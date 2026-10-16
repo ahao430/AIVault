@@ -2126,3 +2126,550 @@ tmux
 > **看订阅 → 看额度 → 预热 / 签到 → 测模型 → 用模型 → 离开电脑后继续 Agent → 回到首页继续管理订阅。**
 
 这就是整个 App 的完整 MVP 产品闭环。
+
+---
+补充：Widget计划
+# Desktop Widget / 桌面小组件
+
+## 1. 功能定位
+
+桌面 Widget 是 AI 订阅管理的辅助入口，核心目标：
+
+> **不打开 App，也能快速查看指定 AI 供应商的额度、余额和重置时间，并支持手动刷新真实额度和执行预热。**
+
+Widget 不是独立应用，也不承担完整的 Provider 管理能力。
+
+核心信息优先级：
+
+1. 额度 / 余额
+2. 重置时间
+3. 数据更新时间
+4. 手动刷新
+5. 预热
+
+---
+
+# 2. 平台实现
+
+Flutter 主 App 继续负责业务逻辑和 UI。
+
+Widget 使用各平台原生 Widget Framework：
+
+```text
+Flutter App
+│
+├── iOS
+│   └── WidgetKit + SwiftUI
+│
+└── Android
+    └── Jetpack Glance
+```
+
+不针对不同 Android 厂商分别开发 Widget。
+
+Android 使用标准 App Widget 机制，兼容主流 Android 厂商。
+
+需要注意：
+
+- Android 各厂商 Widget UI 基础能力基本遵循系统标准
+- 部分 ROM 对后台运行、定时任务、电池优化存在差异
+- Widget 不依赖高频后台运行保证核心功能
+- 必要时增加厂商后台权限提示，但不针对每个厂商维护独立 Widget 实现
+
+---
+
+# 3. Widget 类型
+
+MVP 支持三种尺寸。
+
+## 3.1 小尺寸
+
+显示单个供应商：
+
+```text
+┌─────────────────────┐
+│ ✦ Claude        ↻   │
+│                     │
+│ 72%                 │
+│ ███████░░░          │
+│                     │
+│ 2h 31m 后重置        │
+└─────────────────────┘
+```
+
+适合最常用的一个订阅。
+
+---
+
+## 3.2 中尺寸
+
+显示一个供应商的更多信息：
+
+```text
+┌──────────────────────────┐
+│ ✦ 智谱 AI           ↻    │
+│                          │
+│ 5 小时额度       100%    │
+│ ██████████████████       │
+│                          │
+│ 4h 52m 后重置             │
+│                          │
+│             [♨ 预热]      │
+└──────────────────────────┘
+```
+
+---
+
+## 3.3 大尺寸
+
+显示多个指定供应商：
+
+```text
+┌──────────────────────────┐
+│ AI Subscriptions     ↻   │
+│                          │
+│ Claude       72%  2h31m  │
+│ ███████░░░               │
+│                          │
+│ 智谱         100% 4h52m  │
+│ ████████████             │
+│                          │
+│ OpenAI       48%  1h12m  │
+│ █████░░░░░               │
+└──────────────────────────┘
+```
+
+---
+
+# 4. Widget 可配置供应商
+
+用户添加 Widget 时，可以选择显示对象。
+
+```text
+Widget 配置
+
+供应商：
+[ Claude ▼ ]
+
+显示：
+☑ 额度
+☑ 重置时间
+☑ 最后更新时间
+☐ 余额
+```
+
+支持一个 App 添加多个 Widget。
+
+例如：
+
+```text
+Widget 1 → Claude
+Widget 2 → 智谱 AI
+Widget 3 → 某中转站
+```
+
+大尺寸 Widget 可以配置多个 Provider。
+
+---
+
+# 5. 刷新机制
+
+必须明确区分：
+
+> **Widget 显示刷新**
+
+和：
+
+> **Provider 真实额度刷新**
+
+两者不是同一个概念。
+
+---
+
+## 5.1 Widget 自动刷新
+
+Widget 可以按照系统允许的刷新机制定期重新绘制。
+
+但自动刷新：
+
+> **不主动请求供应商 API。**
+
+例如：
+
+```text
+Provider API 查询结果：
+
+quota = 100%
+resetAt = 20:00
+
+        ↓
+
+保存本地 Snapshot
+
+        ↓
+
+Widget 自动重新绘制
+
+        ↓
+
+根据 resetAt - 当前时间
+
+显示：
+
+4h 52m
+4h 51m
+4h 50m
+```
+
+这样：
+
+- 不消耗 API Token
+- 不依赖 App 高频后台运行
+- 不受不同 Android ROM 后台策略影响核心数据
+- 倒计时可以持续变化
+
+---
+
+# 6. 手动刷新
+
+Widget 必须支持：
+
+> **手动刷新真实额度。**
+
+例如：
+
+```text
+┌─────────────────────┐
+│ Claude          ↻   │
+│                     │
+│ 72%                 │
+│ ███████░░░          │
+│                     │
+│ 2h31m 后重置         │
+└─────────────────────┘
+```
+
+用户点击 `↻`：
+
+```text
+Widget
+  ↓
+Widget Action / App Intent
+  ↓
+Provider Adapter
+  ↓
+getQuota()
+  ↓
+更新 Quota Snapshot
+  ↓
+刷新 Widget
+```
+
+这是一次真正的网络请求。
+
+---
+
+# 7. Widget 预热
+
+Widget 支持快捷预热。
+
+例如：
+
+```text
+┌──────────────────────────┐
+│ ✦ 智谱 AI           ↻    │
+│                          │
+│ 100%                     │
+│ ██████████████████       │
+│                          │
+│ 4h52m 后重置              │
+│                          │
+│             [♨ 预热]      │
+└──────────────────────────┘
+```
+
+点击预热后，必须复用 App 的预热判断逻辑。
+
+```text
+点击预热
+   ↓
+查询当前额度
+   ↓
+是否 = 100%？
+   │
+ ┌─┴─────────┐
+ ↓           ↓
+是           否
+ ↓           ↓
+执行预热      跳过
+             │
+             ↓
+       不浪费 Token
+```
+
+如果额度查询失败：
+
+> 不执行预热。
+
+---
+
+# 8. Widget 操作限制
+
+Widget 不设计成完整的 App 页面。
+
+不放置大量按钮。
+
+推荐：
+
+### 小 Widget
+
+```text
+[↻]
+```
+
+### 中 Widget
+
+```text
+[↻] [♨ 预热]
+```
+
+### 大 Widget
+
+主要展示数据。
+
+不增加：
+
+- 签到
+- 模型测试
+- Token 管理
+- Provider 设置
+- 聊天
+- 画图
+
+这些操作点击 Widget 后进入 App。
+
+---
+
+# 9. Widget Deep Link
+
+点击 Widget 主体：
+
+> 进入对应 Provider 详情页。
+
+例如：
+
+```text
+Widget
+  ↓
+点击 Claude
+  ↓
+打开 App
+  ↓
+Claude Provider Detail
+```
+
+不同区域可以进一步绑定不同页面：
+
+```text
+Provider 名称 → Provider 详情
+额度区域     → 额度详情
+预热按钮     → 预热操作
+```
+
+---
+
+# 10. Widget 数据架构
+
+Widget 不直接访问 App SQLite，也不直接保存 API Token。
+
+采用：
+
+> **Quota Snapshot → Shared Widget Storage → Widget**
+
+架构：
+
+```text
+Provider Adapter
+      ↓
+Quota Manager
+      ↓
+SQLite
+      ↓
+Widget Snapshot
+      ↓
+┌───────────────────────┐
+│ iOS App Group          │
+│ Android Shared Storage │
+└───────────────────────┘
+      ↓
+WidgetKit / Glance
+```
+
+Widget Snapshot 只保存必要的非敏感数据：
+
+```text
+providerId
+providerName
+quota
+total
+remaining
+balance
+currency
+resetAt
+status
+lastUpdatedAt
+```
+
+---
+
+# 11. Widget 不保存敏感数据
+
+Widget 不保存：
+
+- API Key
+- Access Token
+- OAuth Credential
+- SSH Password
+- SSH Private Key
+
+真正的敏感凭证仍然保存在系统安全存储中：
+
+- iOS Keychain
+- Android Keystore
+- macOS Keychain
+- Windows Credential Manager
+
+Widget 只使用：
+
+> 非敏感额度快照。
+
+---
+
+# 12. Widget 与 App 数据同步
+
+App 内额度刷新后：
+
+```text
+Provider Adapter
+      ↓
+Quota Snapshot
+      ↓
+SQLite
+      ↓
+Widget Snapshot
+      ↓
+Widget Reload
+```
+
+这样 App 和 Widget 始终使用同一份额度状态。
+
+---
+
+# 13. App 打开时刷新
+
+用户打开 App 时，可以按照 Provider 刷新策略：
+
+```text
+打开 App
+   ↓
+检查需要刷新的 Provider
+   ↓
+刷新额度
+   ↓
+更新 Snapshot
+   ↓
+同步 Widget
+```
+
+避免 Widget 长时间展示过期数据。
+
+---
+
+# 14. 数据更新时间
+
+Widget 应明确展示：
+
+> 最后一次真实查询时间。
+
+例如：
+
+```text
+100%
+
+4h52m 后重置
+
+更新于 3 分钟前
+```
+
+如果数据过旧：
+
+```text
+100%
+
+4h52m 后重置
+
+⚠ 数据已超过 2 小时未更新
+```
+
+避免用户误认为 Widget 数据实时。
+
+---
+
+# 15. MVP 实现优先级
+
+## P1
+
+实现：
+
+- Android Widget
+- iOS Widget
+- 小 / 中尺寸
+- 指定 Provider
+- 额度展示
+- 重置时间
+- 本地倒计时
+- 最后更新时间
+- Widget 手动刷新
+- Widget 跳转 Provider 详情
+
+## P1 后续
+
+增加：
+
+- 预热按钮
+- 多 Provider 大 Widget
+- Widget 配置项
+- Widget 多实例
+
+## 后续版本
+
+考虑：
+
+- Widget 签到
+- Widget 批量操作
+- 更多快捷操作
+- 更丰富的订阅信息
+
+---
+
+# 16. 设计原则总结
+
+Widget 的核心原则：
+
+```text
+                Widget
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+    自动刷新              手动操作
+        │                   │
+    本地重新绘制        真实请求 API
+        │                   │
+    不消耗 Token        查询额度 / 预热
+```
+
+最终用户体验：
+
+> **桌面上随时看额度 → 看到额度恢复 → 点击刷新确认 → 点击预热。**
+
+Widget 是 App「订阅管理」核心能力的延伸，而不是独立功能。
