@@ -101,6 +101,23 @@ class SshService {
     return client;
   }
 
+  /// 打开交互式 pty 会话（Plan #40：真正的 Terminal Emulator 所需的底层）。
+  /// [command] 为空时启动登录 shell；否则执行该命令
+  /// （如 `tmux new -A -s name` = 存在则附加、不存在则创建）。
+  Future<SSHSession> ptySession(String hostId, {String? command}) async {
+    final host = await _hostById(hostId);
+    final client = await connect(host);
+    final pty = SSHPtyConfig(
+      type: 'xterm-256color',
+      width: 90,
+      height: 28,
+    );
+    if (command == null) {
+      return client.shell(pty: pty);
+    }
+    return client.execute(command, pty: pty);
+  }
+
   /// 执行单条命令并收集全部 stdout（stderr 拼在后面）。
   Future<String> execute(String hostId, String command,
       {Duration timeout = const Duration(seconds: 20)}) async {

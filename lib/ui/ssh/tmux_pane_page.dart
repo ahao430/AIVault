@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../services/tmux.dart';
 import '../../state/ssh_providers.dart';
+import 'ssh_terminal_page.dart';
 
 /// tmux 会话交互（Plan #34 的基础形态 / Plan #36）：
 /// capture-pane 读取输出 + send-keys 发送输入，支持自动刷新。
@@ -133,6 +134,16 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: '终端模式（tmux attach）',
+            icon: const Icon(Icons.terminal, size: 20),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => SshTerminalPage(
+                hostId: widget.hostId,
+                sessionName: widget.session,
+              ),
+            )),
+          ),
           IconButton(
             tooltip: '复制输出',
             icon: const Icon(Icons.copy, size: 18),

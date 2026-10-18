@@ -34,28 +34,41 @@ class SshHostsPage extends ConsumerWidget {
         error: (e, _) => Center(child: Text('加载失败：$e')),
         data: (hosts) {
           if (hosts.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.dns_outlined,
-                      size: 56, color: Theme.of(context).colorScheme.outline),
-                  const SizedBox(height: 10),
-                  const Text('还没有主机'),
-                  const SizedBox(height: 4),
-                  SizedBox(
-                    width: 280,
-                    child: Text(
-                      '手机与电脑登录同一 Tailscale，电脑开启 SSH 并安装 tmux，'
-                      '然后在这里添加电脑',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.outline),
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('开始远程开发',
+                            style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(height: 12),
+                        _step(context, '1', '手机和电脑登录同一个 Tailscale'),
+                        _step(context, '2', '电脑开启 SSH（远程登录）'),
+                        _step(context, '3', '电脑安装 tmux'),
+                        _step(context, '4',
+                            '用 tmux 启动 Claude Code / Codex / OpenCode / Pi'),
+                        _step(context, '5', '在 App 中添加你的电脑'),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            icon: const Icon(Icons.add),
+                            label: const Text('开始配置'),
+                            onPressed: () =>
+                                Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const HostEditPage(),
+                            )),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             );
           }
           return ListView(
@@ -67,6 +80,30 @@ class SshHostsPage extends ConsumerWidget {
       ),
     );
   }
+}
+
+Widget _step(BuildContext context, String n, String text) {
+  final cs = Theme.of(context).colorScheme;
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          radius: 11,
+          backgroundColor: cs.primaryContainer,
+          child: Text(n,
+              style: TextStyle(fontSize: 12, color: cs.onPrimaryContainer)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+            child: Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(text, style: const TextStyle(fontSize: 14)),
+        )),
+      ],
+    ),
+  );
 }
 
 class _HostTile extends ConsumerWidget {

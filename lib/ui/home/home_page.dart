@@ -10,7 +10,9 @@ import '../../services/task_center.dart';
 import '../../state/app_providers.dart';
 import '../provider/provider_detail_page.dart';
 import '../provider/provider_edit_page.dart';
+import '../ssh/hosts_page.dart';
 import '../tasks/tasks_page.dart';
+import '../../state/ssh_providers.dart';
 
 /// 首页：AI 资源综合看板，核心是订阅列表卡片。
 class HomePage extends ConsumerWidget {
@@ -64,7 +66,7 @@ class HomePage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('加载失败：$e')),
         data: (list) {
-          if (list.isEmpty) return const _EmptyView();
+          if (list.isEmpty && _noSshHosts(ref)) return const _EmptyView();
           return RefreshIndicator(
             onRefresh: () async {
               unawaited(ref
@@ -75,8 +77,14 @@ class HomePage extends ConsumerWidget {
             },
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: list.length,
-              itemBuilder: (_, i) => ProviderCard(state: list[i]),
+              itemCount: list.length + 1,
+              itemBuilder: (_, i) {
+                if (i == 0) {
+                  // 远程状态区（Plan #41）：只展示在线 SSH 主机
+                  return const _RemoteStatusCard();
+                }
+                return ProviderCard(state: list[i - 1]);
+              },
             ),
           );
         },
@@ -121,6 +129,97 @@ class HomePage extends ConsumerWidget {
             duration: Duration(seconds: 2)));
         break;
     }
+  }
+
+  bool _noSshHosts(WidgetRef ref) {
+    return ref.read(sshHostsProvider).maybeWhen(
+          data: (hosts) => hosts.isEmpty,
+          orElse: () => true,
+        );
+  }
+}
+
+/// 首页远程状态区（Plan #41）：在线 SSH 主机 + 查看全部。
+/// 不把所有历史 tmux 会话放到首页。
+class _RemoteStatusCard extends ConsumerWidget {
+  const _RemoteStatusCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hostsAsync = ref.watch(sshHostsProvider);
+    final service = ref.read(sshServiceProvider);
+    final cs = Theme.of(context).colorScheme;
+
+    return hostsAsync.maybeWhen(
+      data: (hosts) {
+        if (hosts.isEmpty) return const SizedBox.shrink();
+        final online =
+            hosts.where((h) => service.isConnected(h.id)).toList();
+        final recent = hosts
+            .where((h) => h.lastConnectedAt != null)
+            .toList()
+          ..sort((a, b) =>
+              b.lastConnectedAt!.compareTo(a.lastConnectedAt!));
+        final show = [...online, ...recent.where((h) => !online.contains(h))]
+            .take(3)
+            .toList();
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text('远程开发',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w600)),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const SshHostsPage(),
+                      )),
+                      child: const Text('查看全部'),
+                    ),
+                  ],
+                ),
+                for (final h in show)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      children: [
+                        Icon(Icons.circle,
+                            size: 10,
+                            color: service.isConnected(h.id)
+                                ? Colors.green
+                                : cs.outline),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(h.name,
+                              style:
+                                  const TextStyle(fontSize: 13)),
+                        ),
+                        Text(
+                          service.isConnected(h.id)
+                              ? 'SSH 已连接'
+                              : '最近连接 ${formatRelative(h.lastConnectedAt!, DateTime.now())}',
+                          style: TextStyle(
+                              fontSize: 11, color: cs.outline),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
   }
 }
 
