@@ -16,6 +16,7 @@ part 'database.g.dart';
   WebdavConfigs,
   Conversations,
   Messages,
+  ImageTasks,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -27,7 +28,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -38,6 +39,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             await m.createTable(conversations);
             await m.createTable(messages);
+          }
+          if (from < 4) {
+            await m.createTable(imageTasks);
           }
         },
       );

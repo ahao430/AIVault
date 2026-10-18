@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../chat/conversations_page.dart';
+import '../image/image_studio_page.dart';
 
 /// 工作台：功能入口卡片。AI 聊天已可用；画图 / 远程开发在后续版本迭代。
 class WorkbenchPage extends StatelessWidget {
@@ -34,8 +35,9 @@ class WorkbenchPage extends StatelessWidget {
                   title: 'AI 画图',
                   subtitle: '生成与管理图片',
                   color: cs.tertiary,
-                  badge: '即将推出',
-                  onTap: () => _soon(context, 'AI 画图'),
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const ImageStudioPage(),
+                  )),
                 ),
               ),
             ],

@@ -196,3 +196,32 @@ class Messages extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// AI 画图任务（Plan #26/#27）：单次生成任务，历史只保存本地。
+class ImageTasks extends Table {
+  TextColumn get id => text()();
+  TextColumn get providerId => text()
+      .references(Providers, #id, onDelete: KeyAction.cascade)();
+  TextColumn get tokenId =>
+      text().references(Tokens, #id, onDelete: KeyAction.cascade)();
+  TextColumn get model => text()();
+  TextColumn get prompt => text()();
+
+  /// 参考图相对路径（\n 分隔，位于 app 图片目录内）
+  TextColumn get referencePaths => text().withDefault(const Constant(''))();
+
+  /// 生成结果相对路径（成功后写入）
+  TextColumn get resultPath => text().nullable()();
+
+  /// pending / running / success / failed
+  TextColumn get status => text()();
+  TextColumn get errorMessage => text().nullable()();
+
+  /// 参数（尺寸等），简单 k:v
+  TextColumn get params => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

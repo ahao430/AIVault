@@ -5222,6 +5222,731 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   }
 }
 
+class $ImageTasksTable extends ImageTasks
+    with TableInfo<$ImageTasksTable, ImageTask> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ImageTasksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _providerIdMeta = const VerificationMeta(
+    'providerId',
+  );
+  @override
+  late final GeneratedColumn<String> providerId = GeneratedColumn<String>(
+    'provider_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES providers (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _tokenIdMeta = const VerificationMeta(
+    'tokenId',
+  );
+  @override
+  late final GeneratedColumn<String> tokenId = GeneratedColumn<String>(
+    'token_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES tokens (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _modelMeta = const VerificationMeta('model');
+  @override
+  late final GeneratedColumn<String> model = GeneratedColumn<String>(
+    'model',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _promptMeta = const VerificationMeta('prompt');
+  @override
+  late final GeneratedColumn<String> prompt = GeneratedColumn<String>(
+    'prompt',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _referencePathsMeta = const VerificationMeta(
+    'referencePaths',
+  );
+  @override
+  late final GeneratedColumn<String> referencePaths = GeneratedColumn<String>(
+    'reference_paths',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _resultPathMeta = const VerificationMeta(
+    'resultPath',
+  );
+  @override
+  late final GeneratedColumn<String> resultPath = GeneratedColumn<String>(
+    'result_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _errorMessageMeta = const VerificationMeta(
+    'errorMessage',
+  );
+  @override
+  late final GeneratedColumn<String> errorMessage = GeneratedColumn<String>(
+    'error_message',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _paramsMeta = const VerificationMeta('params');
+  @override
+  late final GeneratedColumn<String> params = GeneratedColumn<String>(
+    'params',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    providerId,
+    tokenId,
+    model,
+    prompt,
+    referencePaths,
+    resultPath,
+    status,
+    errorMessage,
+    params,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'image_tasks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ImageTask> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('provider_id')) {
+      context.handle(
+        _providerIdMeta,
+        providerId.isAcceptableOrUnknown(data['provider_id']!, _providerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_providerIdMeta);
+    }
+    if (data.containsKey('token_id')) {
+      context.handle(
+        _tokenIdMeta,
+        tokenId.isAcceptableOrUnknown(data['token_id']!, _tokenIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tokenIdMeta);
+    }
+    if (data.containsKey('model')) {
+      context.handle(
+        _modelMeta,
+        model.isAcceptableOrUnknown(data['model']!, _modelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_modelMeta);
+    }
+    if (data.containsKey('prompt')) {
+      context.handle(
+        _promptMeta,
+        prompt.isAcceptableOrUnknown(data['prompt']!, _promptMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_promptMeta);
+    }
+    if (data.containsKey('reference_paths')) {
+      context.handle(
+        _referencePathsMeta,
+        referencePaths.isAcceptableOrUnknown(
+          data['reference_paths']!,
+          _referencePathsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('result_path')) {
+      context.handle(
+        _resultPathMeta,
+        resultPath.isAcceptableOrUnknown(data['result_path']!, _resultPathMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('error_message')) {
+      context.handle(
+        _errorMessageMeta,
+        errorMessage.isAcceptableOrUnknown(
+          data['error_message']!,
+          _errorMessageMeta,
+        ),
+      );
+    }
+    if (data.containsKey('params')) {
+      context.handle(
+        _paramsMeta,
+        params.isAcceptableOrUnknown(data['params']!, _paramsMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ImageTask map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ImageTask(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      providerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider_id'],
+      )!,
+      tokenId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}token_id'],
+      )!,
+      model: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}model'],
+      )!,
+      prompt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prompt'],
+      )!,
+      referencePaths: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_paths'],
+      )!,
+      resultPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}result_path'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      errorMessage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}error_message'],
+      ),
+      params: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}params'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ImageTasksTable createAlias(String alias) {
+    return $ImageTasksTable(attachedDatabase, alias);
+  }
+}
+
+class ImageTask extends DataClass implements Insertable<ImageTask> {
+  final String id;
+  final String providerId;
+  final String tokenId;
+  final String model;
+  final String prompt;
+
+  /// 参考图相对路径（\n 分隔，位于 app 图片目录内）
+  final String referencePaths;
+
+  /// 生成结果相对路径（成功后写入）
+  final String? resultPath;
+
+  /// pending / running / success / failed
+  final String status;
+  final String? errorMessage;
+
+  /// 参数（尺寸等），简单 k:v
+  final String? params;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const ImageTask({
+    required this.id,
+    required this.providerId,
+    required this.tokenId,
+    required this.model,
+    required this.prompt,
+    required this.referencePaths,
+    this.resultPath,
+    required this.status,
+    this.errorMessage,
+    this.params,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['provider_id'] = Variable<String>(providerId);
+    map['token_id'] = Variable<String>(tokenId);
+    map['model'] = Variable<String>(model);
+    map['prompt'] = Variable<String>(prompt);
+    map['reference_paths'] = Variable<String>(referencePaths);
+    if (!nullToAbsent || resultPath != null) {
+      map['result_path'] = Variable<String>(resultPath);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || errorMessage != null) {
+      map['error_message'] = Variable<String>(errorMessage);
+    }
+    if (!nullToAbsent || params != null) {
+      map['params'] = Variable<String>(params);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  ImageTasksCompanion toCompanion(bool nullToAbsent) {
+    return ImageTasksCompanion(
+      id: Value(id),
+      providerId: Value(providerId),
+      tokenId: Value(tokenId),
+      model: Value(model),
+      prompt: Value(prompt),
+      referencePaths: Value(referencePaths),
+      resultPath: resultPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resultPath),
+      status: Value(status),
+      errorMessage: errorMessage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(errorMessage),
+      params: params == null && nullToAbsent
+          ? const Value.absent()
+          : Value(params),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory ImageTask.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ImageTask(
+      id: serializer.fromJson<String>(json['id']),
+      providerId: serializer.fromJson<String>(json['providerId']),
+      tokenId: serializer.fromJson<String>(json['tokenId']),
+      model: serializer.fromJson<String>(json['model']),
+      prompt: serializer.fromJson<String>(json['prompt']),
+      referencePaths: serializer.fromJson<String>(json['referencePaths']),
+      resultPath: serializer.fromJson<String?>(json['resultPath']),
+      status: serializer.fromJson<String>(json['status']),
+      errorMessage: serializer.fromJson<String?>(json['errorMessage']),
+      params: serializer.fromJson<String?>(json['params']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'providerId': serializer.toJson<String>(providerId),
+      'tokenId': serializer.toJson<String>(tokenId),
+      'model': serializer.toJson<String>(model),
+      'prompt': serializer.toJson<String>(prompt),
+      'referencePaths': serializer.toJson<String>(referencePaths),
+      'resultPath': serializer.toJson<String?>(resultPath),
+      'status': serializer.toJson<String>(status),
+      'errorMessage': serializer.toJson<String?>(errorMessage),
+      'params': serializer.toJson<String?>(params),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  ImageTask copyWith({
+    String? id,
+    String? providerId,
+    String? tokenId,
+    String? model,
+    String? prompt,
+    String? referencePaths,
+    Value<String?> resultPath = const Value.absent(),
+    String? status,
+    Value<String?> errorMessage = const Value.absent(),
+    Value<String?> params = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => ImageTask(
+    id: id ?? this.id,
+    providerId: providerId ?? this.providerId,
+    tokenId: tokenId ?? this.tokenId,
+    model: model ?? this.model,
+    prompt: prompt ?? this.prompt,
+    referencePaths: referencePaths ?? this.referencePaths,
+    resultPath: resultPath.present ? resultPath.value : this.resultPath,
+    status: status ?? this.status,
+    errorMessage: errorMessage.present ? errorMessage.value : this.errorMessage,
+    params: params.present ? params.value : this.params,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  ImageTask copyWithCompanion(ImageTasksCompanion data) {
+    return ImageTask(
+      id: data.id.present ? data.id.value : this.id,
+      providerId: data.providerId.present
+          ? data.providerId.value
+          : this.providerId,
+      tokenId: data.tokenId.present ? data.tokenId.value : this.tokenId,
+      model: data.model.present ? data.model.value : this.model,
+      prompt: data.prompt.present ? data.prompt.value : this.prompt,
+      referencePaths: data.referencePaths.present
+          ? data.referencePaths.value
+          : this.referencePaths,
+      resultPath: data.resultPath.present
+          ? data.resultPath.value
+          : this.resultPath,
+      status: data.status.present ? data.status.value : this.status,
+      errorMessage: data.errorMessage.present
+          ? data.errorMessage.value
+          : this.errorMessage,
+      params: data.params.present ? data.params.value : this.params,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ImageTask(')
+          ..write('id: $id, ')
+          ..write('providerId: $providerId, ')
+          ..write('tokenId: $tokenId, ')
+          ..write('model: $model, ')
+          ..write('prompt: $prompt, ')
+          ..write('referencePaths: $referencePaths, ')
+          ..write('resultPath: $resultPath, ')
+          ..write('status: $status, ')
+          ..write('errorMessage: $errorMessage, ')
+          ..write('params: $params, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    providerId,
+    tokenId,
+    model,
+    prompt,
+    referencePaths,
+    resultPath,
+    status,
+    errorMessage,
+    params,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ImageTask &&
+          other.id == this.id &&
+          other.providerId == this.providerId &&
+          other.tokenId == this.tokenId &&
+          other.model == this.model &&
+          other.prompt == this.prompt &&
+          other.referencePaths == this.referencePaths &&
+          other.resultPath == this.resultPath &&
+          other.status == this.status &&
+          other.errorMessage == this.errorMessage &&
+          other.params == this.params &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ImageTasksCompanion extends UpdateCompanion<ImageTask> {
+  final Value<String> id;
+  final Value<String> providerId;
+  final Value<String> tokenId;
+  final Value<String> model;
+  final Value<String> prompt;
+  final Value<String> referencePaths;
+  final Value<String?> resultPath;
+  final Value<String> status;
+  final Value<String?> errorMessage;
+  final Value<String?> params;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const ImageTasksCompanion({
+    this.id = const Value.absent(),
+    this.providerId = const Value.absent(),
+    this.tokenId = const Value.absent(),
+    this.model = const Value.absent(),
+    this.prompt = const Value.absent(),
+    this.referencePaths = const Value.absent(),
+    this.resultPath = const Value.absent(),
+    this.status = const Value.absent(),
+    this.errorMessage = const Value.absent(),
+    this.params = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ImageTasksCompanion.insert({
+    required String id,
+    required String providerId,
+    required String tokenId,
+    required String model,
+    required String prompt,
+    this.referencePaths = const Value.absent(),
+    this.resultPath = const Value.absent(),
+    required String status,
+    this.errorMessage = const Value.absent(),
+    this.params = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       providerId = Value(providerId),
+       tokenId = Value(tokenId),
+       model = Value(model),
+       prompt = Value(prompt),
+       status = Value(status),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ImageTask> custom({
+    Expression<String>? id,
+    Expression<String>? providerId,
+    Expression<String>? tokenId,
+    Expression<String>? model,
+    Expression<String>? prompt,
+    Expression<String>? referencePaths,
+    Expression<String>? resultPath,
+    Expression<String>? status,
+    Expression<String>? errorMessage,
+    Expression<String>? params,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (providerId != null) 'provider_id': providerId,
+      if (tokenId != null) 'token_id': tokenId,
+      if (model != null) 'model': model,
+      if (prompt != null) 'prompt': prompt,
+      if (referencePaths != null) 'reference_paths': referencePaths,
+      if (resultPath != null) 'result_path': resultPath,
+      if (status != null) 'status': status,
+      if (errorMessage != null) 'error_message': errorMessage,
+      if (params != null) 'params': params,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ImageTasksCompanion copyWith({
+    Value<String>? id,
+    Value<String>? providerId,
+    Value<String>? tokenId,
+    Value<String>? model,
+    Value<String>? prompt,
+    Value<String>? referencePaths,
+    Value<String?>? resultPath,
+    Value<String>? status,
+    Value<String?>? errorMessage,
+    Value<String?>? params,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return ImageTasksCompanion(
+      id: id ?? this.id,
+      providerId: providerId ?? this.providerId,
+      tokenId: tokenId ?? this.tokenId,
+      model: model ?? this.model,
+      prompt: prompt ?? this.prompt,
+      referencePaths: referencePaths ?? this.referencePaths,
+      resultPath: resultPath ?? this.resultPath,
+      status: status ?? this.status,
+      errorMessage: errorMessage ?? this.errorMessage,
+      params: params ?? this.params,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (providerId.present) {
+      map['provider_id'] = Variable<String>(providerId.value);
+    }
+    if (tokenId.present) {
+      map['token_id'] = Variable<String>(tokenId.value);
+    }
+    if (model.present) {
+      map['model'] = Variable<String>(model.value);
+    }
+    if (prompt.present) {
+      map['prompt'] = Variable<String>(prompt.value);
+    }
+    if (referencePaths.present) {
+      map['reference_paths'] = Variable<String>(referencePaths.value);
+    }
+    if (resultPath.present) {
+      map['result_path'] = Variable<String>(resultPath.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (errorMessage.present) {
+      map['error_message'] = Variable<String>(errorMessage.value);
+    }
+    if (params.present) {
+      map['params'] = Variable<String>(params.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ImageTasksCompanion(')
+          ..write('id: $id, ')
+          ..write('providerId: $providerId, ')
+          ..write('tokenId: $tokenId, ')
+          ..write('model: $model, ')
+          ..write('prompt: $prompt, ')
+          ..write('referencePaths: $referencePaths, ')
+          ..write('resultPath: $resultPath, ')
+          ..write('status: $status, ')
+          ..write('errorMessage: $errorMessage, ')
+          ..write('params: $params, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5237,6 +5962,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $WebdavConfigsTable webdavConfigs = $WebdavConfigsTable(this);
   late final $ConversationsTable conversations = $ConversationsTable(this);
   late final $MessagesTable messages = $MessagesTable(this);
+  late final $ImageTasksTable imageTasks = $ImageTasksTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5252,6 +5978,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     webdavConfigs,
     conversations,
     messages,
+    imageTasks,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -5317,6 +6044,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('messages', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'providers',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('image_tasks', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'tokens',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('image_tasks', kind: UpdateKind.delete)],
     ),
   ]);
   @override
@@ -5461,6 +6202,24 @@ final class $$ProvidersTableReferences
     ).filter((f) => f.providerId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_conversationsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ImageTasksTable, List<ImageTask>>
+  _imageTasksRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.imageTasks,
+    aliasName: $_aliasNameGenerator(db.providers.id, db.imageTasks.providerId),
+  );
+
+  $$ImageTasksTableProcessedTableManager get imageTasksRefs {
+    final manager = $$ImageTasksTableTableManager(
+      $_db,
+      $_db.imageTasks,
+    ).filter((f) => f.providerId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_imageTasksRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -5659,6 +6418,31 @@ class $$ProvidersTableFilterComposer
           }) => $$ConversationsTableFilterComposer(
             $db: $db,
             $table: $db.conversations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> imageTasksRefs(
+    Expression<bool> Function($$ImageTasksTableFilterComposer f) f,
+  ) {
+    final $$ImageTasksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.imageTasks,
+      getReferencedColumn: (t) => t.providerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImageTasksTableFilterComposer(
+            $db: $db,
+            $table: $db.imageTasks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5925,6 +6709,31 @@ class $$ProvidersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> imageTasksRefs<T extends Object>(
+    Expression<T> Function($$ImageTasksTableAnnotationComposer a) f,
+  ) {
+    final $$ImageTasksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.imageTasks,
+      getReferencedColumn: (t) => t.providerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImageTasksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.imageTasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ProvidersTableTableManager
@@ -5946,6 +6755,7 @@ class $$ProvidersTableTableManager
             bool checkinRecordsRefs,
             bool prewarmRecordsRefs,
             bool conversationsRefs,
+            bool imageTasksRefs,
           })
         > {
   $$ProvidersTableTableManager(_$AppDatabase db, $ProvidersTable table)
@@ -6038,6 +6848,7 @@ class $$ProvidersTableTableManager
                 checkinRecordsRefs = false,
                 prewarmRecordsRefs = false,
                 conversationsRefs = false,
+                imageTasksRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -6047,6 +6858,7 @@ class $$ProvidersTableTableManager
                     if (checkinRecordsRefs) db.checkinRecords,
                     if (prewarmRecordsRefs) db.prewarmRecords,
                     if (conversationsRefs) db.conversations,
+                    if (imageTasksRefs) db.imageTasks,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -6156,6 +6968,27 @@ class $$ProvidersTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (imageTasksRefs)
+                        await $_getPrefetchedData<
+                          Provider,
+                          $ProvidersTable,
+                          ImageTask
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProvidersTableReferences
+                              ._imageTasksRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProvidersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).imageTasksRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.providerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -6182,6 +7015,7 @@ typedef $$ProvidersTableProcessedTableManager =
         bool checkinRecordsRefs,
         bool prewarmRecordsRefs,
         bool conversationsRefs,
+        bool imageTasksRefs,
       })
     >;
 typedef $$TokensTableCreateCompanionBuilder =
@@ -6277,6 +7111,24 @@ final class $$TokensTableReferences
     ).filter((f) => f.tokenId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_conversationsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ImageTasksTable, List<ImageTask>>
+  _imageTasksRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.imageTasks,
+    aliasName: $_aliasNameGenerator(db.tokens.id, db.imageTasks.tokenId),
+  );
+
+  $$ImageTasksTableProcessedTableManager get imageTasksRefs {
+    final manager = $$ImageTasksTableTableManager(
+      $_db,
+      $_db.imageTasks,
+    ).filter((f) => f.tokenId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_imageTasksRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -6406,6 +7258,31 @@ class $$TokensTableFilterComposer
           }) => $$ConversationsTableFilterComposer(
             $db: $db,
             $table: $db.conversations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> imageTasksRefs(
+    Expression<bool> Function($$ImageTasksTableFilterComposer f) f,
+  ) {
+    final $$ImageTasksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.imageTasks,
+      getReferencedColumn: (t) => t.tokenId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImageTasksTableFilterComposer(
+            $db: $db,
+            $table: $db.imageTasks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6595,6 +7472,31 @@ class $$TokensTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> imageTasksRefs<T extends Object>(
+    Expression<T> Function($$ImageTasksTableAnnotationComposer a) f,
+  ) {
+    final $$ImageTasksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.imageTasks,
+      getReferencedColumn: (t) => t.tokenId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImageTasksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.imageTasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$TokensTableTableManager
@@ -6615,6 +7517,7 @@ class $$TokensTableTableManager
             bool providerModelsRefs,
             bool modelTestRecordsRefs,
             bool conversationsRefs,
+            bool imageTasksRefs,
           })
         > {
   $$TokensTableTableManager(_$AppDatabase db, $TokensTable table)
@@ -6676,6 +7579,7 @@ class $$TokensTableTableManager
                 providerModelsRefs = false,
                 modelTestRecordsRefs = false,
                 conversationsRefs = false,
+                imageTasksRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -6683,6 +7587,7 @@ class $$TokensTableTableManager
                     if (providerModelsRefs) db.providerModels,
                     if (modelTestRecordsRefs) db.modelTestRecords,
                     if (conversationsRefs) db.conversations,
+                    if (imageTasksRefs) db.imageTasks,
                   ],
                   addJoins:
                       <
@@ -6781,6 +7686,27 @@ class $$TokensTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (imageTasksRefs)
+                        await $_getPrefetchedData<
+                          Token,
+                          $TokensTable,
+                          ImageTask
+                        >(
+                          currentTable: table,
+                          referencedTable: $$TokensTableReferences
+                              ._imageTasksRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$TokensTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).imageTasksRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.tokenId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -6806,6 +7732,7 @@ typedef $$TokensTableProcessedTableManager =
         bool providerModelsRefs,
         bool modelTestRecordsRefs,
         bool conversationsRefs,
+        bool imageTasksRefs,
       })
     >;
 typedef $$ProviderModelsTableCreateCompanionBuilder =
@@ -9877,6 +10804,551 @@ typedef $$MessagesTableProcessedTableManager =
       Message,
       PrefetchHooks Function({bool conversationId})
     >;
+typedef $$ImageTasksTableCreateCompanionBuilder =
+    ImageTasksCompanion Function({
+      required String id,
+      required String providerId,
+      required String tokenId,
+      required String model,
+      required String prompt,
+      Value<String> referencePaths,
+      Value<String?> resultPath,
+      required String status,
+      Value<String?> errorMessage,
+      Value<String?> params,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$ImageTasksTableUpdateCompanionBuilder =
+    ImageTasksCompanion Function({
+      Value<String> id,
+      Value<String> providerId,
+      Value<String> tokenId,
+      Value<String> model,
+      Value<String> prompt,
+      Value<String> referencePaths,
+      Value<String?> resultPath,
+      Value<String> status,
+      Value<String?> errorMessage,
+      Value<String?> params,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$ImageTasksTableReferences
+    extends BaseReferences<_$AppDatabase, $ImageTasksTable, ImageTask> {
+  $$ImageTasksTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProvidersTable _providerIdTable(_$AppDatabase db) =>
+      db.providers.createAlias(
+        $_aliasNameGenerator(db.imageTasks.providerId, db.providers.id),
+      );
+
+  $$ProvidersTableProcessedTableManager get providerId {
+    final $_column = $_itemColumn<String>('provider_id')!;
+
+    final manager = $$ProvidersTableTableManager(
+      $_db,
+      $_db.providers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_providerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $TokensTable _tokenIdTable(_$AppDatabase db) => db.tokens.createAlias(
+    $_aliasNameGenerator(db.imageTasks.tokenId, db.tokens.id),
+  );
+
+  $$TokensTableProcessedTableManager get tokenId {
+    final $_column = $_itemColumn<String>('token_id')!;
+
+    final manager = $$TokensTableTableManager(
+      $_db,
+      $_db.tokens,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_tokenIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ImageTasksTableFilterComposer
+    extends Composer<_$AppDatabase, $ImageTasksTable> {
+  $$ImageTasksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get model => $composableBuilder(
+    column: $table.model,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prompt => $composableBuilder(
+    column: $table.prompt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referencePaths => $composableBuilder(
+    column: $table.referencePaths,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resultPath => $composableBuilder(
+    column: $table.resultPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get errorMessage => $composableBuilder(
+    column: $table.errorMessage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get params => $composableBuilder(
+    column: $table.params,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ProvidersTableFilterComposer get providerId {
+    final $$ProvidersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.providerId,
+      referencedTable: $db.providers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProvidersTableFilterComposer(
+            $db: $db,
+            $table: $db.providers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TokensTableFilterComposer get tokenId {
+    final $$TokensTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tokenId,
+      referencedTable: $db.tokens,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TokensTableFilterComposer(
+            $db: $db,
+            $table: $db.tokens,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ImageTasksTableOrderingComposer
+    extends Composer<_$AppDatabase, $ImageTasksTable> {
+  $$ImageTasksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get model => $composableBuilder(
+    column: $table.model,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get prompt => $composableBuilder(
+    column: $table.prompt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referencePaths => $composableBuilder(
+    column: $table.referencePaths,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resultPath => $composableBuilder(
+    column: $table.resultPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get errorMessage => $composableBuilder(
+    column: $table.errorMessage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get params => $composableBuilder(
+    column: $table.params,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProvidersTableOrderingComposer get providerId {
+    final $$ProvidersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.providerId,
+      referencedTable: $db.providers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProvidersTableOrderingComposer(
+            $db: $db,
+            $table: $db.providers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TokensTableOrderingComposer get tokenId {
+    final $$TokensTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tokenId,
+      referencedTable: $db.tokens,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TokensTableOrderingComposer(
+            $db: $db,
+            $table: $db.tokens,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ImageTasksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ImageTasksTable> {
+  $$ImageTasksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get model =>
+      $composableBuilder(column: $table.model, builder: (column) => column);
+
+  GeneratedColumn<String> get prompt =>
+      $composableBuilder(column: $table.prompt, builder: (column) => column);
+
+  GeneratedColumn<String> get referencePaths => $composableBuilder(
+    column: $table.referencePaths,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get resultPath => $composableBuilder(
+    column: $table.resultPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get errorMessage => $composableBuilder(
+    column: $table.errorMessage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get params =>
+      $composableBuilder(column: $table.params, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$ProvidersTableAnnotationComposer get providerId {
+    final $$ProvidersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.providerId,
+      referencedTable: $db.providers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProvidersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.providers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TokensTableAnnotationComposer get tokenId {
+    final $$TokensTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tokenId,
+      referencedTable: $db.tokens,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TokensTableAnnotationComposer(
+            $db: $db,
+            $table: $db.tokens,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ImageTasksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ImageTasksTable,
+          ImageTask,
+          $$ImageTasksTableFilterComposer,
+          $$ImageTasksTableOrderingComposer,
+          $$ImageTasksTableAnnotationComposer,
+          $$ImageTasksTableCreateCompanionBuilder,
+          $$ImageTasksTableUpdateCompanionBuilder,
+          (ImageTask, $$ImageTasksTableReferences),
+          ImageTask,
+          PrefetchHooks Function({bool providerId, bool tokenId})
+        > {
+  $$ImageTasksTableTableManager(_$AppDatabase db, $ImageTasksTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ImageTasksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ImageTasksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ImageTasksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> providerId = const Value.absent(),
+                Value<String> tokenId = const Value.absent(),
+                Value<String> model = const Value.absent(),
+                Value<String> prompt = const Value.absent(),
+                Value<String> referencePaths = const Value.absent(),
+                Value<String?> resultPath = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> errorMessage = const Value.absent(),
+                Value<String?> params = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ImageTasksCompanion(
+                id: id,
+                providerId: providerId,
+                tokenId: tokenId,
+                model: model,
+                prompt: prompt,
+                referencePaths: referencePaths,
+                resultPath: resultPath,
+                status: status,
+                errorMessage: errorMessage,
+                params: params,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String providerId,
+                required String tokenId,
+                required String model,
+                required String prompt,
+                Value<String> referencePaths = const Value.absent(),
+                Value<String?> resultPath = const Value.absent(),
+                required String status,
+                Value<String?> errorMessage = const Value.absent(),
+                Value<String?> params = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ImageTasksCompanion.insert(
+                id: id,
+                providerId: providerId,
+                tokenId: tokenId,
+                model: model,
+                prompt: prompt,
+                referencePaths: referencePaths,
+                resultPath: resultPath,
+                status: status,
+                errorMessage: errorMessage,
+                params: params,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ImageTasksTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({providerId = false, tokenId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (providerId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.providerId,
+                                referencedTable: $$ImageTasksTableReferences
+                                    ._providerIdTable(db),
+                                referencedColumn: $$ImageTasksTableReferences
+                                    ._providerIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+                    if (tokenId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.tokenId,
+                                referencedTable: $$ImageTasksTableReferences
+                                    ._tokenIdTable(db),
+                                referencedColumn: $$ImageTasksTableReferences
+                                    ._tokenIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ImageTasksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ImageTasksTable,
+      ImageTask,
+      $$ImageTasksTableFilterComposer,
+      $$ImageTasksTableOrderingComposer,
+      $$ImageTasksTableAnnotationComposer,
+      $$ImageTasksTableCreateCompanionBuilder,
+      $$ImageTasksTableUpdateCompanionBuilder,
+      (ImageTask, $$ImageTasksTableReferences),
+      ImageTask,
+      PrefetchHooks Function({bool providerId, bool tokenId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9901,4 +11373,6 @@ class $AppDatabaseManager {
       $$ConversationsTableTableManager(_db, _db.conversations);
   $$MessagesTableTableManager get messages =>
       $$MessagesTableTableManager(_db, _db.messages);
+  $$ImageTasksTableTableManager get imageTasks =>
+      $$ImageTasksTableTableManager(_db, _db.imageTasks);
 }
