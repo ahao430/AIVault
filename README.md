@@ -6,7 +6,7 @@ AI 订阅与 API 账号管理为中心的本地优先跨平台 App —— 随时
 
 产品设计基线见 [Plan.md](./Plan.md)。
 
-## 当前范围（MVP P0）
+## 当前范围（MVP P0 + P1 第一批）
 
 - 供应商 / Token / 模型 三级数据模型（同一供应商的不同账户视为不同实例）
 - 首页订阅卡片：额度进度 + 重置倒计时、余额、置顶 / 隐藏、批量签到 / 批量预热
@@ -15,6 +15,11 @@ AI 订阅与 API 账号管理为中心的本地优先跨平台 App —— 随时
 - 模型列表同步 + 单模型临时测试（9 类失败原因分类：认证 / 权限 / 不存在 / 余额 / 限流 / 上游 / 超时 / 协议 / 未知）
 - 预热规则：**只有额度达到 100% 才执行**；查询失败 / 状态未知一律跳过
 - 额度快照：查询失败保留上一次成功数据，不显示为 0
+- 任务中心：批量签到 / 预热 / 刷新作为后台任务执行，支持进度、取消、重试失败项、结果明细
+- 额度历史：快照走势（sparkline）+ 明细列表
+- 模型测试历史：单个模型的最近测试记录（延迟 / HTTP / 错误分类）
+- JSON 导入导出：默认脱敏，可选包含密钥（明确警告）；按 id 合并导入
+- 已隐藏供应商管理：恢复或彻底删除
 
 ## 目录结构
 
@@ -47,9 +52,14 @@ flutter build macos --debug                                            # 构建
 
 > 注：当前工具链（Dart 3.10）运行 build_runner 需带 `--force-jit`。
 
-### macOS 权限
+### macOS 权限与签名
 
-`macos/Runner/*.entitlements` 已包含 `network.client`（访问 API）与 `keychain-access-groups`（flutter_secure_storage）。
+`macos/Runner/*.entitlements` 已包含 `network.client`（访问 API）。
+
+> 注意：`keychain-access-groups`（flutter_secure_storage 的 Keychain 共享）需要有效的
+> 开发团队签名才能生效 —— 无签名团队时该 entitlement 会导致 macOS 以
+> `Code Signature Invalid` 杀掉 App。当前 debug 构建未包含它；正式分发时请在 Xcode
+> 中开启 Keychain Sharing（配合签名团队）后再构建。
 
 ## 迭代路线（见 Plan.md）
 

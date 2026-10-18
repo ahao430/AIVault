@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/formatters.dart';
 import '../../data/repositories/provider_repository.dart';
 import '../../services/provider_actions.dart';
+import '../../services/task_center.dart';
 import '../../state/app_providers.dart';
 import '../provider/provider_detail_page.dart';
 import '../provider/provider_edit_page.dart';
+import '../tasks/tasks_page.dart';
 
 /// 首页：AI 资源综合看板，核心是订阅列表卡片。
 class HomePage extends ConsumerWidget {
@@ -15,6 +19,8 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final listAsync = ref.watch(homeListProvider);
+    final runningTasks =
+        ref.watch(taskCenterProvider).where((t) => t.running).length;
 
     return Scaffold(
       appBar: AppBar(
@@ -35,6 +41,17 @@ class HomePage extends ConsumerWidget {
             ],
           ),
           IconButton(
+            tooltip: '任务中心',
+            icon: Badge(
+              isLabelVisible: runningTasks > 0,
+              label: Text('$runningTasks'),
+              child: const Icon(Icons.pending_actions),
+            ),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const TasksPage(),
+            )),
+          ),
+          IconButton(
             tooltip: '添加供应商',
             icon: const Icon(Icons.add),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
@@ -49,7 +66,13 @@ class HomePage extends ConsumerWidget {
         data: (list) {
           if (list.isEmpty) return const _EmptyView();
           return RefreshIndicator(
-            onRefresh: () => ref.read(actionsProvider).refreshAll(list),
+            onRefresh: () async {
+              unawaited(ref
+                  .read(taskCenterProvider.notifier)
+                  .startRefreshAll(list));
+              // 让下拉动画停留片刻后收起，任务继续在后台执行
+              await Future<void>.delayed(const Duration(milliseconds: 800));
+            },
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: list.length,
@@ -61,34 +84,42 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Future<void> _refreshAll(BuildContext context, WidgetRef ref) async {
+  void _refreshAll(BuildContext context, WidgetRef ref) {
     final list = ref.read(homeListProvider).value ?? const [];
+    ref.read(taskCenterProvider.notifier).startRefreshAll(list);
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('正在刷新全部额度…'), duration: Duration(seconds: 1)));
-    await ref.read(actionsProvider).refreshAll(list);
+        content: Text('已发起批量刷新，可在任务中心查看进度'),
+        duration: Duration(seconds: 2)));
   }
 
-  Future<void> _batch(BuildContext context, WidgetRef ref, String action) async {
-    final actions = ref.read(actionsProvider);
+  void _batch(BuildContext context, WidgetRef ref, String action) {
     final list = ref.read(homeListProvider).value ?? const [];
+    final tasks = ref.read(taskCenterProvider.notifier);
     final messenger = ScaffoldMessenger.of(context);
 
-    if (action == 'checkin') {
-      if (!list.any((s) => s.canCheckIn)) {
-        messenger.showSnackBar(const SnackBar(content: Text('没有支持签到的供应商')));
-        return;
-      }
-      final outcome = await actions.checkInAll(list);
-      if (!context.mounted) return;
-      await showBatchOutcomeDialog(context, '批量签到完成', outcome);
-    } else if (action == 'prewarm') {
-      if (!list.any((s) => s.canPrewarm)) {
-        messenger.showSnackBar(const SnackBar(content: Text('没有支持预热的供应商')));
-        return;
-      }
-      final outcome = await actions.prewarmAll(list);
-      if (!context.mounted) return;
-      await showBatchOutcomeDialog(context, '批量预热完成', outcome);
+    switch (action) {
+      case 'checkin':
+        if (!list.any((s) => s.canCheckIn && !s.checkedInToday)) {
+          messenger.showSnackBar(
+              const SnackBar(content: Text('没有待签到的供应商')));
+          return;
+        }
+        unawaited(tasks.startCheckInAll(list));
+        messenger.showSnackBar(const SnackBar(
+            content: Text('已发起批量签到，可在任务中心查看进度'),
+            duration: Duration(seconds: 2)));
+        break;
+      case 'prewarm':
+        if (!list.any((s) => s.canPrewarm)) {
+          messenger.showSnackBar(
+              const SnackBar(content: Text('没有支持预热的供应商')));
+          return;
+        }
+        unawaited(tasks.startPrewarmAll(list));
+        messenger.showSnackBar(const SnackBar(
+            content: Text('已发起批量预热，可在任务中心查看进度'),
+            duration: Duration(seconds: 2)));
+        break;
     }
   }
 }

@@ -13,6 +13,7 @@ class BatchOutcome {
     this.skipped = 0,
     this.failed = 0,
     this.details = const [],
+    this.failedProviderIds = const [],
   });
 
   final int success;
@@ -20,18 +21,24 @@ class BatchOutcome {
   final int failed;
   final List<String> details;
 
+  /// 失败项的 providerId，供任务中心重试使用
+  final List<String> failedProviderIds;
+
   BatchOutcome add({
     bool success = false,
     bool skipped = false,
     bool failed = false,
     String? detail,
+    String? providerId,
   }) {
     return BatchOutcome(
       success: this.success + (success ? 1 : 0),
       skipped: this.skipped + (skipped ? 1 : 0),
       failed: this.failed + (failed ? 1 : 0),
-      details:
-          detail == null ? details : [...details, detail],
+      details: detail == null ? details : [...details, detail],
+      failedProviderIds: failed && providerId != null
+          ? [...failedProviderIds, providerId]
+          : failedProviderIds,
     );
   }
 }

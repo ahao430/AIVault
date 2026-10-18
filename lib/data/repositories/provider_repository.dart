@@ -429,6 +429,213 @@ class ProviderRepository {
 
   // -------------------------------------------------------------- snapshots
 
+  /// 额度 / 余额快照历史（时间升序，默认最近 100 条）
+  Stream<List<QuotaSnapshot>> watchSnapshots(String providerId,
+      {int limit = 100}) async* {
+    Future<List<QuotaSnapshot>> load() async {
+      final inner = _db.quotaSnapshots.select()
+        ..where((s) => s.providerId.equals(providerId))
+        ..orderBy([(s) => OrderingTerm.desc(s.timestamp)])
+        ..limit(limit);
+      final rows = await inner.get();
+      return rows.reversed.toList();
+    }
+
+    yield await load();
+    await for (final _ in _db.tableUpdates(
+        TableUpdateQuery.onAllTables([_db.quotaSnapshots]))) {
+      yield await load();
+    }
+  }
+
+  /// 某个模型的最近测试记录（时间降序）
+  Stream<List<ModelTestRecord>> watchModelTests(
+      String tokenId, String modelId) async* {
+    Future<List<ModelTestRecord>> load() async {
+      final query = _db.modelTestRecords.select()
+        ..where((r) => r.tokenId.equals(tokenId) & r.modelId.equals(modelId))
+        ..orderBy([(r) => OrderingTerm.desc(r.createdAt)])
+        ..limit(20);
+      return query.get();
+    }
+
+    yield await load();
+    await for (final _ in _db.tableUpdates(
+        TableUpdateQuery.onAllTables([_db.modelTestRecords]))) {
+      yield await load();
+    }
+  }
+
+  /// 已隐藏的供应商列表
+  Future<List<Provider>> hiddenProviders() async {
+    return (_db.providers.select()..where((p) => p.hidden.equals(true))).get();
+  }
+
+  // ----------------------------------------------------------- import/export
+
+  /// 导出为可 JSON 序列化的 Map。
+  /// [includeSecrets]=false 时默认脱敏：不含 API Key 与系统令牌。
+  Future<Map<String, dynamic>> exportJson(
+      {bool includeSecrets = false}) async {
+    final providers = await _db.providers.select().get();
+    final out = <String, dynamic>{
+      'version': 1,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'providers': <Map<String, dynamic>>[],
+    };
+    final list = out['providers'] as List<Map<String, dynamic>>;
+    for (final p in providers) {
+      final tokens = await (_db.tokens.select()
+            ..where((t) => t.providerId.equals(p.id)))
+          .get();
+      list.add({
+        'id': p.id,
+        'name': p.name,
+        'type': p.type.name,
+        'adapterKind': p.adapterKind.name,
+        'baseUrl': p.baseUrl,
+        'accountLabel': p.accountLabel,
+        'systemUserId': p.systemUserId,
+        'pinned': p.pinned,
+        'hidden': p.hidden,
+        'sortOrder': p.sortOrder,
+        'createdAt': p.createdAt.toIso8601String(),
+        if (includeSecrets && p.systemTokenRef != null)
+          'systemToken': await _secure.read(p.systemTokenRef!),
+        'tokens': [
+          for (final t in tokens)
+            {
+              'id': t.id,
+              'name': t.name,
+              'note': t.note,
+              if (includeSecrets) 'apiKey': await _secure.read(t.secretRef),
+            },
+        ],
+      });
+    }
+    return out;
+  }
+
+  /// 导入 JSON（按 id 合并：存在则更新基础字段，不存在则创建）。
+  /// 仅当导出数据包含密钥时才恢复密钥；系统令牌需在导入端重新输入或随数据恢复。
+  Future<(int created, int updated)> importJson(
+      Map<String, dynamic> data) async {
+    var created = 0;
+    var updated = 0;
+    final providers = data['providers'];
+    if (providers is! List) return (0, 0);
+    final now = DateTime.now();
+
+    for (final entry in providers) {
+      if (entry is! Map) continue;
+      final id = entry['id']?.toString();
+      final name = entry['name']?.toString();
+      if (id == null || name == null || id.isEmpty || name.isEmpty) continue;
+
+      ProviderType type;
+      switch (entry['type']) {
+        case 'official':
+          type = ProviderType.official;
+        default:
+          type = ProviderType.relay;
+      }
+      AdapterKind kind;
+      try {
+        kind = AdapterKind.values
+            .firstWhere((k) => k.name == entry['adapterKind']);
+      } catch (_) {
+        kind = AdapterKind.generic;
+      }
+
+      final existing = await (_db.providers.select()
+            ..where((p) => p.id.equals(id)))
+          .getSingleOrNull();
+
+      if (existing == null) {
+        await _db.providers.insertOne(ProvidersCompanion.insert(
+          id: id,
+          name: name,
+          type: type,
+          adapterKind: kind,
+          baseUrl: Value(entry['baseUrl']?.toString() ?? ''),
+          accountLabel: Value(entry['accountLabel']?.toString() ?? ''),
+          systemUserId: Value(entry['systemUserId']?.toString()),
+          pinned: Value(entry['pinned'] == true),
+          hidden: Value(entry['hidden'] == true),
+          sortOrder: Value((entry['sortOrder'] as num?)?.toInt() ?? 0),
+          createdAt:
+              DateTime.tryParse(entry['createdAt']?.toString() ?? '') ?? now,
+          updatedAt: now,
+        ));
+        final sysToken = entry['systemToken']?.toString();
+        if (sysToken != null && sysToken.isNotEmpty) {
+          await (_db.providers.update()..where((p) => p.id.equals(id)))
+              .write(ProvidersCompanion(
+                  systemTokenRef: Value(SecureStore.systemTokenRef(id))));
+          await _secure.write(SecureStore.systemTokenRef(id), sysToken);
+        }
+        created++;
+      } else {
+        await (_db.providers.update()..where((p) => p.id.equals(id)))
+            .write(ProvidersCompanion(
+          name: Value(name),
+          type: Value(type),
+          adapterKind: Value(kind),
+          baseUrl: Value(entry['baseUrl']?.toString() ?? existing.baseUrl),
+          accountLabel:
+              Value(entry['accountLabel']?.toString() ?? existing.accountLabel),
+          systemUserId: Value(entry['systemUserId']?.toString()),
+          pinned: Value(entry['pinned'] == true),
+          hidden: Value(entry['hidden'] == true),
+          sortOrder: Value((entry['sortOrder'] as num?)?.toInt() ?? 0),
+          updatedAt: Value(now),
+        ));
+        final sysToken = entry['systemToken']?.toString();
+        if (sysToken != null && sysToken.isNotEmpty) {
+          await _secure.write(SecureStore.systemTokenRef(id), sysToken);
+        }
+        updated++;
+      }
+
+      // tokens
+      final tokens = entry['tokens'];
+      if (tokens is List) {
+        for (final t in tokens) {
+          if (t is! Map) continue;
+          final tokenId = t['id']?.toString();
+          if (tokenId == null || tokenId.isEmpty) continue;
+          final tName = t['name']?.toString() ?? '';
+          final note = t['note']?.toString() ?? '';
+          final apiKey = t['apiKey']?.toString();
+
+          final existingToken = await (_db.tokens.select()
+                ..where((row) => row.id.equals(tokenId)))
+              .getSingleOrNull();
+          if (existingToken == null) {
+            await _db.tokens.insertOne(TokensCompanion.insert(
+              id: tokenId,
+              providerId: id,
+              secretRef: SecureStore.tokenRef(tokenId),
+              name: Value(tName),
+              note: Value(note),
+              createdAt: now,
+            ));
+            if (apiKey != null && apiKey.isNotEmpty) {
+              await _secure.write(SecureStore.tokenRef(tokenId), apiKey);
+            }
+          } else {
+            await (_db.tokens.update()..where((row) => row.id.equals(tokenId)))
+                .write(TokensCompanion(name: Value(tName), note: Value(note)));
+            if (apiKey != null && apiKey.isNotEmpty) {
+              await _secure.write(existingToken.secretRef, apiKey);
+            }
+          }
+        }
+      }
+    }
+    return (created, updated);
+  }
+
   Future<void> recordSnapshot(
       String providerId, QuotaKind kind, QuotaResult? result) async {
     if (result == null) return;

@@ -6,6 +6,8 @@ import '../../core/formatters.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/provider_repository.dart';
 import '../../state/app_providers.dart';
+import 'model_test_history_sheet.dart';
+import 'quota_history_page.dart';
 import 'token_edit_sheet.dart';
 
 /// 供应商详情：额度区 + Token 列表（Token 展开显示模型与测试）。
@@ -119,6 +121,17 @@ class ProviderDetailPage extends ConsumerWidget {
                                     size: 16),
                                 label: const Text('立即预热'),
                               ),
+                            const Spacer(),
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) => QuotaHistoryPage(
+                                  providerId: p.id,
+                                  providerName: p.name,
+                                ),
+                              )),
+                              child: const Text('历史'),
+                            ),
                           ],
                         ),
                       ],
@@ -393,6 +406,8 @@ class _TokenCardState extends ConsumerState<_TokenCard> {
                     ListTile(
                       dense: true,
                       visualDensity: VisualDensity.compact,
+                      onTap: () =>
+                          showModelTestHistory(context, token.id, m.modelId),
                       title: Text(m.displayName.isEmpty ? m.modelId : m.displayName,
                           style: const TextStyle(fontSize: 13)),
                       subtitle: m.lastTestAt == null
