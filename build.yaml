@@ -1,0 +1,7 @@
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # 日期以 ISO8601 文本（含毫秒）存储，保证同秒创建的记录排序稳定
+          store_date_time_values_as_text: true
