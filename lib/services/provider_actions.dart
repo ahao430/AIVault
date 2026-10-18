@@ -177,6 +177,13 @@ class ProviderActions {
         apiKey: apiKey, prewarmModel: prewarmModel);
     final result = await adapter.prewarm(ctx);
     await _repo.recordPrewarm(provider.id, result);
+    if (result.status == 'executed') {
+      // 预热成功后立即刷新：额度 / 余额 / 用量马上回到最新（快照落库
+      // 后看板 watch 流自动更新，无需手动 invalidate）
+      try {
+        await refresh(state);
+      } catch (_) {}
+    }
     return result;
   }
 

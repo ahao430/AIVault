@@ -101,6 +101,17 @@ bool isNewer(String remoteVersion, int remoteBuild, String localVersion,
   return false;
 }
 
+/// Flutter split-per-abi 打包时 versionCode = abi*1000 + build
+/// （FlutterPlugin.kt：arm32=1 / arm64=2 / x86_64=3），package_info
+/// 上报的是带偏移的 versionCode（如 build 6 → 2006），与发版信息里
+/// 的裸 build 不可直接比较。此处剥离 ABI 偏移；裸 build 按约定 < 1000。
+int normalizeBuild(int versionCode) {
+  if (versionCode > 1000 && versionCode <= 3999) {
+    return versionCode % 1000;
+  }
+  return versionCode;
+}
+
 List<int> _semver(String v) {
   final parts = v
       .replaceAll(RegExp(r'[^0-9.]'), '')
@@ -223,7 +234,8 @@ class UpdateService {
       }
 
       final pkg = await PackageInfo.fromPlatform();
-      final currentBuild = int.tryParse(pkg.buildNumber) ?? 0;
+      final currentBuild =
+          normalizeBuild(int.tryParse(pkg.buildNumber) ?? 0);
       final hasUpdate =
           isNewer(info.version, info.buildNumber, pkg.version, currentBuild);
       return UpdateCheckResult(

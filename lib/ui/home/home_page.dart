@@ -18,11 +18,24 @@ import '../../state/notification_providers.dart';
 import '../../state/ssh_providers.dart';
 
 /// 首页：AI 资源综合看板，核心是订阅列表卡片。
-class HomePage extends ConsumerWidget {
+/// 进入时恢复看板定时刷新设置（设置页可配 1 / 5 分钟）。
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // 恢复用户配置的自动刷新频率（不触发刷新）
+    ref.read(homeRefresherProvider).load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final listAsync = ref.watch(homeListProvider);
     final runningTasks =
         ref.watch(taskCenterProvider).where((t) => t.running).length;

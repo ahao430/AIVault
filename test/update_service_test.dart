@@ -26,6 +26,18 @@ void main() {
       expect(isNewer('0.4.5', 6, '0.4.4', 5), isTrue);
       expect(isNewer('0.4.5', 6, '0.4.5', 6), isFalse);
     });
+
+    test('split-per-abi 的 versionCode 需剥离 ABI 偏移', () {
+      // arm64 的 build 6 → versionCode 2006；此前因此误判「已是最新」
+      expect(normalizeBuild(2006), 6);
+      expect(normalizeBuild(2008), 8);
+      expect(normalizeBuild(1006), 6);
+      expect(normalizeBuild(3008), 8);
+      expect(normalizeBuild(8), 8);
+      expect(normalizeBuild(999), 999);
+      // 修复后的真实链路：本机 0.4.5 (2006)，远端 0.4.7 (8)
+      expect(isNewer('0.4.7', 8, '0.4.5', normalizeBuild(2006)), isTrue);
+    });
   });
 
   group('update-info.json 解析', () {

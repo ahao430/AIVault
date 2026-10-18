@@ -119,6 +119,50 @@ class _NotificationPrefsPageState extends ConsumerState<NotificationPrefsPage> {
 }
 
 /// 设置页：数据导入导出、隐藏供应商、安全（P1 中 WebDAV / App 锁待迭代）。
+String _intervalLabel(WidgetRef ref) {
+  ref.watch(autoRefreshTickProvider);
+  final m = ref.read(homeRefresherProvider).minutes;
+  if (m <= 0) return '关闭';
+  return '每 $m 分钟';
+}
+
+Future<void> _pickAutoRefresh(BuildContext context, WidgetRef ref) async {
+  final current = ref.read(homeRefresherProvider).minutes;
+  final picked = await showModalBottomSheet<int>(
+    context: context,
+    showDragHandle: true,
+    builder: (_) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 8, 20, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text('首页自动刷新',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+            ),
+          ),
+          for (final (m, label) in [(0, '关闭'), (1, '每 1 分钟'), (5, '每 5 分钟')])
+            ListTile(
+              title: Text(label),
+              trailing: current == m ? const Icon(Icons.check) : null,
+              onTap: () => Navigator.pop(context, m),
+            ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+  if (picked == null) return;
+  await ref.read(homeRefresherProvider).apply(picked);
+  ref.read(autoRefreshTickProvider.notifier).bump();
+  if (context.mounted) {
+    Toast.show(context,
+        picked <= 0 ? '已关闭首页自动刷新' : '首页将每 $picked 分钟自动刷新');
+  }
+}
+
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
@@ -152,6 +196,12 @@ class SettingsPage extends ConsumerWidget {
             ),
           ]),
           _section(context, '订阅管理', [
+            _item(
+              icon: Icons.sync_outlined,
+              title: '首页自动刷新',
+              subtitle: '看板额度定时刷新（当前：${_intervalLabel(ref)}），切回首页也会立即刷新',
+              onTap: () => _pickAutoRefresh(context, ref),
+            ),
             _item(
               icon: Icons.visibility_off_outlined,
               title: '已隐藏供应商',

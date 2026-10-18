@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/secure_store.dart' show SecureStore, FlutterSecureStore;
 import '../data/db/database.dart' hide Provider;
 import '../data/repositories/provider_repository.dart';
+import '../services/home_refresher.dart';
 import '../services/local_notifier.dart'
     show LocalNotifier, NotificationPrefs, NotificationPrefsStore;
 import '../services/provider_actions.dart';
@@ -54,3 +55,20 @@ final notificationPrefsProvider =
     FutureProvider<NotificationPrefs>((ref) async {
   return NotificationPrefsStore(ref.watch(secureStoreProvider)).load();
 });
+
+/// 首页看板静默刷新（定时 + 切回首页立即触发）
+final homeRefresherProvider = Provider<HomeRefresher>((ref) {
+  final refresher = HomeRefresher(ref);
+  ref.onDispose(refresher.dispose);
+  return refresher;
+});
+
+/// 首页自动刷新设置变更信号（驱动设置页副标题重建）
+class AutoRefreshTick extends Notifier<int> {
+  @override
+  int build() => 0;
+  void bump() => state++;
+}
+
+final autoRefreshTickProvider =
+    NotifierProvider<AutoRefreshTick, int>(AutoRefreshTick.new);
