@@ -82,7 +82,8 @@ jobs:
       - name: Pub get & codegen
         run: |
           flutter pub get
-          dart run build_runner build --delete-conflicting-outputs
+          # --force-jit: Dart 3.10 的 dart compile 不支持 build hooks，必须走 JIT
+          dart run build_runner build --delete-conflicting-outputs --force-jit
 
       - name: Analyze & test
         run: |
