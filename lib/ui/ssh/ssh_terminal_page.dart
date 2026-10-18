@@ -36,6 +36,8 @@ class _SshTerminalPageState extends ConsumerState<SshTerminalPage> {
   StreamSubscription? _stdoutSub;
   String? _error;
   bool _connecting = true;
+  bool _showKeys = true;
+  bool _ctrlSticky = false;
 
   @override
   void initState() {
@@ -116,6 +118,13 @@ class _SshTerminalPageState extends ConsumerState<SshTerminalPage> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
+            tooltip: _showKeys ? '隐藏按键条' : '显示按键条',
+            icon: Icon(_showKeys
+                ? Icons.keyboard_hide_outlined
+                : Icons.keyboard_alt_outlined),
+            onPressed: () => setState(() => _showKeys = !_showKeys),
+          ),
+          IconButton(
             tooltip: '复制选中 / 全部输出',
             icon: const Icon(Icons.copy, size: 18),
             onPressed: _copy,
@@ -137,31 +146,75 @@ class _SshTerminalPageState extends ConsumerState<SshTerminalPage> {
                 ),
               ),
             )
-          : Stack(
+          : Column(
               children: [
-                TerminalView(
+                Expanded(
+                  child: Stack(
+                    children: [
+                      TerminalView(
                   _terminal,
                   controller: _terminalCtrl,
                   autofocus: true,
-                  padding: const EdgeInsets.all(8),
-                  backgroundOpacity: 1,
-                  onSecondaryTapDown: (details, offset) {
-                    // 右键：有选区复制，无选区粘贴（桌面端惯例）
-                    final selection = _terminalCtrl.selection;
-                    if (selection != null) {
-                      final text = _terminal.buffer.getText(selection);
-                      _terminalCtrl.clearSelection();
-                      Clipboard.setData(ClipboardData(text: text));
-                    } else {
-                      _paste();
-                    }
-                  },
+                        padding: const EdgeInsets.all(8),
+                        backgroundOpacity: 1,
+                        onSecondaryTapDown: (details, offset) {
+                          // 右键：有选区复制，无选区粘贴（桌面端惯例）
+                          final selection = _terminalCtrl.selection;
+                          if (selection != null) {
+                            final text =
+                                _terminal.buffer.getText(selection);
+                            _terminalCtrl.clearSelection();
+                            Clipboard.setData(ClipboardData(text: text));
+                          } else {
+                            _paste();
+                          }
+                        },
+                      ),
+                      if (_connecting)
+                        const Center(child: CircularProgressIndicator()),
+                    ],
+                  ),
                 ),
-                if (_connecting)
-                  const Center(child: CircularProgressIndicator()),
+                _KeyBar(
+                  visible: _showKeys,
+                  ctrlSticky: _ctrlSticky,
+                  onToggleCtrl: () =>
+                      setState(() => _ctrlSticky = !_ctrlSticky),
+                  onToggleVisible: () =>
+                      setState(() => _showKeys = !_showKeys),
+                  onKey: _sendKey,
+                ),
               ],
             ),
     );
+  }
+
+  void _sendRaw(List<int> bytes) {
+    _session?.write(const Utf8Encoder().convert(String.fromCharCodes(bytes)));
+  }
+
+  /// 快捷键条按键 → 控制序列直写 pty（最可靠路径）。
+  void _sendKey(TerminalKey key) {
+    const seqs = {
+      TerminalKey.esc: '\x1b',
+      TerminalKey.tab: '\t',
+      TerminalKey.up: '\x1b[A',
+      TerminalKey.down: '\x1b[B',
+      TerminalKey.right: '\x1b[C',
+      TerminalKey.left: '\x1b[D',
+      TerminalKey.home: '\x1b[H',
+      TerminalKey.end: '\x1b[F',
+      TerminalKey.del: '\x1b[3~',
+      TerminalKey.ctrlC: '\x03',
+      TerminalKey.ctrlD: '\x04',
+      TerminalKey.ctrlL: '\x0c',
+      TerminalKey.ctrlZ: '\x1a',
+    };
+    _sendRaw(seqs[key]!.codeUnits);
+    if (_ctrlSticky && key == TerminalKey.ctrlC) {
+      // Ctrl 快捷键用完即取消粘滞
+      setState(() => _ctrlSticky = false);
+    }
   }
 
   Future<void> _copy() async {
@@ -183,4 +236,98 @@ class _SshTerminalPageState extends ConsumerState<SshTerminalPage> {
       _terminal.paste(data!.text!);
     }
   }
+}
+
+
+/// 终端快捷键条（Plan #40 移动端补全）：Esc / Tab / 粘滞 Ctrl /
+/// 方向键 / Home / End / Del。桌面端可隐藏。
+enum TerminalKey {
+  esc, tab, up, down, left, right, home, end, del,
+  ctrlC, ctrlD, ctrlL, ctrlZ,
+}
+
+class _KeyBar extends StatelessWidget {
+  const _KeyBar({
+    required this.visible,
+    required this.ctrlSticky,
+    required this.onToggleCtrl,
+    required this.onToggleVisible,
+    required this.onKey,
+  });
+
+  final bool visible;
+  final bool ctrlSticky;
+  final VoidCallback onToggleCtrl;
+  final VoidCallback onToggleVisible;
+  final ValueChanged<TerminalKey> onKey;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!visible) {
+      return SizedBox(
+        height: 28,
+        child: TextButton.icon(
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            minimumSize: Size.zero,
+          ),
+          onPressed: onToggleVisible,
+          icon: const Icon(Icons.keyboard_alt_outlined,
+              size: 14, color: Colors.white38),
+          label:
+              const Text('按键', style: TextStyle(fontSize: 11, color: Colors.white38)),
+        ),
+      );
+    }
+    return Container(
+      color: const Color(0xFF252526),
+      height: 44,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _key('Esc', TerminalKey.esc),
+          _key('Tab', TerminalKey.tab),
+          _toggleCtrl(),
+          _icon(Icons.arrow_upward, TerminalKey.up),
+          _icon(Icons.arrow_downward, TerminalKey.down),
+          _icon(Icons.arrow_back, TerminalKey.left),
+          _icon(Icons.arrow_forward, TerminalKey.right),
+          _key('C-c', TerminalKey.ctrlC),
+        ],
+      ),
+    );
+  }
+
+  Widget _key(String label, TerminalKey key) => TextButton(
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          minimumSize: Size.zero,
+        ),
+        onPressed: () => onKey(key),
+        child: Text(label,
+            style: const TextStyle(fontSize: 12, color: Colors.white70)),
+      );
+
+  Widget _icon(IconData icon, TerminalKey key) => IconButton(
+        visualDensity: VisualDensity.compact,
+        iconSize: 16,
+        color: Colors.white70,
+        onPressed: () => onKey(key),
+        icon: Icon(icon),
+      );
+
+  Widget _toggleCtrl() => TextButton(
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          minimumSize: Size.zero,
+          backgroundColor:
+              ctrlSticky ? Colors.white24 : null,
+        ),
+        onPressed: onToggleCtrl,
+        child: Text('Ctrl',
+            style: TextStyle(
+                fontSize: 12,
+                color: ctrlSticky ? Colors.white : Colors.white70,
+                fontWeight: ctrlSticky ? FontWeight.bold : null)),
+      );
 }

@@ -255,3 +255,16 @@ class SshHosts extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// App 内通知（Plan #49）：只在真正需要用户行动时提醒。
+class Notifications extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  /// quotaRecovered / checkinAvailable / dataStale
+  TextColumn get kind => text()();
+  TextColumn get providerId => text()();
+  TextColumn get title => text()();
+  TextColumn get body => text()();
+  BoolColumn get read => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+}

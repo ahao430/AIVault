@@ -10,8 +10,10 @@ import '../../services/task_center.dart';
 import '../../state/app_providers.dart';
 import '../provider/provider_detail_page.dart';
 import '../provider/provider_edit_page.dart';
+import '../notifications/notifications_page.dart';
 import '../ssh/hosts_page.dart';
 import '../tasks/tasks_page.dart';
+import '../../state/notification_providers.dart';
 import '../../state/ssh_providers.dart';
 
 /// 首页：AI 资源综合看板，核心是订阅列表卡片。
@@ -23,6 +25,7 @@ class HomePage extends ConsumerWidget {
     final listAsync = ref.watch(homeListProvider);
     final runningTasks =
         ref.watch(taskCenterProvider).where((t) => t.running).length;
+    final unread = ref.watch(unreadCountProvider).value ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -41,6 +44,17 @@ class HomePage extends ConsumerWidget {
               PopupMenuItem(value: 'checkin', child: Text('批量签到')),
               PopupMenuItem(value: 'prewarm', child: Text('批量预热')),
             ],
+          ),
+          IconButton(
+            tooltip: '通知',
+            icon: Badge(
+              isLabelVisible: unread > 0,
+              label: Text('$unread'),
+              child: const Icon(Icons.notifications_outlined),
+            ),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const NotificationsPage(),
+            )),
           ),
           IconButton(
             tooltip: '任务中心',

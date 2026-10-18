@@ -5,6 +5,7 @@ import 'package:gpt_markdown/gpt_markdown.dart';
 
 import '../../data/db/database.dart' as db;
 import '../../state/chat_providers.dart';
+import 'chat_export.dart';
 
 /// 聊天页（Plan #22/#24）：流式输出、Markdown 渲染、停止生成、复制、
 /// 会话内切换模型。
@@ -82,6 +83,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: '导出长图',
+            icon: const Icon(Icons.image_outlined),
+            onPressed: isGenerating
+                ? null
+                : () => exportConversationImage(
+                    context, ref, widget.conversationId),
+          ),
           IconButton(
             tooltip: '切换模型',
             icon: const Icon(Icons.tune),

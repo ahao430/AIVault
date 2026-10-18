@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../data/repositories/notification_repository.dart';
 import '../data/repositories/provider_repository.dart';
+import '../services/notification_engine.dart';
 import '../state/app_providers.dart';
 import 'provider_actions.dart';
 
@@ -118,9 +120,10 @@ class TaskCenterController extends Notifier<List<TaskItem>> {
             .then((r) => (r.status == 'executed', r.message ?? r.status)));
   }
 
-  /// 批量刷新额度 / 余额
+  /// 批量刷新额度 / 余额（完成后检测通知事件，Plan #49）
   Future<void> startRefreshAll(List<ProviderWithState> list) async {
     if (list.isEmpty) return;
+    final before = {for (final s in list) s.provider.id: s};
     await _run('batchRefresh', '批量刷新额度', list,
         skip: (s) => (s.canQueryQuota || s.canQueryBalance)
             ? null
@@ -129,6 +132,31 @@ class TaskCenterController extends Notifier<List<TaskItem>> {
       await _actions.refresh(s);
       return (true, null);
     });
+    await _detectNotifications(before, list.map((s) => s.provider.id));
+  }
+
+  /// 刷新后对比前后状态产生通知（额度恢复 / 签到可用 / 数据过期）。
+  Future<void> _detectNotifications(
+      Map<String, ProviderWithState> before,
+      Iterable<String> providerIds) async {
+    try {
+      final after = <ProviderWithState>[];
+      for (final id in providerIds) {
+        final s = await _repo.loadOne(id);
+        if (s != null) after.add(s);
+      }
+      final repo = NotificationRepository(ref.read(dbProvider));
+      final events = detectEvents(
+        before: before,
+        after: after,
+        sentTodayKinds: await repo.sentTodayKinds(),
+      );
+      if (events.isNotEmpty) {
+        await repo.insertEvents(events);
+      }
+    } catch (_) {
+      // 通知检测失败不影响刷新任务本身
+    }
   }
 
   /// 重试一个任务中失败的供应商。
