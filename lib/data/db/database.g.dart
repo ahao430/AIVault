@@ -91,6 +91,21 @@ class $ProvidersTable extends Providers
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _checkinDisabledMeta = const VerificationMeta(
+    'checkinDisabled',
+  );
+  @override
+  late final GeneratedColumn<bool> checkinDisabled = GeneratedColumn<bool>(
+    'checkin_disabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("checkin_disabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
   @override
   late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
@@ -161,6 +176,7 @@ class $ProvidersTable extends Providers
     accountLabel,
     systemTokenRef,
     systemUserId,
+    checkinDisabled,
     pinned,
     sortOrder,
     hidden,
@@ -222,6 +238,15 @@ class $ProvidersTable extends Providers
         systemUserId.isAcceptableOrUnknown(
           data['system_user_id']!,
           _systemUserIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('checkin_disabled')) {
+      context.handle(
+        _checkinDisabledMeta,
+        checkinDisabled.isAcceptableOrUnknown(
+          data['checkin_disabled']!,
+          _checkinDisabledMeta,
         ),
       );
     }
@@ -304,6 +329,10 @@ class $ProvidersTable extends Providers
         DriftSqlType.string,
         data['${effectivePrefix}system_user_id'],
       ),
+      checkinDisabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}checkin_disabled'],
+      )!,
       pinned: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}pinned'],
@@ -353,6 +382,9 @@ class Provider extends DataClass implements Insertable<Provider> {
 
   /// NewAPI 系的部分版本接口要求 New-Api-User 头（用户 ID），明文非敏感
   final String? systemUserId;
+
+  /// 站点未开启签到功能时置 true：隐藏签到入口并跳过批量签到
+  final bool checkinDisabled;
   final bool pinned;
   final int sortOrder;
   final bool hidden;
@@ -367,6 +399,7 @@ class Provider extends DataClass implements Insertable<Provider> {
     required this.accountLabel,
     this.systemTokenRef,
     this.systemUserId,
+    required this.checkinDisabled,
     required this.pinned,
     required this.sortOrder,
     required this.hidden,
@@ -394,6 +427,7 @@ class Provider extends DataClass implements Insertable<Provider> {
     if (!nullToAbsent || systemUserId != null) {
       map['system_user_id'] = Variable<String>(systemUserId);
     }
+    map['checkin_disabled'] = Variable<bool>(checkinDisabled);
     map['pinned'] = Variable<bool>(pinned);
     map['sort_order'] = Variable<int>(sortOrder);
     map['hidden'] = Variable<bool>(hidden);
@@ -416,6 +450,7 @@ class Provider extends DataClass implements Insertable<Provider> {
       systemUserId: systemUserId == null && nullToAbsent
           ? const Value.absent()
           : Value(systemUserId),
+      checkinDisabled: Value(checkinDisabled),
       pinned: Value(pinned),
       sortOrder: Value(sortOrder),
       hidden: Value(hidden),
@@ -442,6 +477,7 @@ class Provider extends DataClass implements Insertable<Provider> {
       accountLabel: serializer.fromJson<String>(json['accountLabel']),
       systemTokenRef: serializer.fromJson<String?>(json['systemTokenRef']),
       systemUserId: serializer.fromJson<String?>(json['systemUserId']),
+      checkinDisabled: serializer.fromJson<bool>(json['checkinDisabled']),
       pinned: serializer.fromJson<bool>(json['pinned']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       hidden: serializer.fromJson<bool>(json['hidden']),
@@ -465,6 +501,7 @@ class Provider extends DataClass implements Insertable<Provider> {
       'accountLabel': serializer.toJson<String>(accountLabel),
       'systemTokenRef': serializer.toJson<String?>(systemTokenRef),
       'systemUserId': serializer.toJson<String?>(systemUserId),
+      'checkinDisabled': serializer.toJson<bool>(checkinDisabled),
       'pinned': serializer.toJson<bool>(pinned),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'hidden': serializer.toJson<bool>(hidden),
@@ -482,6 +519,7 @@ class Provider extends DataClass implements Insertable<Provider> {
     String? accountLabel,
     Value<String?> systemTokenRef = const Value.absent(),
     Value<String?> systemUserId = const Value.absent(),
+    bool? checkinDisabled,
     bool? pinned,
     int? sortOrder,
     bool? hidden,
@@ -498,6 +536,7 @@ class Provider extends DataClass implements Insertable<Provider> {
         ? systemTokenRef.value
         : this.systemTokenRef,
     systemUserId: systemUserId.present ? systemUserId.value : this.systemUserId,
+    checkinDisabled: checkinDisabled ?? this.checkinDisabled,
     pinned: pinned ?? this.pinned,
     sortOrder: sortOrder ?? this.sortOrder,
     hidden: hidden ?? this.hidden,
@@ -522,6 +561,9 @@ class Provider extends DataClass implements Insertable<Provider> {
       systemUserId: data.systemUserId.present
           ? data.systemUserId.value
           : this.systemUserId,
+      checkinDisabled: data.checkinDisabled.present
+          ? data.checkinDisabled.value
+          : this.checkinDisabled,
       pinned: data.pinned.present ? data.pinned.value : this.pinned,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       hidden: data.hidden.present ? data.hidden.value : this.hidden,
@@ -541,6 +583,7 @@ class Provider extends DataClass implements Insertable<Provider> {
           ..write('accountLabel: $accountLabel, ')
           ..write('systemTokenRef: $systemTokenRef, ')
           ..write('systemUserId: $systemUserId, ')
+          ..write('checkinDisabled: $checkinDisabled, ')
           ..write('pinned: $pinned, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('hidden: $hidden, ')
@@ -560,6 +603,7 @@ class Provider extends DataClass implements Insertable<Provider> {
     accountLabel,
     systemTokenRef,
     systemUserId,
+    checkinDisabled,
     pinned,
     sortOrder,
     hidden,
@@ -578,6 +622,7 @@ class Provider extends DataClass implements Insertable<Provider> {
           other.accountLabel == this.accountLabel &&
           other.systemTokenRef == this.systemTokenRef &&
           other.systemUserId == this.systemUserId &&
+          other.checkinDisabled == this.checkinDisabled &&
           other.pinned == this.pinned &&
           other.sortOrder == this.sortOrder &&
           other.hidden == this.hidden &&
@@ -594,6 +639,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
   final Value<String> accountLabel;
   final Value<String?> systemTokenRef;
   final Value<String?> systemUserId;
+  final Value<bool> checkinDisabled;
   final Value<bool> pinned;
   final Value<int> sortOrder;
   final Value<bool> hidden;
@@ -609,6 +655,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     this.accountLabel = const Value.absent(),
     this.systemTokenRef = const Value.absent(),
     this.systemUserId = const Value.absent(),
+    this.checkinDisabled = const Value.absent(),
     this.pinned = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.hidden = const Value.absent(),
@@ -625,6 +672,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     this.accountLabel = const Value.absent(),
     this.systemTokenRef = const Value.absent(),
     this.systemUserId = const Value.absent(),
+    this.checkinDisabled = const Value.absent(),
     this.pinned = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.hidden = const Value.absent(),
@@ -646,6 +694,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     Expression<String>? accountLabel,
     Expression<String>? systemTokenRef,
     Expression<String>? systemUserId,
+    Expression<bool>? checkinDisabled,
     Expression<bool>? pinned,
     Expression<int>? sortOrder,
     Expression<bool>? hidden,
@@ -662,6 +711,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
       if (accountLabel != null) 'account_label': accountLabel,
       if (systemTokenRef != null) 'system_token_ref': systemTokenRef,
       if (systemUserId != null) 'system_user_id': systemUserId,
+      if (checkinDisabled != null) 'checkin_disabled': checkinDisabled,
       if (pinned != null) 'pinned': pinned,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (hidden != null) 'hidden': hidden,
@@ -680,6 +730,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     Value<String>? accountLabel,
     Value<String?>? systemTokenRef,
     Value<String?>? systemUserId,
+    Value<bool>? checkinDisabled,
     Value<bool>? pinned,
     Value<int>? sortOrder,
     Value<bool>? hidden,
@@ -696,6 +747,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
       accountLabel: accountLabel ?? this.accountLabel,
       systemTokenRef: systemTokenRef ?? this.systemTokenRef,
       systemUserId: systemUserId ?? this.systemUserId,
+      checkinDisabled: checkinDisabled ?? this.checkinDisabled,
       pinned: pinned ?? this.pinned,
       sortOrder: sortOrder ?? this.sortOrder,
       hidden: hidden ?? this.hidden,
@@ -736,6 +788,9 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     if (systemUserId.present) {
       map['system_user_id'] = Variable<String>(systemUserId.value);
     }
+    if (checkinDisabled.present) {
+      map['checkin_disabled'] = Variable<bool>(checkinDisabled.value);
+    }
     if (pinned.present) {
       map['pinned'] = Variable<bool>(pinned.value);
     }
@@ -768,6 +823,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
           ..write('accountLabel: $accountLabel, ')
           ..write('systemTokenRef: $systemTokenRef, ')
           ..write('systemUserId: $systemUserId, ')
+          ..write('checkinDisabled: $checkinDisabled, ')
           ..write('pinned: $pinned, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('hidden: $hidden, ')
@@ -7256,6 +7312,7 @@ typedef $$ProvidersTableCreateCompanionBuilder =
       Value<String> accountLabel,
       Value<String?> systemTokenRef,
       Value<String?> systemUserId,
+      Value<bool> checkinDisabled,
       Value<bool> pinned,
       Value<int> sortOrder,
       Value<bool> hidden,
@@ -7273,6 +7330,7 @@ typedef $$ProvidersTableUpdateCompanionBuilder =
       Value<String> accountLabel,
       Value<String?> systemTokenRef,
       Value<String?> systemUserId,
+      Value<bool> checkinDisabled,
       Value<bool> pinned,
       Value<int> sortOrder,
       Value<bool> hidden,
@@ -7455,6 +7513,11 @@ class $$ProvidersTableFilterComposer
 
   ColumnFilters<String> get systemUserId => $composableBuilder(
     column: $table.systemUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get checkinDisabled => $composableBuilder(
+    column: $table.checkinDisabled,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7683,6 +7746,11 @@ class $$ProvidersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get checkinDisabled => $composableBuilder(
+    column: $table.checkinDisabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get pinned => $composableBuilder(
     column: $table.pinned,
     builder: (column) => ColumnOrderings(column),
@@ -7748,6 +7816,11 @@ class $$ProvidersTableAnnotationComposer
 
   GeneratedColumn<String> get systemUserId => $composableBuilder(
     column: $table.systemUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get checkinDisabled => $composableBuilder(
+    column: $table.checkinDisabled,
     builder: (column) => column,
   );
 
@@ -7960,6 +8033,7 @@ class $$ProvidersTableTableManager
                 Value<String> accountLabel = const Value.absent(),
                 Value<String?> systemTokenRef = const Value.absent(),
                 Value<String?> systemUserId = const Value.absent(),
+                Value<bool> checkinDisabled = const Value.absent(),
                 Value<bool> pinned = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> hidden = const Value.absent(),
@@ -7975,6 +8049,7 @@ class $$ProvidersTableTableManager
                 accountLabel: accountLabel,
                 systemTokenRef: systemTokenRef,
                 systemUserId: systemUserId,
+                checkinDisabled: checkinDisabled,
                 pinned: pinned,
                 sortOrder: sortOrder,
                 hidden: hidden,
@@ -7992,6 +8067,7 @@ class $$ProvidersTableTableManager
                 Value<String> accountLabel = const Value.absent(),
                 Value<String?> systemTokenRef = const Value.absent(),
                 Value<String?> systemUserId = const Value.absent(),
+                Value<bool> checkinDisabled = const Value.absent(),
                 Value<bool> pinned = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> hidden = const Value.absent(),
@@ -8007,6 +8083,7 @@ class $$ProvidersTableTableManager
                 accountLabel: accountLabel,
                 systemTokenRef: systemTokenRef,
                 systemUserId: systemUserId,
+                checkinDisabled: checkinDisabled,
                 pinned: pinned,
                 sortOrder: sortOrder,
                 hidden: hidden,

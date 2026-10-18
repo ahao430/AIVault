@@ -29,6 +29,7 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
 
   ProviderType _type = ProviderType.relay;
   AdapterKind _adapter = AdapterKind.newapi;
+  bool _checkinDisabled = false;
   bool _initialized = false;
   bool _saving = false;
 
@@ -61,6 +62,7 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
     setState(() {
       _type = p.type;
       _adapter = p.adapterKind;
+      _checkinDisabled = p.checkinDisabled;
     });
   }
 
@@ -124,6 +126,7 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
             systemUserId: _sysUserCtrl.text.trim().isEmpty
                 ? null
                 : _sysUserCtrl.text.trim(),
+            checkinDisabled: _checkinDisabled,
           );
       if (mounted) Navigator.of(context).pop();
     } finally {
@@ -247,6 +250,16 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
                   labelText: 'New-Api-User ID（可选）',
                   helperText: '部分 NewAPI 版本接口要求携带用户 ID',
                 ),
+              ),
+            ],
+            if (AdapterRegistry.of(_adapter).capabilities.checkIn) ...[
+              const SizedBox(height: 4),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                title: const Text('启用签到'),
+                subtitle: const Text('站点没有开启签到功能时关闭：隐藏签到入口，批量签到自动跳过'),
+                value: !_checkinDisabled,
+                onChanged: (v) => setState(() => _checkinDisabled = !v),
               ),
             ],
             const SizedBox(height: 24),

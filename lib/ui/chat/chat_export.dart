@@ -18,6 +18,9 @@ Future<void> exportConversationImage(
 ) async {
   final repo = ref.read(chatRepoProvider);
   final overlayState = Overlay.of(context, rootOverlay: true);
+  // 离屏渲染后界面无变化，给个开始提示避免「点了没反应」的错觉
+  Toast.show(context, '正在生成长图…',
+      duration: const Duration(milliseconds: 1200));
   final conv = await repo.getConversation(conversationId);
   if (conv == null) return;
   final messages = await repo.messages(conversationId);
@@ -89,8 +92,17 @@ Future<void> exportConversationImage(
     ),
   );
 
-  // 离屏 attach 以完成布局（overlayState 已在 await 前取得）
-  final overlay = OverlayEntry(builder: (_) => widget);
+  // 离屏 attach 以完成布局（overlayState 已在 await 前取得）。
+  // Transform.translate 把渲染树挪到屏幕外：布局/绘制照常发生（可截图），
+  // 但用户看不到全屏闪白，IgnorePointer 保证不拦截点击。
+  final overlay = OverlayEntry(
+    builder: (_) => IgnorePointer(
+      child: Transform.translate(
+        offset: const Offset(0, 100000),
+        child: widget,
+      ),
+    ),
+  );
   overlayState.insert(overlay);
   try {
     await Future<void>.delayed(const Duration(milliseconds: 300));

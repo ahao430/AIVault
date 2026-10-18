@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.4（2026-10-18）
+
+- 修复检查更新崩溃：update-info.json 由 CDN 以 octet-stream 下发，dio
+  不自动解码导致 String 强转 Map 崩溃，现手动 jsonDecode
+- 修复聊天「导出长图」全屏闪白：渲染树移到屏幕外（Transform.translate +
+  IgnorePointer），布局/截图照常、用户无感；开始时给「正在生成长图…」提示
+- 新增每供应商「启用签到」开关（编辑页，仅签到类适配器显示）：站点没开
+  签到功能时可关闭，卡片按钮隐藏、批量签到与签到提醒自动跳过（schema v7，
+  导出/导入保留）
+
 ## 0.4.3（2026-10-18）
 
 - 智谱 Coding Plan 5 小时额度：接入用量接口（monitor usage，社区验证端点），

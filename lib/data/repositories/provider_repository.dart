@@ -44,7 +44,7 @@ class ProviderWithState {
   ProviderAdapter get adapter => AdapterRegistry.of(provider.adapterKind);
 
   bool get canPrewarm => adapter.capabilities.prewarm;
-  bool get canCheckIn => adapter.capabilities.checkIn;
+  bool get canCheckIn => adapter.capabilities.checkIn && !provider.checkinDisabled;
   bool get canQueryQuota => adapter.capabilities.quota;
   bool get canQueryBalance => adapter.capabilities.balance;
 
@@ -265,6 +265,7 @@ class ProviderRepository {
     String? systemUserId,
     bool pinned = false,
     bool hidden = false,
+    bool checkinDisabled = false,
   }) async {
     final now = DateTime.now();
     if (id == null) {
@@ -281,6 +282,7 @@ class ProviderRepository {
         systemUserId: Value(systemUserId),
         pinned: Value(pinned),
         hidden: Value(hidden),
+        checkinDisabled: Value(checkinDisabled),
         createdAt: now,
         updatedAt: now,
       ));
@@ -299,6 +301,7 @@ class ProviderRepository {
         systemUserId: Value(systemUserId),
         pinned: Value(pinned),
         hidden: Value(hidden),
+        checkinDisabled: Value(checkinDisabled),
         updatedAt: Value(now),
       ));
       if (systemToken != null && systemToken.isNotEmpty) {
@@ -580,6 +583,7 @@ class ProviderRepository {
         'baseUrl': p.baseUrl,
         'accountLabel': p.accountLabel,
         'systemUserId': p.systemUserId,
+        'checkinDisabled': p.checkinDisabled,
         'pinned': p.pinned,
         'hidden': p.hidden,
         'sortOrder': p.sortOrder,
@@ -646,6 +650,7 @@ class ProviderRepository {
           systemUserId: Value(entry['systemUserId']?.toString()),
           pinned: Value(entry['pinned'] == true),
           hidden: Value(entry['hidden'] == true),
+          checkinDisabled: Value(entry['checkinDisabled'] == true),
           sortOrder: Value((entry['sortOrder'] as num?)?.toInt() ?? 0),
           createdAt:
               DateTime.tryParse(entry['createdAt']?.toString() ?? '') ?? now,
@@ -671,6 +676,7 @@ class ProviderRepository {
           systemUserId: Value(entry['systemUserId']?.toString()),
           pinned: Value(entry['pinned'] == true),
           hidden: Value(entry['hidden'] == true),
+          checkinDisabled: Value(entry['checkinDisabled'] == true),
           sortOrder: Value((entry['sortOrder'] as num?)?.toInt() ?? 0),
           updatedAt: Value(now),
         ));

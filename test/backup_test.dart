@@ -49,6 +49,48 @@ void main() {
     return list.firstWhere((s) => s.provider.name == name).provider.id;
   }
 
+  group('签到开关（checkinDisabled）', () {
+    test('关闭后 canCheckIn 为 false 且导出导入保留', () async {
+      await repo.upsertProvider(
+        id: null,
+        name: '无签到站点',
+        type: ProviderType.relay,
+        adapterKind: AdapterKind.newapi,
+        baseUrl: 'https://no-checkin.example.com',
+        accountLabel: '',
+        checkinDisabled: true,
+      );
+      var state =
+          (await repo.watchHomeList(includeHidden: true).first).first;
+      expect(state.canCheckIn, isFalse); // newapi 本身支持签到，被开关关闭
+      expect(state.provider.checkinDisabled, isTrue);
+
+      // 导出 → 导入到新库后保留
+      final data = await repo.exportJson(includeSecrets: true);
+      final db2 = AppDatabase.forTesting(NativeDatabase.memory());
+      final repo2 = ProviderRepository(db2, secure);
+      await repo2.importJson(data);
+      final state2 =
+          (await repo2.watchHomeList(includeHidden: true).first).first;
+      expect(state2.canCheckIn, isFalse);
+      await db2.close();
+    });
+
+    test('默认开启', () async {
+      await repo.upsertProvider(
+        id: null,
+        name: '普通站点',
+        type: ProviderType.relay,
+        adapterKind: AdapterKind.newapi,
+        baseUrl: 'https://normal.example.com',
+        accountLabel: '',
+      );
+      final state =
+          (await repo.watchHomeList(includeHidden: true).first).first;
+      expect(state.canCheckIn, isTrue);
+    });
+  });
+
   group('导出', () {
     test('默认脱敏：不含 apiKey 与 systemToken', () async {
       final id = await addProvider('中转A');

@@ -40,6 +40,9 @@ class Providers extends Table {
   /// NewAPI 系的部分版本接口要求 New-Api-User 头（用户 ID），明文非敏感
   TextColumn get systemUserId => text().nullable()();
 
+  /// 站点未开启签到功能时置 true：隐藏签到入口并跳过批量签到
+  BoolColumn get checkinDisabled => boolean().withDefault(const Constant(false))();
+
   BoolColumn get pinned => boolean().withDefault(const Constant(false))();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   BoolColumn get hidden => boolean().withDefault(const Constant(false))();

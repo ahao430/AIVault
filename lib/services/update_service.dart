@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -172,13 +173,21 @@ class UpdateService {
           status: UpdateStatus.failed, error: '未配置更新源仓库');
     }
     try {
-      final infoRes = await _dio.getUri<Map<String, dynamic>>(infoUri(r),
+      // update-info.json 由 Release 资产 CDN 下发，Content-Type 是
+      // octet-stream，dio 不会自动解码 → 拿到的是 String，手动 decode。
+      final infoRes = await _dio.getUri<dynamic>(infoUri(r),
           options: Options(validateStatus: (_) => true));
       if (infoRes.statusCode != 200 || infoRes.data == null) {
         return const UpdateCheckResult(
             status: UpdateStatus.failed, error: '暂无发布版本');
       }
-      final info = UpdateInfo.fromJson(infoRes.data!);
+      dynamic raw = infoRes.data;
+      if (raw is String) raw = jsonDecode(raw);
+      if (raw is! Map) {
+        return const UpdateCheckResult(
+            status: UpdateStatus.failed, error: '更新信息格式错误');
+      }
+      final info = UpdateInfo.fromJson(Map<String, dynamic>.from(raw));
       if (info == null) {
         return const UpdateCheckResult(
             status: UpdateStatus.failed, error: '更新信息格式错误');
