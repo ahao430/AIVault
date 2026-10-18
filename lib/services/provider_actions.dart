@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 
 import '../adapters/newapi.dart';
@@ -84,7 +86,7 @@ class ProviderActions {
     }
   }
 
-  /// 刷新全部供应商额度。
+  /// 刷新全部供应商额度（完成后异步清理过期快照）。
   Future<void> refreshAll(Iterable<ProviderWithState> list) async {
     for (final state in list) {
       try {
@@ -93,6 +95,7 @@ class ProviderActions {
         // 单个失败不影响其余刷新
       }
     }
+    unawaited(_repo.pruneOldSnapshots());
   }
 
   /// 单个签到。

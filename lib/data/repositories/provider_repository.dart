@@ -65,6 +65,33 @@ class ProviderWithState {
   bool get checkedInToday => todayCheckin != null && todayCheckin!.success;
 }
 
+/// 变更去抖：密集写入（如批量刷新逐条插快照）合并为一次重载。
+/// 只保留静默期后的最后一个事件。
+Stream<T> _debounced<T>(Stream<T> source, Duration delay) {
+  late final StreamController<T> controller;
+  Timer? timer;
+  controller = StreamController<T>(
+    onListen: () {
+      final sub = source.listen(
+        (v) {
+          timer?.cancel();
+          timer = Timer(delay, () => controller.add(v));
+        },
+        onError: controller.addError,
+        onDone: () {
+          timer?.cancel();
+          controller.close();
+        },
+      );
+      controller.onCancel = () {
+        timer?.cancel();
+        return sub.cancel();
+      };
+    },
+  );
+  return controller.stream;
+}
+
 class ProviderRepository {
   ProviderRepository(this._db, this._secure);
 
@@ -77,22 +104,27 @@ class ProviderRepository {
 
   // ---------------------------------------------------------------- providers
 
-  Stream<List<ProviderWithState>> watchHomeList({bool includeHidden = false}) async* {
+  Stream<List<ProviderWithState>> watchHomeList(
+      {bool includeHidden = false}) async* {
     yield await _loadAll(includeHidden);
-    await for (final _ in _db.tableUpdates(TableUpdateQuery.onAllTables([
-      _db.providers,
-      _db.tokens,
-      _db.providerModels,
-      _db.quotaSnapshots,
-      _db.checkinRecords,
-      _db.prewarmRecords,
-    ]))) {
+    // 批量刷新会产生密集的单条写入（每条快照一次），
+    // 120ms 合并窗口避免每次写入都触发全量重载
+    await for (final _ in _debounced(
+        _db.tableUpdates(TableUpdateQuery.onAllTables([
+          _db.providers,
+          _db.tokens,
+          _db.providerModels,
+          _db.quotaSnapshots,
+          _db.checkinRecords,
+          _db.prewarmRecords,
+        ])),
+        const Duration(milliseconds: 120))) {
       yield await _loadAll(includeHidden);
     }
   }
 
   Future<List<ProviderWithState>> _loadAll(bool includeHidden) async {
-    final list = await (_db.providers.select()
+    final providers = await (_db.providers.select()
           ..where((p) => includeHidden ? const Constant(true) : p.hidden.equals(false))
           ..orderBy([
             (p) => OrderingTerm.desc(p.pinned),
@@ -101,26 +133,41 @@ class ProviderRepository {
             (p) => OrderingTerm.desc(p.createdAt),
           ]))
         .get();
+    if (providers.isEmpty) return const [];
+
+    // 一次拉取全部关联数据，内存分组，避免 N+1 查询
+    final providerIds = [for (final p in providers) p.id];
+    final allTokens = await (_db.tokens.select()
+          ..where((t) => t.providerId.isIn(providerIds)))
+        .get();
+    final allTokenIds = [for (final t in allTokens) t.id];
+    final allModels = allTokenIds.isEmpty
+        ? const <ProviderModel>[]
+        : await (_db.providerModels.select()
+              ..where((m) => m.tokenId.isIn(allTokenIds)))
+            .get();
+    final modelsByToken = <String, List<ProviderModel>>{};
+    for (final m in allModels) {
+      modelsByToken.putIfAbsent(m.tokenId, () => []).add(m);
+    }
 
     final result = <ProviderWithState>[];
-    for (final p in list) {
-      result.add(await _assemble(p));
+    for (final p in providers) {
+      result.add(await _assemble(p, allTokens, modelsByToken));
     }
     return result;
   }
 
-  Future<ProviderWithState> _assemble(Provider p) async {
-    final tokens = await (_db.tokens.select()
-          ..where((t) => t.providerId.equals(p.id)))
-        .get();
+  Future<ProviderWithState> _assemble(
+    Provider p,
+    List<Token> allTokens,
+    Map<String, List<ProviderModel>> modelsByToken,
+  ) async {
+    final tokens = allTokens.where((t) => t.providerId == p.id).toList();
     final tokenCount = tokens.length;
-    final tokenIds = tokens.map((t) => t.id).toList();
-    final modelCount = tokenIds.isEmpty
-        ? 0
-        : await (_db.providerModels.select()
-              ..where((m) => m.tokenId.isIn(tokenIds)))
-            .get()
-            .then((l) => l.length);
+    final modelCount = tokens
+        .map((t) => modelsByToken[t.id]?.length ?? 0)
+        .fold(0, (a, b) => a + b);
 
     final latestQuota = await _latestSnapshot(
         p.id, QuotaKind.windowQuota, successOnly: true);
@@ -174,19 +221,35 @@ class ProviderRepository {
           ..where((p) => p.id.equals(providerId)))
         .getSingleOrNull();
     if (p == null) return null;
-    return _assemble(p);
+    // 单个供应商：按需拉取该供应商的关联数据
+    final tokens = await (_db.tokens.select()
+          ..where((t) => t.providerId.equals(providerId)))
+        .get();
+    final tokenIds = [for (final t in tokens) t.id];
+    final models = tokenIds.isEmpty
+        ? const <ProviderModel>[]
+        : await (_db.providerModels.select()
+              ..where((m) => m.tokenId.isIn(tokenIds)))
+            .get();
+    final modelsByToken = <String, List<ProviderModel>>{};
+    for (final m in models) {
+      modelsByToken.putIfAbsent(m.tokenId, () => []).add(m);
+    }
+    return _assemble(p, tokens, modelsByToken);
   }
 
   Stream<ProviderWithState?> watchOne(String providerId) async* {
     yield await loadOne(providerId);
-    await for (final _ in _db.tableUpdates(TableUpdateQuery.onAllTables([
-      _db.providers,
-      _db.tokens,
-      _db.providerModels,
-      _db.quotaSnapshots,
-      _db.checkinRecords,
-      _db.prewarmRecords,
-    ]))) {
+    await for (final _ in _debounced(
+        _db.tableUpdates(TableUpdateQuery.onAllTables([
+          _db.providers,
+          _db.tokens,
+          _db.providerModels,
+          _db.quotaSnapshots,
+          _db.checkinRecords,
+          _db.prewarmRecords,
+        ])),
+        const Duration(milliseconds: 120))) {
       yield await loadOne(providerId);
     }
   }
@@ -374,10 +437,10 @@ class ProviderRepository {
     }
 
     yield await load();
-    await for (final _ in _db.tableUpdates(TableUpdateQuery.onAllTables([
-      _db.tokens,
-      _db.providerModels,
-    ]))) {
+    await for (final _ in _debounced(
+        _db.tableUpdates(
+            TableUpdateQuery.onAllTables([_db.tokens, _db.providerModels])),
+        const Duration(milliseconds: 120))) {
       yield await load();
     }
   }
@@ -685,6 +748,32 @@ class ProviderRepository {
       success: true,
       message: const Value('本月已用'),
     ));
+  }
+
+  /// 快照治理：每个 provider × kind 只保留最近 [keep] 条，
+  /// 批量刷新后调用，防止快照表无限增长。
+  Future<void> pruneOldSnapshots({int keep = 100}) async {
+    final providers = await (_db.providers.select()
+          ..where((p) => const Constant(true)))
+        .get();
+    for (final p in providers) {
+      for (final kind in QuotaKind.values) {
+        final ids = await (_db.quotaSnapshots.select()
+              ..where((s) =>
+                  s.providerId.equals(p.id) & s.kind.equalsValue(kind))
+              ..orderBy([(s) => OrderingTerm.desc(s.timestamp)])
+              ..limit(keep))
+            .map((s) => s.id)
+            .get();
+        if (ids.isEmpty) continue;
+        await (_db.quotaSnapshots.delete()
+              ..where((s) =>
+                  s.providerId.equals(p.id) &
+                  s.kind.equalsValue(kind) &
+                  s.id.isNotIn(ids)))
+            .go();
+      }
+    }
   }
 
   Future<void> recordBalance(

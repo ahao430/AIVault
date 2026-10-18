@@ -186,6 +186,31 @@ void main() {
     });
   });
 
+  test('快照治理：每 provider×kind 只保留最近 100 条', () async {
+    final id = await addProvider('中转站');
+    for (var i = 0; i < 130; i++) {
+      await repo.recordSnapshot(
+          id,
+          QuotaKind.windowQuota,
+          const QuotaResult(
+              ratio: 0.5,
+              success: true,
+              source: 'official'));
+    }
+    await repo.recordBalance(
+        id, const BalanceResult(amount: 9.9, success: true));
+
+    await repo.pruneOldSnapshots(keep: 100);
+
+    final remaining = await (db.select(db.quotaSnapshots)
+            ..where((s) => s.providerId.equals(id)))
+        .get();
+    expect(remaining.where((s) => s.kind == QuotaKind.windowQuota),
+        hasLength(100));
+    expect(remaining.where((s) => s.kind == QuotaKind.balance),
+        hasLength(1));
+  });
+
   group('额度历史', () {
     test('watchSnapshots 按时间升序返回最近记录', () async {
       final id = await addProvider('中转站');
