@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/secure_store.dart' show SecureStore, FlutterSecureStore;
 import '../data/db/database.dart' hide Provider;
 import '../data/repositories/provider_repository.dart';
+import '../services/local_notifier.dart'
+    show LocalNotifier, NotificationPrefs, NotificationPrefsStore;
 import '../services/provider_actions.dart';
 
 final dbProvider = Provider<AppDatabase>((ref) {
@@ -44,4 +46,11 @@ final tokenListProvider = StreamProvider.autoDispose
 final tickerProvider = StreamProvider<DateTime>((ref) async* {
   yield DateTime.now();
   yield* Stream.periodic(const Duration(seconds: 30), (_) => DateTime.now());
+});
+
+final localNotifierProvider = Provider<LocalNotifier>((_) => LocalNotifier());
+
+final notificationPrefsProvider =
+    FutureProvider<NotificationPrefs>((ref) async {
+  return NotificationPrefsStore(ref.watch(secureStoreProvider)).load();
 });

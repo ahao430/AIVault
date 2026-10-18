@@ -132,6 +132,27 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               onDismiss: () =>
                   ref.read(chatSessionProvider.notifier).dismissError(),
             ),
+          // 最后一条是 assistant 且未在生成时，提供重新生成
+          messagesAsync.maybeWhen(
+            data: (messages) => messages.isNotEmpty &&
+                    messages.last.role == 'assistant' &&
+                    !isGenerating
+                ? Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact),
+                      onPressed: () => ref
+                          .read(chatSessionProvider.notifier)
+                          .regenerate(widget.conversationId),
+                      icon: const Icon(Icons.refresh, size: 14),
+                      label: const Text('重新生成',
+                          style: TextStyle(fontSize: 12)),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+            orElse: () => const SizedBox.shrink(),
+          ),
           _InputBar(
             controller: _inputCtrl,
             generating: isGenerating,
@@ -178,13 +199,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 }
 
-class _MessageBubble extends StatelessWidget {
+class _MessageBubble extends ConsumerWidget {
   const _MessageBubble({required this.message});
 
   final db.Message message;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
     final isUser = message.role == 'user';
 
@@ -219,15 +240,10 @@ class _MessageBubble extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
-                  onLongPress: () {
-                    Clipboard.setData(
-                        ClipboardData(text: message.content));
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('已复制消息'),
-                        duration: Duration(seconds: 1)));
-                  },
-                  child: Icon(Icons.copy,
-                      size: 12, color: cs.outline.withValues(alpha: 0.6)),
+                  onLongPress: () =>
+                      _showActions(context, ref, message),
+                  child: Icon(Icons.more_vert,
+                      size: 13, color: cs.outline.withValues(alpha: 0.6)),
                 ),
               ],
             ),
@@ -235,6 +251,44 @@ class _MessageBubble extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+Future<void> _showActions(
+    BuildContext context, WidgetRef ref, db.Message message) async {
+  final action = await showModalBottomSheet<String>(
+    context: context,
+    showDragHandle: true,
+    builder: (_) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.copy),
+            title: const Text('复制消息'),
+            onTap: () => Navigator.pop(context, 'copy'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete_outline),
+            title: const Text('删除消息'),
+            onTap: () => Navigator.pop(context, 'delete'),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (action == null || !context.mounted) return;
+  switch (action) {
+    case 'copy':
+      await Clipboard.setData(ClipboardData(text: message.content));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('已复制'), duration: Duration(seconds: 1)));
+      }
+      break;
+    case 'delete':
+      await ref.read(chatSessionProvider.notifier).deleteMessage(message.id);
+      break;
   }
 }
 

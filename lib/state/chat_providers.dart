@@ -201,6 +201,32 @@ class ChatSessionController extends Notifier<ChatGenerating> {
     }
   }
 
+  /// 重新生成：删除最后一条 assistant 消息，用最后一条 user 消息重发。
+  Future<void> regenerate(String conversationId) async {
+    if (state.generating) return;
+    final repo = ref.read(chatRepoProvider);
+    final messages = await repo.messages(conversationId);
+    if (messages.isEmpty) return;
+    final last = messages.last;
+    String? userInput;
+    if (last.role == 'assistant') {
+      await repo.deleteMessage(last.id);
+      userInput =
+          messages.reversed.take(2).lastOrNull?.role == 'user'
+              ? messages.reversed.take(2).last.content
+              : null;
+    } else if (last.role == 'user') {
+      userInput = last.content;
+    }
+    if (userInput == null || userInput.isEmpty) return;
+    await send(conversationId, userInput);
+  }
+
+  /// 删除单条消息。
+  Future<void> deleteMessage(String id) async {
+    await ref.read(chatRepoProvider).deleteMessage(id);
+  }
+
   /// 停止生成：保留已生成部分。
   void stop() {
     _cancelToken?.cancel();

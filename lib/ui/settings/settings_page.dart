@@ -3,12 +3,116 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../services/backup_service.dart';
+import '../../services/local_notifier.dart';
 import '../../state/app_providers.dart';
 import 'app_lock_settings_page.dart';
 import 'hidden_providers_page.dart';
 import 'webdav_page.dart';
 
 final backupServiceProvider = Provider<BackupService>((ref) => BackupService());
+
+/// 通知偏好页（Plan #49：开关 + 分类 + 系统通知）
+class NotificationPrefsPage extends ConsumerStatefulWidget {
+  const NotificationPrefsPage({super.key});
+
+  @override
+  ConsumerState<NotificationPrefsPage> createState() =>
+      _NotificationPrefsPageState();
+}
+
+class _NotificationPrefsPageState extends ConsumerState<NotificationPrefsPage> {
+  NotificationPrefs? _prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs =
+        await NotificationPrefsStore(ref.read(secureStoreProvider)).load();
+    if (mounted) setState(() => _prefs = prefs);
+  }
+
+  Future<void> _update(NotificationPrefs prefs) async {
+    setState(() => _prefs = prefs);
+    await NotificationPrefsStore(ref.read(secureStoreProvider)).save(prefs);
+    ref.invalidate(notificationPrefsProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = _prefs;
+    if (p == null) {
+      return const Scaffold(
+          body: Center(child: CircularProgressIndicator()));
+    }
+    return Scaffold(
+      appBar: AppBar(title: const Text('通知偏好')),
+      body: ListView(
+        children: [
+          SwitchListTile(
+            secondary: const Icon(Icons.notifications_active_outlined),
+            title: const Text('启用通知'),
+            subtitle: const Text('关闭后不再产生任何 App 内 / 系统通知'),
+            value: p.enabled,
+            onChanged: (v) => _update(p.copyWith(enabled: v)),
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.phone_iphone),
+            title: const Text('同时发送系统通知'),
+            subtitle: const Text('在系统通知中心显示（需系统授权）'),
+            value: p.systemNotifications,
+            onChanged: p.enabled
+                ? (v) async {
+                    if (v) {
+                      await ref
+                          .read(localNotifierProvider)
+                          .requestPermission();
+                    }
+                    await _update(p.copyWith(systemNotifications: v));
+                  }
+                : null,
+          ),
+          const Divider(indent: 16, endIndent: 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text('通知分类',
+                style: Theme.of(context).textTheme.titleSmall),
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.local_fire_department_outlined),
+            title: const Text('额度已恢复'),
+            subtitle: const Text('额度从不满恢复到 100%，可以预热时'),
+            value: p.quotaRecovered,
+            onChanged: p.enabled
+                ? (v) => _update(p.copyWith(quotaRecovered: v))
+                : null,
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.event_available_outlined),
+            title: const Text('今日可签到'),
+            subtitle: const Text('支持签到的供应商当日未签到（每天一次）'),
+            value: p.checkinAvailable,
+            onChanged: p.enabled
+                ? (v) => _update(p.copyWith(checkinAvailable: v))
+                : null,
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.warning_amber_outlined),
+            title: const Text('数据已过期'),
+            subtitle: const Text('额度 / 余额超过 24 小时未更新（每天一次）'),
+            value: p.dataStale,
+            onChanged: p.enabled
+                ? (v) => _update(p.copyWith(dataStale: v))
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// 设置页：数据导入导出、隐藏供应商、安全（P1 中 WebDAV / App 锁待迭代）。
 class SettingsPage extends ConsumerWidget {
@@ -50,6 +154,16 @@ class SettingsPage extends ConsumerWidget {
               subtitle: '恢复显示或彻底删除',
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const HiddenProvidersPage(),
+              )),
+            ),
+          ]),
+          _section(context, '通知', [
+            _item(
+              icon: Icons.notifications_outlined,
+              title: '通知偏好',
+              subtitle: '开关与分类（额度恢复 / 签到 / 数据过期）、系统通知',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const NotificationPrefsPage(),
               )),
             ),
           ]),

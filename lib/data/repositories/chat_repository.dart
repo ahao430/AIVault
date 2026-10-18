@@ -85,6 +85,10 @@ class ChatRepository {
         .get();
   }
 
+  Future<void> deleteMessage(String id) async {
+    await (_db.messages.delete()..where((m) => m.id.equals(id))).go();
+  }
+
   Future<Message> appendMessage({
     required String conversationId,
     required String role,

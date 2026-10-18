@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/repositories/notification_repository.dart';
 import '../data/repositories/provider_repository.dart';
+import '../services/local_notifier.dart';
 import '../services/notification_engine.dart';
 import '../state/app_providers.dart';
 import 'provider_actions.dart';
@@ -136,6 +139,7 @@ class TaskCenterController extends Notifier<List<TaskItem>> {
   }
 
   /// 刷新后对比前后状态产生通知（额度恢复 / 签到可用 / 数据过期）。
+  /// 按用户偏好分类过滤；App 内通知中心入库 + 系统通知并行转发。
   Future<void> _detectNotifications(
       Map<String, ProviderWithState> before,
       Iterable<String> providerIds) async {
@@ -146,13 +150,21 @@ class TaskCenterController extends Notifier<List<TaskItem>> {
         if (s != null) after.add(s);
       }
       final repo = NotificationRepository(ref.read(dbProvider));
+      final prefs =
+          await NotificationPrefsStore(ref.read(secureStoreProvider)).load();
       final events = detectEvents(
         before: before,
         after: after,
         sentTodayKinds: await repo.sentTodayKinds(),
-      );
-      if (events.isNotEmpty) {
-        await repo.insertEvents(events);
+      ).where((e) => prefs.allows(e.kind)).toList();
+      if (events.isEmpty) return;
+      await repo.insertEvents(events);
+      if (prefs.systemNotifications) {
+        for (final e in events) {
+          unawaited(ref
+              .read(localNotifierProvider)
+              .notify(kind: e.kind, title: e.title, body: e.body));
+        }
       }
     } catch (_) {
       // 通知检测失败不影响刷新任务本身
