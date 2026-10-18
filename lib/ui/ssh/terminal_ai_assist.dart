@@ -41,7 +41,9 @@ List<String> extractCommandBlocks(String text) {
 
 /// 终端 AI 助手（SSH 主机管理配搭）：把当前终端最近输出作为上下文，
 /// 向已配置的模型提问；回复中的命令块可一键插入终端（不自动执行，
-/// 用户确认后自己按回车）或复制。
+/// 用户可一键执行（写入 pty 并回车）、仅插入（人工确认）或复制。
+/// 执行后自动读回终端新增输出作为下一轮上下文，形成
+/// 「问 → 执行 → 看结果 → 继续问」闭环。
 ///
 /// 以 BottomSheet 呈现，对话状态只在 Sheet 生命周期内保留，不写入
 /// 聊天记录。
@@ -50,6 +52,7 @@ Future<void> showTerminalAiAssist(
   required String hostLabel,
   required String Function() terminalContext,
   required void Function(String command) onInsertCommand,
+  required void Function(String command) onRunCommand,
 }) {
   return showModalBottomSheet(
     context: context,
@@ -59,9 +62,13 @@ Future<void> showTerminalAiAssist(
       hostLabel: hostLabel,
       terminalContext: terminalContext,
       onInsertCommand: onInsertCommand,
+      onRunCommand: onRunCommand,
     ),
   );
 }
+
+/// 终端输出消息前缀：渲染为暗色等宽块，不参与命令提取
+const kTerminalOutputTag = '[终端输出]';
 
 class TerminalAiAssist extends ConsumerStatefulWidget {
   const TerminalAiAssist({
@@ -69,11 +76,13 @@ class TerminalAiAssist extends ConsumerStatefulWidget {
     required this.hostLabel,
     required this.terminalContext,
     required this.onInsertCommand,
+    required this.onRunCommand,
   });
 
   final String hostLabel;
   final String Function() terminalContext;
   final void Function(String command) onInsertCommand;
+  final void Function(String command) onRunCommand;
 
   @override
   ConsumerState<TerminalAiAssist> createState() => _TerminalAiAssistState();
@@ -88,12 +97,68 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
   String? _error;
   ChatModelOption? _model;
 
+  /// 上次读到的终端屏幕（剥 ANSI 后），用于执行命令后 diff 新输出
+  String _lastSnapshot = '';
+  bool _waitingOutput = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastSnapshot = stripAnsi(widget.terminalContext());
+  }
+
   @override
   void dispose() {
     _cancelToken?.cancel();
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  /// 屏幕内容 diff：正常情况新输出追加在尾部（无滚动）或顶部推入（滚动）
+  String _diffOutput(String prev, String cur) {
+    if (cur == prev) return '';
+    if (cur.startsWith(prev)) return cur.substring(prev.length);
+    if (cur.endsWith(prev)) return cur.substring(0, cur.length - prev.length);
+    return cur;
+  }
+
+  /// 直接执行命令并自动读回输出（最多两段等待，共约 6.5s）
+  Future<void> _runCommand(String cmd) async {
+    widget.onRunCommand(cmd);
+    setState(() => _waitingOutput = true);
+    String delta = '';
+    for (final wait in const [
+      Duration(milliseconds: 2500),
+      Duration(milliseconds: 4000),
+    ]) {
+      await Future<void>.delayed(wait);
+      if (!mounted) return;
+      final text = stripAnsi(widget.terminalContext());
+      delta = _diffOutput(_lastSnapshot, text).trim();
+      if (delta.isNotEmpty) {
+        _lastSnapshot = text;
+        break;
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _waitingOutput = false;
+      if (delta.isNotEmpty) {
+        if (delta.length > 1500) delta = delta.substring(delta.length - 1500);
+        _turns.add(
+            ChatMessage(role: 'user', content: '$kTerminalOutputTag\n$delta'));
+      }
+    });
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
+      }
+    });
   }
 
   Future<void> _send() async {
@@ -112,6 +177,7 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
 
     // 终端上下文：当前屏幕文本（剥 ANSI），截取最近一段
     final screen = stripAnsi(widget.terminalContext());
+    _lastSnapshot = screen;
     final ctxText = screen.length > 3000
         ? screen.substring(screen.length - 3000)
         : screen;
@@ -141,9 +207,10 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
       ChatMessage(
         role: 'system',
         content: '你是 SSH 终端操作助手，帮用户管理远程主机 ${widget.hostLabel}。'
-            '用户会把当前终端的最近输出贴给你。回答要简短直接；'
+            '用户会把当前终端的最近输出贴给你，也可能直接执行你给的命令并把'
+            '$kTerminalOutputTag 后的新输出发回来。回答要简短直接；'
             '需要执行命令时给出一个 ```bash 代码块，只给一条可直接执行的命令，'
-            '不要编造输出。用户会把命令插入终端人工确认执行。',
+            '不要编造输出。看到终端输出后据此分析并给下一步。',
       ),
       if (ctxText.trim().isNotEmpty)
         ChatMessage(
@@ -247,7 +314,7 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
                           '· 磁盘满了，看看哪个目录最大\n'
                           '· 这个报错怎么修\n'
                           '· 帮我把这个服务重启一下\n\n'
-                          'AI 给出的命令会插到终端里，由你确认执行。',
+                          '命令可一键执行，执行后自动读回终端新输出继续分析。',
                           style: TextStyle(color: cs.outline, fontSize: 13),
                         ),
                       ),
@@ -257,10 +324,15 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                       itemCount: _turns.length +
                           (_streaming.isNotEmpty ? 1 : 0) +
+                          (_waitingOutput ? 1 : 0) +
                           (_error != null ? 1 : 0),
                       itemBuilder: (_, i) {
                         if (i < _turns.length) {
                           final t = _turns[i];
+                          if (t.content.startsWith(kTerminalOutputTag)) {
+                            return _terminalOutputBubble(
+                                t.content.substring(kTerminalOutputTag.length).trim());
+                          }
                           return Align(
                             alignment: t.role == 'user'
                                 ? Alignment.centerRight
@@ -285,6 +357,27 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
                           );
                         }
                         final rest = i - _turns.length;
+                        if (_waitingOutput && rest == (_streaming.isNotEmpty ? 1 : 0)) {
+                          return Align(
+                            alignment: Alignment.centerLeft,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(
+                                      width: 12,
+                                      height: 12,
+                                      child: CircularProgressIndicator(strokeWidth: 2)),
+                                  const SizedBox(width: 8),
+                                  Text('正在读取终端输出…',
+                                      style: TextStyle(
+                                          fontSize: 12, color: cs.outline)),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
                         if (rest == 0 && _streaming.isNotEmpty) {
                           return Align(
                             alignment: Alignment.centerLeft,
@@ -341,7 +434,46 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
     );
   }
 
-  /// 助手气泡：正文 + 可执行命令块（插入终端 / 复制）
+  /// 终端自动读回的输出气泡：暗色等宽，左对齐
+  Widget _terminalOutputBubble(String text) {
+    final cs = Theme.of(context).colorScheme;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.all(10),
+        constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.82),
+        decoration: BoxDecoration(
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.terminal, size: 12, color: cs.outline),
+                const SizedBox(width: 4),
+                Text('终端输出',
+                    style: TextStyle(fontSize: 10, color: Colors.white38)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            SelectableText(text,
+                style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 11,
+                    height: 1.4,
+                    color: Color(0xFFD4D4D4))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 助手气泡：正文 + 可执行命令块（执行 / 插入 / 复制）
   Widget _assistantBubble(String content) {
     final blocks = extractCommandBlocks(content);
     // 简化渲染：去掉所有代码围栏的正文 + 命令块列表
@@ -390,15 +522,23 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
                         label: const Text('复制'),
                       ),
                       const SizedBox(width: 4),
-                      FilledButton.tonalIcon(
-                        style: FilledButton.styleFrom(
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
                             visualDensity: VisualDensity.compact),
                         onPressed: () {
                           widget.onInsertCommand(cmd);
-                          Navigator.of(context).pop();
+                          Toast.show(context, '已插入终端（未执行）');
                         },
-                        icon: const Icon(Icons.terminal, size: 14),
-                        label: const Text('插入终端'),
+                        icon: const Icon(Icons.keyboard_tab, size: 14),
+                        label: const Text('插入'),
+                      ),
+                      const SizedBox(width: 4),
+                      FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                            visualDensity: VisualDensity.compact),
+                        onPressed: () => _runCommand(cmd),
+                        icon: const Icon(Icons.play_arrow, size: 14),
+                        label: const Text('执行'),
                       ),
                     ],
                   ),

@@ -237,8 +237,9 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
                 controller: _sysTokenCtrl,
                 decoration: const InputDecoration(
                   labelText: '系统访问令牌（可选）',
-                  helperText: 'NewAPI Web 控制台的「系统访问令牌」，用于余额查询与签到；'
-                      '与普通 API Key 不同，加密保存在系统安全存储',
+                  helperText: 'NewAPI 控制台「个人设置 → 系统访问令牌」（随机串，'
+                      '不是 sk- 开头的 API 密钥），用于余额查询与签到，'
+                      '加密保存在系统安全存储',
                   suffixIcon: Icon(Icons.lock_outline),
                 ),
                 obscureText: true,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/formatters.dart';
+import '../../core/toast.dart';
 import '../../services/tmux.dart';
 import '../../state/ssh_providers.dart';
 import 'tmux_pane_page.dart';
@@ -66,6 +67,11 @@ class _TmuxSessionsPageState extends ConsumerState<TmuxSessionsPage> {
         title: Text('${hostName ?? '主机'} · tmux'),
         actions: [
           IconButton(
+            tooltip: '新建 / 恢复会话',
+            icon: const Icon(Icons.add),
+            onPressed: _loading ? null : _createOrResume,
+          ),
+          IconButton(
             tooltip: '刷新',
             icon: const Icon(Icons.refresh),
             onPressed: _loading ? null : _refresh,
@@ -102,8 +108,15 @@ class _TmuxSessionsPageState extends ConsumerState<TmuxSessionsPage> {
                           const SizedBox(height: 8),
                           const Text('没有 tmux 会话'),
                           const SizedBox(height: 4),
-                          const Text('在电脑上用 tmux 启动 Agent 后刷新',
+                          const Text('可在电脑上用 tmux 启动 Agent 后刷新，'
+                              '或直接在这里新建会话',
                               style: TextStyle(fontSize: 12)),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            icon: const Icon(Icons.add, size: 16),
+                            label: const Text('新建 / 恢复会话'),
+                            onPressed: _createOrResume,
+                          ),
                         ],
                       ),
                     )
@@ -123,6 +136,55 @@ class _TmuxSessionsPageState extends ConsumerState<TmuxSessionsPage> {
                       ],
                     ),
     );
+  }
+
+  /// App 内直接新建 / 恢复会话：tmux new-session -d -A（存在则恢复、
+  /// 不存在则后台创建），随后直接进入对话视图。
+  Future<void> _createOrResume() async {
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) {
+        final ctrl = TextEditingController(text: 'claude');
+        return AlertDialog(
+          title: const Text('新建 / 恢复会话'),
+          content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: '会话名',
+              hintText: '例如 claude、codex',
+              helperText: '同名会话会被恢复（tmux new -A）',
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('取消')),
+            FilledButton(
+                onPressed: () => Navigator.pop(context, ctrl.text.trim()),
+                child: const Text('打开')),
+          ],
+        );
+      },
+    );
+    if (name == null || name.isEmpty) return;
+    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(name)) {
+      if (!mounted) return;
+      Toast.show(context, '会话名只支持字母 / 数字 / 下划线 / 中划线');
+      return;
+    }
+    try {
+      final service = ref.read(sshServiceProvider);
+      await service.execute(widget.hostId,
+          "tmux new-session -d -A -s '${name.replaceAll("'", "'\\''")}'");
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => TmuxPanePage(hostId: widget.hostId, session: name),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      Toast.show(context, '创建失败：$e');
+    }
   }
 }
 

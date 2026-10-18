@@ -94,19 +94,46 @@ class NewApiAdapter extends OpenAICompatibleAdapter {
       return BalanceResult(
         amount: 0,
         success: false,
-        message: msg.isNotEmpty ? msg : 'HTTP ${res.statusCode}',
+        message: _friendlyAuthError(msg.isNotEmpty ? msg : 'HTTP ${res.statusCode}'),
       );
     } catch (e) {
       return BalanceResult(amount: 0, success: false, message: e.toString());
     }
   }
 
+  /// 「invalid access token」= 站点 access_token 表无此令牌，绝大多数是
+  /// 把 sk- 开头的 API 密钥当成了系统访问令牌。给出可操作的指引。
+  static String _friendlyAuthError(String msg) {
+    final lower = msg.toLowerCase();
+    if (lower.contains('access token') || msg.contains('访问令牌')) {
+      return '$msg（请确认保存的是控制台「个人设置 → 系统访问令牌」，'
+          '而不是 sk- 开头的 API 密钥；修改后重新保存并刷新）';
+    }
+    return msg;
+  }
+
+  /// 签到端点：新版开源为 /api/user/checkin，老二开为 /api/user/check_in，
+  /// 依次尝试。
+  Future<({dynamic body, int? status})?> _postCheckin(
+      ProviderContext ctx) async {
+    for (final path in const ['/api/user/checkin', '/api/user/check_in']) {
+      final res = await dio.post('$_origin(ctx)$path', options: _options(ctx));
+      if (res.statusCode != 404) {
+        return (body: res.data, status: res.statusCode);
+      }
+    }
+    return null;
+  }
+
   @override
   Future<CheckinResult> checkIn(ProviderContext ctx) async {
     try {
-      final res = await dio.post('${_origin(ctx)}/api/user/check_in',
-          options: _options(ctx));
-      final body = res.data;
+      final hit = await _postCheckin(ctx);
+      if (hit == null) {
+        return const CheckinResult(
+            success: false, message: '站点不支持签到接口（404）');
+      }
+      final body = hit.body;
       if (body is Map) {
         final success = body['success'] == true;
         final message = body['message']?.toString() ?? '';
@@ -121,10 +148,10 @@ class NewApiAdapter extends OpenAICompatibleAdapter {
               success: false, message: '今日已签到', alreadyCheckedIn: true);
         }
         return CheckinResult(
-            success: false, message: message.isEmpty ? '签到失败' : message);
+            success: false,
+            message: _friendlyAuthError(message.isEmpty ? '签到失败' : message));
       }
-      return CheckinResult(
-          success: false, message: 'HTTP ${res.statusCode}');
+      return CheckinResult(success: false, message: 'HTTP ${hit.status}');
     } catch (e) {
       return CheckinResult(success: false, message: e.toString());
     }

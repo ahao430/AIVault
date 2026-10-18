@@ -121,7 +121,7 @@ class _SshTerminalPageState extends ConsumerState<SshTerminalPage> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            tooltip: 'AI 助手：把屏幕内容发给模型，命令可插入终端',
+            tooltip: 'AI 助手：屏幕内容作上下文，命令可直接执行',
             icon: const Icon(Icons.smart_toy_outlined),
             onPressed: () => showTerminalAiAssist(
               context,
@@ -130,6 +130,9 @@ class _SshTerminalPageState extends ConsumerState<SshTerminalPage> {
               // 只插入不执行：不带换行，用户确认后自己按回车
               onInsertCommand: (cmd) =>
                   _session?.write(const Utf8Encoder().convert(cmd)),
+              // 直接执行：命令 + 回车立即写入 pty
+              onRunCommand: (cmd) =>
+                  _session?.write(const Utf8Encoder().convert('$cmd\r')),
             ),
           ),
           IconButton(
