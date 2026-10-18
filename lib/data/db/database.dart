@@ -17,6 +17,7 @@ part 'database.g.dart';
   Conversations,
   Messages,
   ImageTasks,
+  SshHosts,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -28,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -42,6 +43,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await m.createTable(imageTasks);
+          }
+          if (from < 5) {
+            await m.createTable(sshHosts);
           }
         },
       );

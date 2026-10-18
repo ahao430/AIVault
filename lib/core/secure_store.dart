@@ -11,6 +11,8 @@ abstract class SecureStore {
   static String tokenRef(String tokenId) => 'token:$tokenId';
   static String systemTokenRef(String providerId) => 'sys:$providerId';
   static String webdavPasswordRef(String deviceId) => 'webdav:$deviceId';
+  static String sshSecretRef(String hostId) => 'ssh:$hostId';
+  static String sshPassphraseRef(String hostId) => 'ssh-pass:$hostId';
 }
 
 /// 生产实现：iOS Keychain / Android Keystore / macOS Keychain /

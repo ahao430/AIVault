@@ -24,6 +24,7 @@ AI 订阅与 API 账号管理为中心的本地优先跨平台 App —— 随时
 - 已隐藏供应商管理：恢复或彻底删除
 - AI 聊天（P2）：会话管理（新建 / 重命名 / 删除，历史只存本地）、OpenAI 兼容流式输出（SSE 解析支持跨 chunk 半行与 UTF-8 截断）、Markdown 渲染（gpt_markdown）、推理模型 reasoning 折叠显示、停止生成（保留已生成部分）、会话内切换模型、长按复制消息
 - AI 画图（P2）：单次生成任务、参考图（/v1/images/edits multipart）、b64/url 双响应格式、画图类模型优先排序、尺寸选择、历史网格（prompt / 模型 / 时间 / 状态）、图片详情（放大预览 / 另存为 / 复制 Prompt）、图片文件随记录删除
+- 远程开发（P3 第一批）：SSH 主机管理（dartssh2，Key/密码认证，凭证只存安全存储）、首次连接 host key TOFU 校验（指纹变化拒绝连接防中间人）、连接池与断开、tmux 会话列表（窗口数/创建时间/attached，会话名含冒号可解析）、会话 Agent 识别（Claude Code/Codex/OpenCode/Pi）、tmux pane 交互（capture-pane 输出 / send-keys 输入 / Ctrl+C / 5 秒自动刷新）
 
 ## 目录结构
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../chat/conversations_page.dart';
 import '../image/image_studio_page.dart';
+import '../ssh/hosts_page.dart';
 
 /// 工作台：功能入口卡片。AI 聊天已可用；画图 / 远程开发在后续版本迭代。
 class WorkbenchPage extends StatelessWidget {
@@ -46,20 +47,17 @@ class WorkbenchPage extends StatelessWidget {
           _EntryCard(
             icon: Icons.terminal_outlined,
             title: '远程开发',
-            subtitle: 'SSH / Agent / tmux 会话',
+            subtitle: 'SSH 主机 / tmux 会话',
             color: cs.secondary,
-            badge: '即将推出',
-            onTap: () => _soon(context, '远程开发'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const SshHostsPage(),
+            )),
           ),
         ],
       ),
     );
   }
 
-  void _soon(BuildContext context, String name) {
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$name 将在后续版本提供')));
-  }
 }
 
 class _EntryCard extends StatelessWidget {
@@ -69,7 +67,6 @@ class _EntryCard extends StatelessWidget {
     required this.subtitle,
     required this.color,
     required this.onTap,
-    this.badge,
   });
 
   final IconData icon;
@@ -77,7 +74,6 @@ class _EntryCard extends StatelessWidget {
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
-  final String? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -111,12 +107,6 @@ class _EntryCard extends StatelessWidget {
                       .bodySmall
                       ?.copyWith(
                           color: Theme.of(context).colorScheme.outline)),
-              if (badge != null) ...[
-                const SizedBox(height: 6),
-                Text(badge!,
-                    style: const TextStyle(
-                        fontSize: 11, fontStyle: FontStyle.italic)),
-              ],
             ],
           ),
         ),

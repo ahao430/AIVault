@@ -116,7 +116,7 @@ Future<HttpServer> _spawn(
   final server = await HttpServer.bind('127.0.0.1', 0);
   server.listen((req) async {
     // 读完请求体避免挂起
-    await req.fold<void>(<int>[], (acc, chunk) => acc).catchError((_) {});
+    await req.drain<void>().catchError((_) {});
     await handler(req, req.response);
   });
   return server;

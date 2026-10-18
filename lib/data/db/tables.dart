@@ -225,3 +225,33 @@ class ImageTasks extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// SSH 主机（Plan #38）。密码 / 私钥只存系统安全存储，数据库存引用。
+/// hostKeyFingerprint 用于 TOFU 校验（Plan #39：不能默认无条件信任）。
+class SshHosts extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get host => text()();
+  IntColumn get port => integer().withDefault(const Constant(22))();
+  TextColumn get username => text()();
+
+  /// key / password
+  TextColumn get authType => text()();
+
+  /// 私钥或密码在 Secure Storage 中的引用 key
+  TextColumn get secretRef => text()();
+
+  /// 私钥口令引用（仅 key 认证可能需要，可空）
+  TextColumn get passphraseRef => text().nullable()();
+
+  /// 首次连接接受的 host key 指纹（SHA256:...）
+  TextColumn get hostKeyFingerprint => text().nullable()();
+
+  /// 私钥原文仅用于表单展示时的暂存说明，不存明文
+  DateTimeColumn get lastConnectedAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
