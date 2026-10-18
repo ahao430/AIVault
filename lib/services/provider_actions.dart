@@ -71,7 +71,10 @@ class ProviderActions {
       }
     }
     if (caps.balance) {
-      final ctx = await _repo.buildContext(provider);
+      // DeepSeek 等按量官方的余额走 API Key 鉴权，必须带上；
+      // NewAPI 系忽略 apiKey（用系统令牌），传了也无害。
+      final ctx = await _repo.buildContext(provider,
+          apiKey: await _firstApiKey(provider.id));
       final result = await adapter.getBalance(ctx);
       if (result != null) {
         await _repo.recordBalance(provider.id, result);

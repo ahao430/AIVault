@@ -77,7 +77,18 @@ class HomePage extends ConsumerWidget {
           ),
         ],
       ),
-      body: listAsync.when(
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+              Theme.of(context).brightness == Brightness.dark
+                  ? 'assets/images/bg_dark.webp'
+                  : 'assets/images/bg_light.webp',
+            ),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: listAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('加载失败：$e')),
         data: (list) {
@@ -127,6 +138,7 @@ class HomePage extends ConsumerWidget {
             ),
           );
         },
+        ),
       ),
     );
   }
@@ -459,11 +471,21 @@ class ProviderCard extends ConsumerWidget {
                   ?.copyWith(color: cs.outline)),
           const Spacer(),
           if (b != null)
-            Text('更新于 ${formatRelative(b.timestamp, now)}',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: cs.outline)),
+            Text(
+              b.success
+                  ? '更新于 ${formatRelative(b.timestamp, now)}'
+                  : ((b.message ?? '').isNotEmpty
+                      ? '查询失败：${b.message}'
+                      : '查询失败'),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(
+                      color: b.success ? cs.outline : cs.error,
+                      fontSize: 11),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
         ],
       ),
     ]);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../adapters/registry.dart';
 import '../../core/formatters.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/provider_repository.dart';
@@ -35,6 +36,10 @@ class ProviderDetailPage extends ConsumerWidget {
           final p = state.provider;
           final cs = Theme.of(context).colorScheme;
           final now = ref.watch(tickerProvider).value ?? DateTime.now();
+          // 官方订阅未填地址时展示预设，保证复制出来的地址可直接用
+          final displayBaseUrl = p.baseUrl.isNotEmpty
+              ? p.baseUrl
+              : (AdapterRegistry.presetBaseUrls[p.adapterKind] ?? '');
 
           return tokensAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -71,14 +76,39 @@ class ProviderDetailPage extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        if (p.baseUrl.isNotEmpty)
+                        if (displayBaseUrl.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
-                            child: Text(p.baseUrl,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(color: cs.outline)),
+                            child: Row(
+                              children: [
+                                Icon(Icons.link, size: 13, color: cs.outline),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    p.baseUrl.isEmpty ? '（预设）$displayBaseUrl' : displayBaseUrl,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(color: cs.outline),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: '复制 Base URL',
+                                  visualDensity: VisualDensity.compact,
+                                  icon: Icon(Icons.copy,
+                                      size: 15, color: cs.outline),
+                                  onPressed: () async {
+                                    await Clipboard.setData(
+                                        ClipboardData(text: displayBaseUrl));
+                                    if (context.mounted) {
+                                      Toast.show(context, 'Base URL 已复制');
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         const SizedBox(height: 12),
                         if (state.canQueryQuota ||
@@ -249,8 +279,21 @@ class ProviderDetailPage extends ConsumerWidget {
             ],
             const Spacer(),
             if (b != null)
-              Text('更新于 ${formatRelative(b.timestamp, now)}',
-                  style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                b.success
+                    ? '更新于 ${formatRelative(b.timestamp, now)}'
+                    : ((b.message ?? '').isNotEmpty
+                        ? '查询失败：${b.message}'
+                        : '查询失败'),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(
+                        color: b.success ? cs.outline : cs.error,
+                        fontSize: 11),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
           ],
         ),
       ],

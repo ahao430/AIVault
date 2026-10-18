@@ -171,8 +171,8 @@ class ProviderRepository {
 
     final latestQuota = await _latestSnapshot(
         p.id, QuotaKind.windowQuota, successOnly: true);
-    final latestBalance = await _latestSnapshot(
-        p.id, QuotaKind.balance, successOnly: true);
+    // 余额读最近一条（含失败）：失败原因直接上屏，便于定位配置问题
+    final latestBalance = await _latestSnapshot(p.id, QuotaKind.balance);
     final latestUsage = await _latestSnapshot(
         p.id, QuotaKind.usage, successOnly: true);
 

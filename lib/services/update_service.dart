@@ -166,26 +166,44 @@ class UpdateService {
   Uri infoUri(String repo) => Uri.parse(
       'https://github.com/$repo/releases/latest/download/update-info.json');
 
+  /// GitHub 直连在国内移动网络常不可达（开 VPN 才通）。依次尝试直连与
+  /// 公共加速镜像前缀；镜像风格为「前缀 + 完整原始 URL」。
+  static const _dlMirrors = [
+    '', // 直连
+    'https://ghfast.top/',
+    'https://gh-proxy.com/',
+  ];
+
   Future<UpdateCheckResult> check({String? repoOverride}) async {
     final r = repoOverride ?? await effectiveRepo();
     if (r == null || r.isEmpty) {
       return const UpdateCheckResult(
           status: UpdateStatus.failed, error: '未配置更新源仓库');
     }
+    dynamic raw;
     try {
-      // update-info.json 由 Release 资产 CDN 下发，Content-Type 是
-      // octet-stream，dio 不会自动解码 → 拿到的是 String，手动 decode。
-      final infoRes = await _dio.getUri<dynamic>(infoUri(r),
-          options: Options(validateStatus: (_) => true));
-      if (infoRes.statusCode != 200 || infoRes.data == null) {
-        return const UpdateCheckResult(
-            status: UpdateStatus.failed, error: '暂无发布版本');
+      var gotResponse = false;
+      for (final mirror in _dlMirrors) {
+        try {
+          // update-info.json 由 Release 资产 CDN 下发，Content-Type 是
+          // octet-stream，dio 不会自动解码 → 拿到的是 String，手动 decode。
+          final infoRes = await _dio.getUri<dynamic>(
+              Uri.parse('$mirror${infoUri(r)}'),
+              options: Options(validateStatus: (_) => true));
+          gotResponse = true;
+          if (infoRes.statusCode == 404) break; // 有发布但无 info，重试无意义
+          if (infoRes.statusCode != 200 || infoRes.data == null) continue;
+          raw = infoRes.data;
+          if (raw is String) raw = jsonDecode(raw);
+          if (raw is Map) break;
+        } catch (_) {
+          // 网络不通 → 试下一个镜像
+        }
       }
-      dynamic raw = infoRes.data;
-      if (raw is String) raw = jsonDecode(raw);
       if (raw is! Map) {
-        return const UpdateCheckResult(
-            status: UpdateStatus.failed, error: '更新信息格式错误');
+        return UpdateCheckResult(
+            status: UpdateStatus.failed,
+            error: gotResponse ? '更新信息格式错误' : '无法连接更新源（GitHub 与镜像均不通）');
       }
       final info = UpdateInfo.fromJson(Map<String, dynamic>.from(raw));
       if (info == null) {
@@ -232,7 +250,7 @@ class UpdateService {
     }
   }
 
-  /// 下载 APK 到缓存目录，返回文件。
+  /// 下载 APK 到缓存目录，返回文件。直连失败时依次走镜像。
   Future<File> downloadApk(
     String url,
     String fileName, {
@@ -240,18 +258,28 @@ class UpdateService {
   }) async {
     final dir = Directory.systemTemp;
     final file = File('${dir.path}/$fileName');
-    await _dio.download(
-      url,
-      file.path,
-      options: Options(
-        // GitHub release 下载会 302 到对象存储
-        followRedirects: true,
-        maxRedirects: 5,
-        receiveTimeout: const Duration(minutes: 30),
-      ),
-      onReceiveProgress: onProgress,
-    );
-    return file;
+    Object? lastError;
+    for (final mirror in _dlMirrors) {
+      try {
+        await _dio.download(
+          '$mirror$url',
+          file.path,
+          options: Options(
+            // GitHub release 下载会 302 到对象存储
+            followRedirects: true,
+            maxRedirects: 5,
+            receiveTimeout: const Duration(minutes: 30),
+          ),
+          onReceiveProgress: onProgress,
+        );
+        return file;
+      } catch (e) {
+        lastError = e;
+        // 换镜像前清掉半截文件
+        if (await file.exists()) await file.delete().catchError((_) => file);
+      }
+    }
+    throw Exception('下载失败（GitHub 与镜像均不通）：$lastError');
   }
 
   /// 触发系统安装器（Android 8+ 需用户允许「安装未知应用」）。

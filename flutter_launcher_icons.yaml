@@ -1,0 +1,10 @@
+# 生成命令：dart run flutter_launcher_icons
+# 图标由 gpt-image-2 生成（金库转盘 + AI 星火），方形满幅；
+# 自适应图标用整图作 background 层（主体居中约占 55%，圆形/方圆裁切安全），
+# foreground 层全透明占位。
+flutter_launcher_icons:
+  image_path: "assets/images/app_icon.png"
+  android: true
+  remove_alpha_ios: false
+  adaptive_icon_background: "assets/images/app_icon.png"
+  adaptive_icon_foreground: "assets/images/adaptive_fg.png"

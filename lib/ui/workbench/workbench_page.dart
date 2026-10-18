@@ -12,9 +12,21 @@ class WorkbenchPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(title: const Text('工作台')),
-      body: ListView(
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+              isDark
+                  ? 'assets/images/bg_dark.webp'
+                  : 'assets/images/bg_light.webp',
+            ),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: ListView(
         padding: const EdgeInsets.all(12),
         children: [
           Row(
@@ -65,6 +77,7 @@ class WorkbenchPage extends StatelessWidget {
             )),
           ),
         ],
+        ),
       ),
     );
   }

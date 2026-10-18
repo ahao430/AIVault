@@ -27,7 +27,8 @@ BalanceResult? parseDeepSeekBalance(Map body) {
   );
 }
 
-/// DeepSeek（OpenAI 格式）：模型/测试/预热 + 余额查询。
+/// DeepSeek（OpenAI 格式）：模型/测试 + 余额查询。
+/// 按量计费（无订阅窗口额度），因此不提供预热能力。
 class DeepSeekAdapter extends OpenAICompatibleAdapter
     with OfficialAdapterMixin {
   DeepSeekAdapter({super.dio});
@@ -39,7 +40,6 @@ class DeepSeekAdapter extends OpenAICompatibleAdapter
   AdapterCapabilities get capabilities => const AdapterCapabilities(
         models: true,
         testModel: true,
-        prewarm: true,
         balance: true,
       );
 
@@ -76,7 +76,7 @@ class DeepSeekAdapter extends OpenAICompatibleAdapter
   }
 }
 
-/// DeepSeek（Anthropic 格式）：同一把 Key，同样的余额接口。
+/// DeepSeek（Anthropic 格式）：同一把 Key，同样的余额接口；按量无预热。
 class DeepSeekAnthropicAdapter extends AnthropicOfficialAdapter {
   DeepSeekAnthropicAdapter({super.dio})
       : super(
@@ -87,7 +87,6 @@ class DeepSeekAnthropicAdapter extends AnthropicOfficialAdapter {
   AdapterCapabilities get capabilities => const AdapterCapabilities(
         models: true,
         testModel: true,
-        prewarm: true,
         balance: true,
       );
 
