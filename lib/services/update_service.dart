@@ -4,6 +4,26 @@ import 'package:dio/dio.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../core/secure_store.dart';
+
+/// 更新源仓库（owner/repo）解析优先级：
+/// 1. 构建时注入：--dart-define=GITHUB_REPO=owner/repo（发版 workflow 自动传）
+/// 2. 用户在检查更新页手动配置（存安全存储）
+/// 3. 未配置：提示无法检查
+const kGithubRepoDefine = String.fromEnvironment('GITHUB_REPO');
+
+String? normalizeRepo(String raw) {
+  final t = raw.trim();
+  if (t.isEmpty) return null;
+  // 容错：完整 URL / 缺 owner 的输入
+  var s = t;
+  final m = RegExp(r'github\.com/([^/]+/[^/]+)').firstMatch(s);
+  if (m != null) s = m.group(1)!;
+  s = s.replaceAll('.git', '');
+  if (!RegExp(r'^[\w.-]+/[\w.-]+$').hasMatch(s)) return null;
+  return s;
+}
+
 /// 发版元数据（CI 随 Release 附带的 update-info.json）
 class UpdateInfo {
   const UpdateInfo({
@@ -110,23 +130,43 @@ String detectAbiFromBuildProp(String content) {
 /// 按 ABI 下载 APK → 交给系统安装器。
 /// 固定 keystore 签名保证覆盖安装不丢数据（本地 SQLite / 安全存储保留）。
 class UpdateService {
-  UpdateService({Dio? dio, this.repo})
-      : _dio = dio ?? Dio(BaseOptions(
+  UpdateService({Dio? dio, this.repo, SecureStore? secureStore})
+      : _secureStore = secureStore,
+        _dio = dio ?? Dio(BaseOptions(
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(minutes: 10),
         ));
 
   final Dio _dio;
+  final SecureStore? _secureStore;
+  static const _kRepoPref = 'update:repo';
 
-  /// GitHub 仓库（owner/repo），从构造或调用处注入
+  /// GitHub 仓库（owner/repo），测试 / 显式注入用
   final String? repo;
+
+  /// 生效的更新源：dart-define > 用户配置 > 构造注入。
+  Future<String?> effectiveRepo() async {
+    if (kGithubRepoDefine.isNotEmpty) return kGithubRepoDefine;
+    final saved = await _secureStore?.read(_kRepoPref);
+    final normalized = saved == null ? null : normalizeRepo(saved);
+    if (normalized != null) return normalized;
+    return repo;
+  }
+
+  Future<void> saveUserRepo(String raw) async {
+    final normalized = normalizeRepo(raw);
+    if (normalized == null) {
+      throw ArgumentError('仓库地址格式应为 owner/repo');
+    }
+    await _secureStore?.write(_kRepoPref, normalized);
+  }
 
   /// update-info.json 固定走 latest release 的下载地址（一次请求拿全）
   Uri infoUri(String repo) => Uri.parse(
       'https://github.com/$repo/releases/latest/download/update-info.json');
 
   Future<UpdateCheckResult> check({String? repoOverride}) async {
-    final r = repoOverride ?? repo;
+    final r = repoOverride ?? await effectiveRepo();
     if (r == null || r.isEmpty) {
       return const UpdateCheckResult(
           status: UpdateStatus.failed, error: '未配置更新源仓库');

@@ -55,6 +55,29 @@ void main() {
     });
   });
 
+  group('更新源仓库地址解析', () {
+    test('标准 owner/repo', () {
+      expect(normalizeRepo('wanghao/AIVault'), 'wanghao/AIVault');
+    });
+
+    test('完整 GitHub URL 提取', () {
+      expect(normalizeRepo('https://github.com/wanghao/AIVault'),
+          'wanghao/AIVault');
+      expect(normalizeRepo('https://github.com/wanghao/AIVault/releases'),
+          'wanghao/AIVault');
+    });
+
+    test('去掉 .git 后缀与首尾空白', () {
+      expect(normalizeRepo('  wanghao/AIVault.git '), 'wanghao/AIVault');
+    });
+
+    test('非法格式返回 null', () {
+      expect(normalizeRepo(''), isNull);
+      expect(normalizeRepo('just-a-name'), isNull);
+      expect(normalizeRepo('a/b/c'), isNull);
+    });
+  });
+
   group('ABI 检测（build.prop 解析）', () {
     test('64 位设备', () {
       const prop = '''

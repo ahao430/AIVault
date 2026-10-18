@@ -64,7 +64,10 @@ App「设置 → 检查更新」（仅 Android 显示）：
 2. 读取 `/system/build.prop` 判断设备 ABI，自动选择对应安装包
 3. 下载（带进度）后交给系统安装器；Android 8+ 首次需允许「安装未知应用」
 
-**首次发布前**：把 `lib/ui/settings/update_page.dart` 中的 `_repo` 常量改成你的实际仓库（`owner/repo`）。
+更新源仓库地址自动注入：发版构建时 workflow 通过
+`--dart-define=GITHUB_REPO=${{ github.repository }}` 写入安装包，
+无需改任何代码。本地构建 / fork 用户也可在「检查更新」页
+手动配置仓库地址（owner/repo，支持粘贴完整 GitHub 链接）。
 
 ## 升级不丢数据的保证
 
