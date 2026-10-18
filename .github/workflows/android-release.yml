@@ -24,6 +24,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.38.9   # 与本地开发版本一致，保证 analyzer/test 结果可复现
           cache: true
 
       - name: Install Android platforms
