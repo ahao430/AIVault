@@ -75,6 +75,7 @@ class UpdateCheckResult {
     this.currentVersion,
     this.currentBuild,
     this.error,
+    this.via,
   });
 
   final UpdateStatus status;
@@ -82,6 +83,9 @@ class UpdateCheckResult {
   final String? currentVersion;
   final int? currentBuild;
   final String? error;
+
+  /// 信息来源：直连 / 镜像域名（排查镜像缓存问题时用）
+  final String? via;
 }
 
 /// 版本比较（纯函数）：优先比较 buildNumber（等价 versionCode，
@@ -181,21 +185,28 @@ class UpdateService {
           status: UpdateStatus.failed, error: '未配置更新源仓库');
     }
     dynamic raw;
+    String? via;
     try {
       var gotResponse = false;
+      // latest/download 是可变地址，公共镜像会缓存旧内容（刚发版后
+      // 常见）：带时间戳查询参数穿透缓存，保证拿到最新发布信息。
+      final bust = DateTime.now().millisecondsSinceEpoch;
       for (final mirror in _dlMirrors) {
         try {
           // update-info.json 由 Release 资产 CDN 下发，Content-Type 是
           // octet-stream，dio 不会自动解码 → 拿到的是 String，手动 decode。
           final infoRes = await _dio.getUri<dynamic>(
-              Uri.parse('$mirror${infoUri(r)}'),
+              Uri.parse('$mirror${infoUri(r)}?t=$bust'),
               options: Options(validateStatus: (_) => true));
           gotResponse = true;
           if (infoRes.statusCode == 404) break; // 有发布但无 info，重试无意义
           if (infoRes.statusCode != 200 || infoRes.data == null) continue;
           raw = infoRes.data;
           if (raw is String) raw = jsonDecode(raw);
-          if (raw is Map) break;
+          if (raw is Map) {
+            via = mirror.isEmpty ? '直连' : mirror;
+            break;
+          }
         } catch (_) {
           // 网络不通 → 试下一个镜像
         }
@@ -221,6 +232,7 @@ class UpdateService {
         info: info,
         currentVersion: pkg.version,
         currentBuild: currentBuild,
+        via: via,
       );
     } catch (e) {
       return UpdateCheckResult(

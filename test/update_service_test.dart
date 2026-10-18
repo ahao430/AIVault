@@ -20,6 +20,12 @@ void main() {
       expect(isNewer('0.4', 5, '0.3.9', 5), isTrue,
           reason: '0.4 视为 0.4.0');
     });
+
+    test('真实场景回归：0.4.4+5 检测 0.4.5+6 必须提示升级', () {
+      // 回归保护：手机 0.4.4 (build 5)，远端 0.4.5 (build 6)
+      expect(isNewer('0.4.5', 6, '0.4.4', 5), isTrue);
+      expect(isNewer('0.4.5', 6, '0.4.5', 6), isFalse);
+    });
   });
 
   group('update-info.json 解析', () {

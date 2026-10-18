@@ -162,7 +162,8 @@ class _UpdatePageState extends ConsumerState<UpdatePage> {
                                   if (r?.currentVersion != null)
                                     Text(
                                       '当前 ${r!.currentVersion} (${r.currentBuild})'
-                                      '${r.info != null ? ' → 最新 ${r.info!.version} (${r.info!.buildNumber})' : ''}',
+                                      '${r.info != null ? ' → 最新 ${r.info!.version} (${r.info!.buildNumber})' : ''}'
+                                      '${r.via != null ? ' · 来源 ${r.via}' : ''}',
                                       style: TextStyle(
                                           fontSize: 12, color: cs.outline),
                                     ),
