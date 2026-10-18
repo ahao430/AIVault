@@ -9,6 +9,7 @@ import '../../state/app_providers.dart';
 import 'model_test_history_sheet.dart';
 import 'quota_history_page.dart';
 import 'token_edit_sheet.dart';
+import 'token_export_dialog.dart';
 
 /// 供应商详情：额度区 + Token 列表（Token 展开显示模型与测试）。
 class ProviderDetailPage extends ConsumerWidget {
@@ -340,6 +341,21 @@ class _TokenCardState extends ConsumerState<_TokenCard> {
                       case 'sync':
                         _syncModels();
                         break;
+                      case 'export':
+                        final state =
+                            await ref.read(repositoryProvider).loadOne(widget.providerId);
+                        final apiKey =
+                            await ref.read(repositoryProvider).readApiKey(token.id);
+                        if (!context.mounted) return;
+                        showTokenExportDialog(
+                          context,
+                          providerName:
+                              state?.provider.name ?? 'Provider',
+                          baseUrl: state?.provider.baseUrl ?? '',
+                          readApiKey: () async => apiKey,
+                          models: models.map((m) => m.modelId).toList(),
+                        );
+                        break;
                       case 'delete':
                         final ok = await showDialog<bool>(
                           context: context,
@@ -369,6 +385,7 @@ class _TokenCardState extends ConsumerState<_TokenCard> {
                   itemBuilder: (_) => const [
                     PopupMenuItem(value: 'edit', child: Text('编辑')),
                     PopupMenuItem(value: 'sync', child: Text('同步模型列表')),
+                    PopupMenuItem(value: 'export', child: Text('导出到 CC Switch / Magpie…')),
                     PopupMenuItem(value: 'delete', child: Text('删除')),
                   ],
                 ),

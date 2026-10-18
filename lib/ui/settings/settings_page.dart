@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/backup_service.dart';
 import '../../state/app_providers.dart';
 import 'hidden_providers_page.dart';
+import 'webdav_page.dart';
 
 final backupServiceProvider = Provider<BackupService>((ref) => BackupService());
 
@@ -35,7 +36,10 @@ class SettingsPage extends ConsumerWidget {
             _item(
               icon: Icons.cloud_sync_outlined,
               title: 'WebDAV 同步',
-              subtitle: '个人设备间同步订阅数据（后续版本）',
+              subtitle: '个人设备间同步订阅数据（含冲突检测）',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const WebdavPage(),
+              )),
             ),
           ]),
           _section(context, '订阅管理', [

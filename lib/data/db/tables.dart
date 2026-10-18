@@ -134,3 +134,29 @@ class PrewarmRecords extends Table {
   TextColumn get message => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
 }
+
+/// WebDAV 同步配置（单行，id 恒为 1；密码存安全存储，这里只存引用）
+class WebdavConfigs extends Table {
+  IntColumn get id => integer().withDefault(const Constant(1))();
+  TextColumn get url => text()();
+  TextColumn get username => text()();
+
+  /// WebDAV 密码在 Secure Storage 中的引用 key
+  TextColumn get passwordRef => text()();
+  TextColumn get remotePath =>
+      text().withDefault(const Constant('/aivault'))();
+
+  /// 同步是否包含 API Key 等密钥（敏感信息单独控制，Plan #50）
+  BoolColumn get includeSecrets =>
+      boolean().withDefault(const Constant(true))();
+
+  /// 本设备标识（用于同步元数据展示）
+  TextColumn get deviceId => text()();
+
+  /// 上次成功同步时间
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

@@ -3771,6 +3771,576 @@ class PrewarmRecordsCompanion extends UpdateCompanion<PrewarmRecord> {
   }
 }
 
+class $WebdavConfigsTable extends WebdavConfigs
+    with TableInfo<$WebdavConfigsTable, WebdavConfig> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WebdavConfigsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usernameMeta = const VerificationMeta(
+    'username',
+  );
+  @override
+  late final GeneratedColumn<String> username = GeneratedColumn<String>(
+    'username',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _passwordRefMeta = const VerificationMeta(
+    'passwordRef',
+  );
+  @override
+  late final GeneratedColumn<String> passwordRef = GeneratedColumn<String>(
+    'password_ref',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _remotePathMeta = const VerificationMeta(
+    'remotePath',
+  );
+  @override
+  late final GeneratedColumn<String> remotePath = GeneratedColumn<String>(
+    'remote_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('/aivault'),
+  );
+  static const VerificationMeta _includeSecretsMeta = const VerificationMeta(
+    'includeSecrets',
+  );
+  @override
+  late final GeneratedColumn<bool> includeSecrets = GeneratedColumn<bool>(
+    'include_secrets',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("include_secrets" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    url,
+    username,
+    passwordRef,
+    remotePath,
+    includeSecrets,
+    deviceId,
+    lastSyncedAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'webdav_configs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WebdavConfig> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_urlMeta);
+    }
+    if (data.containsKey('username')) {
+      context.handle(
+        _usernameMeta,
+        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_usernameMeta);
+    }
+    if (data.containsKey('password_ref')) {
+      context.handle(
+        _passwordRefMeta,
+        passwordRef.isAcceptableOrUnknown(
+          data['password_ref']!,
+          _passwordRefMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_passwordRefMeta);
+    }
+    if (data.containsKey('remote_path')) {
+      context.handle(
+        _remotePathMeta,
+        remotePath.isAcceptableOrUnknown(data['remote_path']!, _remotePathMeta),
+      );
+    }
+    if (data.containsKey('include_secrets')) {
+      context.handle(
+        _includeSecretsMeta,
+        includeSecrets.isAcceptableOrUnknown(
+          data['include_secrets']!,
+          _includeSecretsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WebdavConfig map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WebdavConfig(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      )!,
+      username: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      )!,
+      passwordRef: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}password_ref'],
+      )!,
+      remotePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_path'],
+      )!,
+      includeSecrets: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}include_secrets'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WebdavConfigsTable createAlias(String alias) {
+    return $WebdavConfigsTable(attachedDatabase, alias);
+  }
+}
+
+class WebdavConfig extends DataClass implements Insertable<WebdavConfig> {
+  final int id;
+  final String url;
+  final String username;
+
+  /// WebDAV 密码在 Secure Storage 中的引用 key
+  final String passwordRef;
+  final String remotePath;
+
+  /// 同步是否包含 API Key 等密钥（敏感信息单独控制，Plan #50）
+  final bool includeSecrets;
+
+  /// 本设备标识（用于同步元数据展示）
+  final String deviceId;
+
+  /// 上次成功同步时间
+  final DateTime? lastSyncedAt;
+  final DateTime updatedAt;
+  const WebdavConfig({
+    required this.id,
+    required this.url,
+    required this.username,
+    required this.passwordRef,
+    required this.remotePath,
+    required this.includeSecrets,
+    required this.deviceId,
+    this.lastSyncedAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['url'] = Variable<String>(url);
+    map['username'] = Variable<String>(username);
+    map['password_ref'] = Variable<String>(passwordRef);
+    map['remote_path'] = Variable<String>(remotePath);
+    map['include_secrets'] = Variable<bool>(includeSecrets);
+    map['device_id'] = Variable<String>(deviceId);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  WebdavConfigsCompanion toCompanion(bool nullToAbsent) {
+    return WebdavConfigsCompanion(
+      id: Value(id),
+      url: Value(url),
+      username: Value(username),
+      passwordRef: Value(passwordRef),
+      remotePath: Value(remotePath),
+      includeSecrets: Value(includeSecrets),
+      deviceId: Value(deviceId),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory WebdavConfig.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WebdavConfig(
+      id: serializer.fromJson<int>(json['id']),
+      url: serializer.fromJson<String>(json['url']),
+      username: serializer.fromJson<String>(json['username']),
+      passwordRef: serializer.fromJson<String>(json['passwordRef']),
+      remotePath: serializer.fromJson<String>(json['remotePath']),
+      includeSecrets: serializer.fromJson<bool>(json['includeSecrets']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'url': serializer.toJson<String>(url),
+      'username': serializer.toJson<String>(username),
+      'passwordRef': serializer.toJson<String>(passwordRef),
+      'remotePath': serializer.toJson<String>(remotePath),
+      'includeSecrets': serializer.toJson<bool>(includeSecrets),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  WebdavConfig copyWith({
+    int? id,
+    String? url,
+    String? username,
+    String? passwordRef,
+    String? remotePath,
+    bool? includeSecrets,
+    String? deviceId,
+    Value<DateTime?> lastSyncedAt = const Value.absent(),
+    DateTime? updatedAt,
+  }) => WebdavConfig(
+    id: id ?? this.id,
+    url: url ?? this.url,
+    username: username ?? this.username,
+    passwordRef: passwordRef ?? this.passwordRef,
+    remotePath: remotePath ?? this.remotePath,
+    includeSecrets: includeSecrets ?? this.includeSecrets,
+    deviceId: deviceId ?? this.deviceId,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  WebdavConfig copyWithCompanion(WebdavConfigsCompanion data) {
+    return WebdavConfig(
+      id: data.id.present ? data.id.value : this.id,
+      url: data.url.present ? data.url.value : this.url,
+      username: data.username.present ? data.username.value : this.username,
+      passwordRef: data.passwordRef.present
+          ? data.passwordRef.value
+          : this.passwordRef,
+      remotePath: data.remotePath.present
+          ? data.remotePath.value
+          : this.remotePath,
+      includeSecrets: data.includeSecrets.present
+          ? data.includeSecrets.value
+          : this.includeSecrets,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebdavConfig(')
+          ..write('id: $id, ')
+          ..write('url: $url, ')
+          ..write('username: $username, ')
+          ..write('passwordRef: $passwordRef, ')
+          ..write('remotePath: $remotePath, ')
+          ..write('includeSecrets: $includeSecrets, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    url,
+    username,
+    passwordRef,
+    remotePath,
+    includeSecrets,
+    deviceId,
+    lastSyncedAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WebdavConfig &&
+          other.id == this.id &&
+          other.url == this.url &&
+          other.username == this.username &&
+          other.passwordRef == this.passwordRef &&
+          other.remotePath == this.remotePath &&
+          other.includeSecrets == this.includeSecrets &&
+          other.deviceId == this.deviceId &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class WebdavConfigsCompanion extends UpdateCompanion<WebdavConfig> {
+  final Value<int> id;
+  final Value<String> url;
+  final Value<String> username;
+  final Value<String> passwordRef;
+  final Value<String> remotePath;
+  final Value<bool> includeSecrets;
+  final Value<String> deviceId;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<DateTime> updatedAt;
+  const WebdavConfigsCompanion({
+    this.id = const Value.absent(),
+    this.url = const Value.absent(),
+    this.username = const Value.absent(),
+    this.passwordRef = const Value.absent(),
+    this.remotePath = const Value.absent(),
+    this.includeSecrets = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  WebdavConfigsCompanion.insert({
+    this.id = const Value.absent(),
+    required String url,
+    required String username,
+    required String passwordRef,
+    this.remotePath = const Value.absent(),
+    this.includeSecrets = const Value.absent(),
+    required String deviceId,
+    this.lastSyncedAt = const Value.absent(),
+    required DateTime updatedAt,
+  }) : url = Value(url),
+       username = Value(username),
+       passwordRef = Value(passwordRef),
+       deviceId = Value(deviceId),
+       updatedAt = Value(updatedAt);
+  static Insertable<WebdavConfig> custom({
+    Expression<int>? id,
+    Expression<String>? url,
+    Expression<String>? username,
+    Expression<String>? passwordRef,
+    Expression<String>? remotePath,
+    Expression<bool>? includeSecrets,
+    Expression<String>? deviceId,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (url != null) 'url': url,
+      if (username != null) 'username': username,
+      if (passwordRef != null) 'password_ref': passwordRef,
+      if (remotePath != null) 'remote_path': remotePath,
+      if (includeSecrets != null) 'include_secrets': includeSecrets,
+      if (deviceId != null) 'device_id': deviceId,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  WebdavConfigsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? url,
+    Value<String>? username,
+    Value<String>? passwordRef,
+    Value<String>? remotePath,
+    Value<bool>? includeSecrets,
+    Value<String>? deviceId,
+    Value<DateTime?>? lastSyncedAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return WebdavConfigsCompanion(
+      id: id ?? this.id,
+      url: url ?? this.url,
+      username: username ?? this.username,
+      passwordRef: passwordRef ?? this.passwordRef,
+      remotePath: remotePath ?? this.remotePath,
+      includeSecrets: includeSecrets ?? this.includeSecrets,
+      deviceId: deviceId ?? this.deviceId,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (username.present) {
+      map['username'] = Variable<String>(username.value);
+    }
+    if (passwordRef.present) {
+      map['password_ref'] = Variable<String>(passwordRef.value);
+    }
+    if (remotePath.present) {
+      map['remote_path'] = Variable<String>(remotePath.value);
+    }
+    if (includeSecrets.present) {
+      map['include_secrets'] = Variable<bool>(includeSecrets.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebdavConfigsCompanion(')
+          ..write('id: $id, ')
+          ..write('url: $url, ')
+          ..write('username: $username, ')
+          ..write('passwordRef: $passwordRef, ')
+          ..write('remotePath: $remotePath, ')
+          ..write('includeSecrets: $includeSecrets, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3783,6 +4353,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $CheckinRecordsTable checkinRecords = $CheckinRecordsTable(this);
   late final $PrewarmRecordsTable prewarmRecords = $PrewarmRecordsTable(this);
+  late final $WebdavConfigsTable webdavConfigs = $WebdavConfigsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3795,6 +4366,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     modelTestRecords,
     checkinRecords,
     prewarmRecords,
+    webdavConfigs,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -7043,6 +7615,284 @@ typedef $$PrewarmRecordsTableProcessedTableManager =
       PrewarmRecord,
       PrefetchHooks Function({bool providerId})
     >;
+typedef $$WebdavConfigsTableCreateCompanionBuilder =
+    WebdavConfigsCompanion Function({
+      Value<int> id,
+      required String url,
+      required String username,
+      required String passwordRef,
+      Value<String> remotePath,
+      Value<bool> includeSecrets,
+      required String deviceId,
+      Value<DateTime?> lastSyncedAt,
+      required DateTime updatedAt,
+    });
+typedef $$WebdavConfigsTableUpdateCompanionBuilder =
+    WebdavConfigsCompanion Function({
+      Value<int> id,
+      Value<String> url,
+      Value<String> username,
+      Value<String> passwordRef,
+      Value<String> remotePath,
+      Value<bool> includeSecrets,
+      Value<String> deviceId,
+      Value<DateTime?> lastSyncedAt,
+      Value<DateTime> updatedAt,
+    });
+
+class $$WebdavConfigsTableFilterComposer
+    extends Composer<_$AppDatabase, $WebdavConfigsTable> {
+  $$WebdavConfigsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get username => $composableBuilder(
+    column: $table.username,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get passwordRef => $composableBuilder(
+    column: $table.passwordRef,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get includeSecrets => $composableBuilder(
+    column: $table.includeSecrets,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WebdavConfigsTableOrderingComposer
+    extends Composer<_$AppDatabase, $WebdavConfigsTable> {
+  $$WebdavConfigsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get username => $composableBuilder(
+    column: $table.username,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get passwordRef => $composableBuilder(
+    column: $table.passwordRef,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get includeSecrets => $composableBuilder(
+    column: $table.includeSecrets,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WebdavConfigsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WebdavConfigsTable> {
+  $$WebdavConfigsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<String> get username =>
+      $composableBuilder(column: $table.username, builder: (column) => column);
+
+  GeneratedColumn<String> get passwordRef => $composableBuilder(
+    column: $table.passwordRef,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get includeSecrets => $composableBuilder(
+    column: $table.includeSecrets,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$WebdavConfigsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WebdavConfigsTable,
+          WebdavConfig,
+          $$WebdavConfigsTableFilterComposer,
+          $$WebdavConfigsTableOrderingComposer,
+          $$WebdavConfigsTableAnnotationComposer,
+          $$WebdavConfigsTableCreateCompanionBuilder,
+          $$WebdavConfigsTableUpdateCompanionBuilder,
+          (
+            WebdavConfig,
+            BaseReferences<_$AppDatabase, $WebdavConfigsTable, WebdavConfig>,
+          ),
+          WebdavConfig,
+          PrefetchHooks Function()
+        > {
+  $$WebdavConfigsTableTableManager(_$AppDatabase db, $WebdavConfigsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WebdavConfigsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WebdavConfigsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WebdavConfigsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> url = const Value.absent(),
+                Value<String> username = const Value.absent(),
+                Value<String> passwordRef = const Value.absent(),
+                Value<String> remotePath = const Value.absent(),
+                Value<bool> includeSecrets = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => WebdavConfigsCompanion(
+                id: id,
+                url: url,
+                username: username,
+                passwordRef: passwordRef,
+                remotePath: remotePath,
+                includeSecrets: includeSecrets,
+                deviceId: deviceId,
+                lastSyncedAt: lastSyncedAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String url,
+                required String username,
+                required String passwordRef,
+                Value<String> remotePath = const Value.absent(),
+                Value<bool> includeSecrets = const Value.absent(),
+                required String deviceId,
+                Value<DateTime?> lastSyncedAt = const Value.absent(),
+                required DateTime updatedAt,
+              }) => WebdavConfigsCompanion.insert(
+                id: id,
+                url: url,
+                username: username,
+                passwordRef: passwordRef,
+                remotePath: remotePath,
+                includeSecrets: includeSecrets,
+                deviceId: deviceId,
+                lastSyncedAt: lastSyncedAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WebdavConfigsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WebdavConfigsTable,
+      WebdavConfig,
+      $$WebdavConfigsTableFilterComposer,
+      $$WebdavConfigsTableOrderingComposer,
+      $$WebdavConfigsTableAnnotationComposer,
+      $$WebdavConfigsTableCreateCompanionBuilder,
+      $$WebdavConfigsTableUpdateCompanionBuilder,
+      (
+        WebdavConfig,
+        BaseReferences<_$AppDatabase, $WebdavConfigsTable, WebdavConfig>,
+      ),
+      WebdavConfig,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7061,4 +7911,6 @@ class $AppDatabaseManager {
       $$CheckinRecordsTableTableManager(_db, _db.checkinRecords);
   $$PrewarmRecordsTableTableManager get prewarmRecords =>
       $$PrewarmRecordsTableTableManager(_db, _db.prewarmRecords);
+  $$WebdavConfigsTableTableManager get webdavConfigs =>
+      $$WebdavConfigsTableTableManager(_db, _db.webdavConfigs);
 }
