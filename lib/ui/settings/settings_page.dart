@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../services/backup_service.dart';
 import '../../state/app_providers.dart';
+import 'app_lock_settings_page.dart';
 import 'hidden_providers_page.dart';
 import 'webdav_page.dart';
 
@@ -56,7 +57,10 @@ class SettingsPage extends ConsumerWidget {
             _item(
               icon: Icons.lock_outline,
               title: '应用锁',
-              subtitle: 'Face ID / 指纹 / PIN（后续版本）',
+              subtitle: 'PIN + 生物识别（Touch ID / Face ID / 指纹）',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const AppLockSettingsPage(),
+              )),
             ),
             _item(
               icon: Icons.key_outlined,

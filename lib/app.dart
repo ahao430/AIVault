@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme.dart';
+import 'state/lock_providers.dart';
 import 'ui/home/home_page.dart';
+import 'ui/lock/lock_screen.dart';
 import 'ui/settings/settings_page.dart';
 import 'ui/workbench/workbench_page.dart';
 
@@ -14,7 +17,7 @@ class AIVaultApp extends StatelessWidget {
       title: 'AIVault',
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      home: const MainShell(),
+      home: const LockGate(child: MainShell()),
     );
   }
 }
@@ -62,5 +65,22 @@ class _MainShellState extends State<MainShell> {
         ],
       ),
     );
+  }
+}
+
+
+/// App 锁门卫（Plan #54）：锁定时以锁屏覆盖全部内容。
+class LockGate extends ConsumerWidget {
+  const LockGate({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lock = ref.watch(lockProvider);
+    if (lock.locked) {
+      return const LockScreen();
+    }
+    return child;
   }
 }

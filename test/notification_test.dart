@@ -5,7 +5,7 @@ import 'package:aivault/data/repositories/notification_repository.dart';
 import 'package:aivault/data/repositories/provider_repository.dart';
 import 'package:aivault/adapters/provider_adapter.dart';
 import 'package:aivault/services/notification_engine.dart';
-import 'package:drift/drift.dart' hide Column, Provider;
+import 'package:drift/drift.dart' hide Column;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -89,16 +89,40 @@ class HomePage extends ConsumerWidget {
               // 让下拉动画停留片刻后收起，任务继续在后台执行
               await Future<void>.delayed(const Duration(milliseconds: 800));
             },
-            child: ListView.builder(
+            child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: list.length + 1,
-              itemBuilder: (_, i) {
-                if (i == 0) {
+              slivers: [
+                SliverToBoxAdapter(
                   // 远程状态区（Plan #41）：只展示在线 SSH 主机
-                  return const _RemoteStatusCard();
-                }
-                return ProviderCard(state: list[i - 1]);
-              },
+                  child: _RemoteStatusCard(),
+                ),
+                SliverReorderableList(
+                  itemCount: list.length,
+                  onReorder: (oldIndex, newIndex) {
+                    if (newIndex > oldIndex) newIndex -= 1;
+                    final ids = [
+                      for (final s in list) s.provider.id
+                    ];
+                      final item = ids.removeAt(oldIndex);
+                      ids.insert(newIndex, item);
+                      unawaited(ref
+                          .read(repositoryProvider)
+                          .reorder(ids));
+                  },
+                  itemBuilder: (_, i) => KeyedSubtree(
+                    key: ValueKey(list[i].provider.id),
+                    child: Padding(
+                      // 保留 ReorderableDragStartListener 的默认位置：
+                      // 卡片整体可长按拖动（Material3 卡片自带 handle）
+                      padding: EdgeInsets.zero,
+                      child: ReorderableDragStartListener(
+                        index: i,
+                        child: ProviderCard(state: list[i]),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },

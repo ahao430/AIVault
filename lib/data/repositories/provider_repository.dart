@@ -237,6 +237,20 @@ class ProviderRepository {
     }
   }
 
+  /// 应用新的显示顺序（首页拖拽排序，Plan #42：排序规则最终由用户控制）。
+  /// [orderedIds] 为拖拽后的完整顺序；置顶项保持在前由查询排序兜底。
+  Future<void> reorder(List<String> orderedIds) async {
+    await _db.transaction(() async {
+      for (var i = 0; i < orderedIds.length; i++) {
+        await (_db.providers.update()
+              ..where((p) => p.id.equals(orderedIds[i])))
+            .write(ProvidersCompanion(
+                sortOrder: Value(i),
+                updatedAt: Value(DateTime.now())));
+      }
+    });
+  }
+
   Future<void> setPinned(String providerId, bool pinned) async {
     await (_db.providers.update()..where((p) => p.id.equals(providerId)))
         .write(ProvidersCompanion(pinned: Value(pinned), updatedAt: Value(DateTime.now())));
