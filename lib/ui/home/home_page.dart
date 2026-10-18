@@ -140,7 +140,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       // 保留 ReorderableDragStartListener 的默认位置：
                       // 卡片整体可长按拖动（Material3 卡片自带 handle）
                       padding: EdgeInsets.zero,
-                      child: ReorderableDragStartListener(
+                      child: ReorderableDelayedDragStartListener(
                         index: i,
                         child: ProviderCard(state: list[i]),
                       ),

@@ -142,7 +142,49 @@ class _DevHostTile extends ConsumerWidget {
         '${host.lastConnectedAt != null ? ' · 最近连接 ${formatRelative(host.lastConnectedAt!, DateTime.now())}' : ''}',
         style: TextStyle(fontSize: 12, color: cs.outline),
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: PopupMenuButton<String>(
+        onSelected: (v) async {
+          final service = ref.read(sshServiceProvider);
+          switch (v) {
+            case 'edit':
+              if (!context.mounted) return;
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => HostEditPage(hostId: host.id),
+              ));
+              break;
+            case 'disconnect':
+              await service.disconnect(host.id);
+              ref.invalidate(sshHostsProvider);
+              break;
+            case 'delete':
+              final ok = await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('删除主机'),
+                  content: Text('确定删除「${host.name}」？保存的凭证将一并删除。'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('取消')),
+                    FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('删除')),
+                  ],
+                ),
+              );
+              if (ok == true) {
+                await service.disconnect(host.id);
+                await ref.read(sshHostRepoProvider).deleteHost(host.id);
+              }
+              break;
+          }
+        },
+        itemBuilder: (_) => const [
+          PopupMenuItem(value: 'edit', child: Text('编辑')),
+          PopupMenuItem(value: 'disconnect', child: Text('断开连接')),
+          PopupMenuItem(value: 'delete', child: Text('删除')),
+        ],
+      ),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => TmuxSessionsPage(hostId: host.id),
       )),
