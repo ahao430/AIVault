@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xterm/xterm.dart';
 
 import '../../state/ssh_providers.dart';
+import 'terminal_ai_assist.dart';
 
 /// SSH 全屏终端（Plan #40）：基于 xterm 的真正终端模拟器，
 /// 支持 ANSI / 光标控制 / 全屏 TUI / tmux；桌面端支持
@@ -103,12 +104,13 @@ class _SshTerminalPageState extends ConsumerState<SshTerminalPage> {
 
   @override
   Widget build(BuildContext context) {
-    final hostName = ref.watch(sshHostsProvider).maybeWhen(
+    final host = ref.watch(sshHostsProvider).maybeWhen(
           data: (hosts) =>
-              hosts.where((h) => h.id == widget.hostId).firstOrNull?.name,
+              hosts.where((h) => h.id == widget.hostId).firstOrNull,
           orElse: () => null,
         );
-    final title = widget.sessionName ?? hostName ?? '终端';
+    final title = widget.sessionName ?? host?.name ?? '终端';
+    final hostLabel = host == null ? widget.hostId : '${host.username}@${host.host}';
 
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E1E),
@@ -117,6 +119,18 @@ class _SshTerminalPageState extends ConsumerState<SshTerminalPage> {
         backgroundColor: const Color(0xFF252526),
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            tooltip: 'AI 助手：把屏幕内容发给模型，命令可插入终端',
+            icon: const Icon(Icons.smart_toy_outlined),
+            onPressed: () => showTerminalAiAssist(
+              context,
+              hostLabel: hostLabel,
+              terminalContext: () => _terminal.buffer.getText(),
+              // 只插入不执行：不带换行，用户确认后自己按回车
+              onInsertCommand: (cmd) =>
+                  _session?.write(const Utf8Encoder().convert(cmd)),
+            ),
+          ),
           IconButton(
             tooltip: _showKeys ? '隐藏按键条' : '显示按键条',
             icon: Icon(_showKeys

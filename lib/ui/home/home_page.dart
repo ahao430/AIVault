@@ -210,7 +210,7 @@ class _RemoteStatusCard extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Text('远程开发',
+                    Text('远程主机',
                         style: Theme.of(context)
                             .textTheme
                             .titleSmall

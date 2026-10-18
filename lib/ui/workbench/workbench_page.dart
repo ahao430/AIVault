@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../chat/conversations_page.dart';
 import '../image/image_studio_page.dart';
 import '../ssh/hosts_page.dart';
+import '../ssh/remote_dev_page.dart';
 
-/// 工作台：功能入口卡片。AI 聊天已可用；画图 / 远程开发在后续版本迭代。
+/// 工作台：功能入口卡片。
 class WorkbenchPage extends StatelessWidget {
   const WorkbenchPage({super.key});
 
@@ -45,12 +46,22 @@ class WorkbenchPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _EntryCard(
-            icon: Icons.terminal_outlined,
-            title: '远程开发',
-            subtitle: 'SSH 主机 / tmux 会话',
-            color: cs.secondary,
+            icon: Icons.dns_outlined,
+            title: 'SSH 主机',
+            subtitle: '管理远程主机，终端操作 + AI 助手',
+            color: cs.primary,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => const SshHostsPage(),
+            )),
+          ),
+          const SizedBox(height: 12),
+          _EntryCard(
+            icon: Icons.terminal_outlined,
+            title: '远程开发',
+            subtitle: 'Tailscale 内网主机的 tmux 会话（Agent 观战）',
+            color: cs.secondary,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const RemoteDevPage(),
             )),
           ),
         ],

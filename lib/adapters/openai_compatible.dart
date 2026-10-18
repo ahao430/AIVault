@@ -43,15 +43,19 @@ class OpenAICompatibleAdapter extends ProviderAdapter {
   /// 子类可覆写：官方适配器在用户未填 Base URL 时回退到预设地址。
   String effectiveBase(ProviderContext ctx) => ctx.baseUrl;
 
-  /// 用户可能只填根地址，也可能带版本段（/v1、/v4、/v1beta 等）。
-  /// 只有路径末尾没有版本段时才补 /v1，否则智谱 …/paas/v4 会被拼成
-  /// …/paas/v4/v1 导致 404。
-  String apiBase(ProviderContext ctx) {
-    final base = normalizeBaseUrl(effectiveBase(ctx));
-    if (base.isEmpty) return '';
-    if (RegExp(r'/v\d+[a-z0-9]*$').hasMatch(base)) return base;
-    return '$base/v1';
+  /// 路径已带版本段（/v1、/v4、/v1beta 等）则原样返回，否则补 /v1。
+  /// 智谱 …/paas/v4、DeepSeek 根地址等官方端点依赖此判断，
+  /// 否则会被拼成 …/v4/v1 导致 404。聊天服务同样复用。
+  static String withVersionSegment(String base) {
+    final b = normalizeBaseUrl(base);
+    if (b.isEmpty) return '';
+    if (RegExp(r'/v\d+[a-z0-9]*$').hasMatch(b)) return b;
+    return '$b/v1';
   }
+
+  /// 用户可能只填根地址，也可能带版本段（/v1、/v4、/v1beta 等）。
+  String apiBase(ProviderContext ctx) =>
+      withVersionSegment(effectiveBase(ctx));
 
   Options _options(ProviderContext ctx, {Duration? timeout}) => Options(
         headers: {

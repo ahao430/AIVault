@@ -5,9 +5,12 @@ import '../../core/formatters.dart';
 import '../../data/db/database.dart' hide Provider;
 import '../../state/ssh_providers.dart';
 import 'host_edit_page.dart';
+import 'ssh_terminal_page.dart';
 import 'tmux_sessions_page.dart';
 
-/// SSH 主机列表（Plan #37）：作为远程开发的基础能力，不占底部 Tab。
+/// SSH 主机管理（Plan #37）：以「主机」为中心 —— 管理远程 SSH 主机，
+/// 点击直接进入全功能终端，可配合终端内 AI 助手操作。
+/// tmux 会话（远程开发）请用 RemoteDevPage，这里只留快捷入口。
 class SshHostsPage extends ConsumerWidget {
   const SshHostsPage({super.key});
 
@@ -43,21 +46,24 @@ class SshHostsPage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('开始远程开发',
+                        Text('管理远程主机',
                             style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(height: 8),
+                        Text(
+                          '添加 SSH 主机后随时登录操作，终端里可唤起 AI 助手，'
+                          '把屏幕内容发给模型、让它在终端里给出并插入命令。',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 12),
-                        _step(context, '1', '手机和电脑登录同一个 Tailscale'),
-                        _step(context, '2', '电脑开启 SSH（远程登录）'),
-                        _step(context, '3', '电脑安装 tmux'),
-                        _step(context, '4',
-                            '用 tmux 启动 Claude Code / Codex / OpenCode / Pi'),
-                        _step(context, '5', '在 App 中添加你的电脑'),
+                        _step(context, '1', '确认主机已开启 SSH（端口 22 或自定义）'),
+                        _step(context, '2', '在 App 中添加主机（密码或密钥）'),
+                        _step(context, '3', '点击主机进入终端，右上角唤起 AI 助手'),
                         const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton.icon(
                             icon: const Icon(Icons.add),
-                            label: const Text('开始配置'),
+                            label: const Text('添加主机'),
                             onPressed: () =>
                                 Navigator.of(context).push(MaterialPageRoute(
                               builder: (_) => const HostEditPage(),
@@ -146,6 +152,12 @@ class _HostTile extends ConsumerWidget {
                 builder: (_) => HostEditPage(hostId: host.id),
               ));
               break;
+            case 'tmux':
+              if (!context.mounted) return;
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => TmuxSessionsPage(hostId: host.id),
+              ));
+              break;
             case 'disconnect':
               await service.disconnect(host.id);
               ref.invalidate(sshHostsProvider);
@@ -175,12 +187,15 @@ class _HostTile extends ConsumerWidget {
         },
         itemBuilder: (_) => const [
           PopupMenuItem(value: 'edit', child: Text('编辑')),
+          PopupMenuItem(
+              value: 'tmux',
+              child: Text('tmux 会话（远程开发）')),
           PopupMenuItem(value: 'disconnect', child: Text('断开连接')),
           PopupMenuItem(value: 'delete', child: Text('删除')),
         ],
       ),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => TmuxSessionsPage(hostId: host.id),
+        builder: (_) => SshTerminalPage(hostId: host.id),
       )),
     );
   }

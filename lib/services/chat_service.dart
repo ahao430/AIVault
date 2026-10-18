@@ -130,12 +130,10 @@ class ChatService {
     }
   }
 
-  /// Base URL 已带 /v1 则不重复补（用户可能填到 /v1 或根地址）。
-  static String _chatBase(String url) {
-    final normalized = OpenAICompatibleAdapter.normalizeBaseUrl(url);
-    if (normalized.toLowerCase().endsWith('/v1')) return normalized;
-    return '$normalized/v1';
-  }
+  /// Base URL 已带版本段（/v1 /v4 /v1beta…）则不重复补（官方端点如智谱
+  /// …/paas/v4 不能再追加 /v1）。
+  static String _chatBase(String url) =>
+      OpenAICompatibleAdapter.withVersionSegment(url);
 
   Future<String> _readErrorBody(dynamic data) async {
     try {
