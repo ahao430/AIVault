@@ -48,3 +48,9 @@ app.*.map.json
 .v2c/
 .video_agent/
 out/
+
+# Android signing (固定令牌，绝不提交)
+android/keystore.properties
+android/app/release.keystore
+*.jks
+*.keystore

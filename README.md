@@ -71,6 +71,18 @@ flutter build macos --debug                                            # 构建
 > `Code Signature Invalid` 杀掉 App。当前 debug 构建未包含它；正式分发时请在 Xcode
 > 中开启 Keychain Sharing（配合签名团队）后再构建。
 
+## Android 发版
+
+按 ABI 拆分安装包（arm64-v8a 主流新机 / armeabi-v7a 老设备 / x86_64 模拟器，不做 universal 大包），
+固定 keystore 签名（GitHub Secrets 注入，覆盖安装升级不丢数据），
+应用内「设置 → 检查更新」自动检测 GitHub Release 并安装。
+
+```bash
+git tag v0.4.0+5 && git push origin v0.4.0+5   # 触发发版流水线
+```
+
+完整流程（密钥生成、Secrets 配置、故障排查）见 [RELEASING.md](./RELEASING.md)。
+
 ## 迭代路线（见 Plan.md）
 
 - **P1**：额度历史、任务中心、通知、WebDAV 同步、JSON 导入导出、CC Switch / Magpie 导出、桌面 Widget、App 锁

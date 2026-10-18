@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/backup_service.dart';
 import '../../services/local_notifier.dart';
 import '../../state/app_providers.dart';
+import 'dart:io' show Platform;
+
 import 'app_lock_settings_page.dart';
 import 'hidden_providers_page.dart';
+import 'update_page.dart';
 import 'webdav_page.dart';
 
 final backupServiceProvider = Provider<BackupService>((ref) => BackupService());
@@ -191,6 +194,17 @@ class SettingsPage extends ConsumerWidget {
               subtitle: '额度 / 余额 / 重置时间快捷查看（后续版本）',
             ),
           ]),
+          if (Platform.isAndroid)
+            _section(context, '更新', [
+              _item(
+                icon: Icons.system_update_alt,
+                title: '检查更新',
+                subtitle: '从 GitHub Releases 检查并安装新版本（覆盖升级不丢数据）',
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const UpdatePage(),
+                )),
+              ),
+            ]),
           _section(context, '关于', [
             _item(
               icon: Icons.info_outline,

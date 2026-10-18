@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0（2026-10-18）
+
+- Android 发版流水线：GitHub Actions 按 ABI 拆分 APK（arm64-v8a / armeabi-v7a / x86_64，
+  无 universal 大包），固定 keystore 签名（Secrets 注入 + apksigner 校验），
+  Release 附 update-info.json
+- 应用内更新（设置 → 检查更新）：读 GitHub Release 元数据、按设备 ABI 自动选包、
+  下载进度、系统安装器接管；同一签名覆盖安装不丢数据
+- 构建适配：阿里云镜像兜底（beforeProject 全局注入，CI 不受影响）、
+  core library desugaring、库插件 compileSdk 抬升
+
 ## 0.3.1（2026-10-18）
 
 - 性能：首页聚合流消除 N+1 查询（tokens / models 一次拉取内存分组）；
