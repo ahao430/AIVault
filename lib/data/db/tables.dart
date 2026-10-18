@@ -264,6 +264,9 @@ class SshHosts extends Table {
   /// 首次连接接受的 host key 指纹（SHA256:...）
   TextColumn get hostKeyFingerprint => text().nullable()();
 
+  /// Tailscale 内网主机：连接失败时提示先打开本机 Tailscale
+  BoolColumn get isTailscale => boolean().withDefault(const Constant(false))();
+
   /// 私钥原文仅用于表单展示时的暂存说明，不存明文
   DateTimeColumn get lastConnectedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime()();

@@ -32,6 +32,26 @@ bool? verifyHostKey(String? recorded, String fingerprint) {
 ///
 /// 不做通用 Agent Server、不做公网中继（Plan #68）——
 /// 只通过 Tailscale + SSH + tmux 操作用户自己的电脑。
+/// 连接失败的补充提示：Tailscale 主机遇到网络类错误时，提示先开本机
+/// Tailscale 进入局域网。
+String tailscaleHint({required bool isTailscale, required Object error}) {
+  if (!isTailscale) return '';
+  final t = error.toString().toLowerCase();
+  final networkish = t.contains('timeout') ||
+      t.contains('timed out') ||
+      t.contains('unreachable') ||
+      t.contains('refused') ||
+      t.contains('network') ||
+      t.contains('socket') ||
+      t.contains('reset') ||
+      t.contains('connection') ||
+      t.contains('connect');
+  if (networkish) {
+    return '\n\n请先打开本机 Tailscale 进入局域网后重试';
+  }
+  return '';
+}
+
 class SshService {
   SshService(this._db, this._secure);
 

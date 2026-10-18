@@ -136,9 +136,14 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
     _sentInputs.add(text);
     setState(() => _chatView = true);
     final service = ref.read(sshServiceProvider);
+    // -l 字面量输入：内容中的特殊字符不会被当作键名解释
     await service.execute(
       widget.hostId,
-      'tmux send-keys -t ${_sh(widget.session)} ${_sh(text)} Enter',
+      'tmux send-keys -t ${_sh(widget.session)} -l ${_sh(text)}',
+    );
+    await service.execute(
+      widget.hostId,
+      'tmux send-keys -t ${_sh(widget.session)} Enter',
     );
     // 等待远端执行后立即抓取一次
     await Future<void>.delayed(const Duration(milliseconds: 800));

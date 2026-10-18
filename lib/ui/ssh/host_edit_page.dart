@@ -28,6 +28,7 @@ class _HostEditPageState extends ConsumerState<HostEditPage> {
   bool _obscure = true;
   bool _loaded = false;
   bool _saving = false;
+  bool _isTailscale = false;
 
   @override
   void dispose() {
@@ -49,7 +50,10 @@ class _HostEditPageState extends ConsumerState<HostEditPage> {
     _hostCtrl.text = host.host;
     _portCtrl.text = '${host.port}';
     _userCtrl.text = host.username;
-    setState(() => _authType = host.authType);
+    setState(() {
+      _authType = host.authType;
+      _isTailscale = host.isTailscale;
+    });
   }
 
   Future<void> _save({bool test = false}) async {
@@ -67,6 +71,7 @@ class _HostEditPageState extends ConsumerState<HostEditPage> {
         secret: _secretCtrl.text.trim().isEmpty ? null : _secretCtrl.text.trim(),
         passphrase:
             _passphraseCtrl.text.isEmpty ? null : _passphraseCtrl.text,
+        isTailscale: _isTailscale,
       );
       if (test) {
         final host = await repo.getHost(widget.hostId ??
@@ -159,7 +164,16 @@ class _HostEditPageState extends ConsumerState<HostEditPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 4),
+            SwitchListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+              title: const Text('Tailscale 主机'),
+              subtitle: const Text('通过 Tailscale 内网访问；连接失败时会提示'
+                  '先打开本机 Tailscale'),
+              value: _isTailscale,
+              onChanged: (v) => setState(() => _isTailscale = v),
+            ),
+            const SizedBox(height: 4),
             SegmentedButton<String>(
               segments: const [
                 ButtonSegment(

@@ -35,6 +35,7 @@ class SshHostRepository {
     required String authType, // key / password
     String? secret,
     String? passphrase,
+    bool isTailscale = false,
   }) async {
     final now = DateTime.now();
     if (id == null) {
@@ -47,6 +48,7 @@ class SshHostRepository {
         authType: authType,
         secretRef: SecureStore.sshSecretRef(newId),
         port: Value(port),
+        isTailscale: Value(isTailscale),
         passphraseRef: Value(passphrase != null && passphrase.isNotEmpty
             ? SecureStore.sshPassphraseRef(newId)
             : null),
@@ -62,6 +64,7 @@ class SshHostRepository {
     } else {
       await (_db.sshHosts.update()..where((h) => h.id.equals(id)))
           .write(SshHostsCompanion(
+        isTailscale: Value(isTailscale),
         name: Value(name),
         host: Value(host),
         port: Value(port),

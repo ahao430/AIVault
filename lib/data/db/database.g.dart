@@ -6100,6 +6100,21 @@ class $SshHostsTable extends SshHosts with TableInfo<$SshHostsTable, SshHost> {
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _isTailscaleMeta = const VerificationMeta(
+    'isTailscale',
+  );
+  @override
+  late final GeneratedColumn<bool> isTailscale = GeneratedColumn<bool>(
+    'is_tailscale',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_tailscale" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _lastConnectedAtMeta = const VerificationMeta(
     'lastConnectedAt',
   );
@@ -6145,6 +6160,7 @@ class $SshHostsTable extends SshHosts with TableInfo<$SshHostsTable, SshHost> {
     secretRef,
     passphraseRef,
     hostKeyFingerprint,
+    isTailscale,
     lastConnectedAt,
     createdAt,
     updatedAt,
@@ -6230,6 +6246,15 @@ class $SshHostsTable extends SshHosts with TableInfo<$SshHostsTable, SshHost> {
         ),
       );
     }
+    if (data.containsKey('is_tailscale')) {
+      context.handle(
+        _isTailscaleMeta,
+        isTailscale.isAcceptableOrUnknown(
+          data['is_tailscale']!,
+          _isTailscaleMeta,
+        ),
+      );
+    }
     if (data.containsKey('last_connected_at')) {
       context.handle(
         _lastConnectedAtMeta,
@@ -6300,6 +6325,10 @@ class $SshHostsTable extends SshHosts with TableInfo<$SshHostsTable, SshHost> {
         DriftSqlType.string,
         data['${effectivePrefix}host_key_fingerprint'],
       ),
+      isTailscale: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_tailscale'],
+      )!,
       lastConnectedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_connected_at'],
@@ -6340,6 +6369,9 @@ class SshHost extends DataClass implements Insertable<SshHost> {
   /// 首次连接接受的 host key 指纹（SHA256:...）
   final String? hostKeyFingerprint;
 
+  /// Tailscale 内网主机：连接失败时提示先打开本机 Tailscale
+  final bool isTailscale;
+
   /// 私钥原文仅用于表单展示时的暂存说明，不存明文
   final DateTime? lastConnectedAt;
   final DateTime createdAt;
@@ -6354,6 +6386,7 @@ class SshHost extends DataClass implements Insertable<SshHost> {
     required this.secretRef,
     this.passphraseRef,
     this.hostKeyFingerprint,
+    required this.isTailscale,
     this.lastConnectedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -6374,6 +6407,7 @@ class SshHost extends DataClass implements Insertable<SshHost> {
     if (!nullToAbsent || hostKeyFingerprint != null) {
       map['host_key_fingerprint'] = Variable<String>(hostKeyFingerprint);
     }
+    map['is_tailscale'] = Variable<bool>(isTailscale);
     if (!nullToAbsent || lastConnectedAt != null) {
       map['last_connected_at'] = Variable<DateTime>(lastConnectedAt);
     }
@@ -6397,6 +6431,7 @@ class SshHost extends DataClass implements Insertable<SshHost> {
       hostKeyFingerprint: hostKeyFingerprint == null && nullToAbsent
           ? const Value.absent()
           : Value(hostKeyFingerprint),
+      isTailscale: Value(isTailscale),
       lastConnectedAt: lastConnectedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastConnectedAt),
@@ -6422,6 +6457,7 @@ class SshHost extends DataClass implements Insertable<SshHost> {
       hostKeyFingerprint: serializer.fromJson<String?>(
         json['hostKeyFingerprint'],
       ),
+      isTailscale: serializer.fromJson<bool>(json['isTailscale']),
       lastConnectedAt: serializer.fromJson<DateTime?>(json['lastConnectedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -6440,6 +6476,7 @@ class SshHost extends DataClass implements Insertable<SshHost> {
       'secretRef': serializer.toJson<String>(secretRef),
       'passphraseRef': serializer.toJson<String?>(passphraseRef),
       'hostKeyFingerprint': serializer.toJson<String?>(hostKeyFingerprint),
+      'isTailscale': serializer.toJson<bool>(isTailscale),
       'lastConnectedAt': serializer.toJson<DateTime?>(lastConnectedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -6456,6 +6493,7 @@ class SshHost extends DataClass implements Insertable<SshHost> {
     String? secretRef,
     Value<String?> passphraseRef = const Value.absent(),
     Value<String?> hostKeyFingerprint = const Value.absent(),
+    bool? isTailscale,
     Value<DateTime?> lastConnectedAt = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -6473,6 +6511,7 @@ class SshHost extends DataClass implements Insertable<SshHost> {
     hostKeyFingerprint: hostKeyFingerprint.present
         ? hostKeyFingerprint.value
         : this.hostKeyFingerprint,
+    isTailscale: isTailscale ?? this.isTailscale,
     lastConnectedAt: lastConnectedAt.present
         ? lastConnectedAt.value
         : this.lastConnectedAt,
@@ -6494,6 +6533,9 @@ class SshHost extends DataClass implements Insertable<SshHost> {
       hostKeyFingerprint: data.hostKeyFingerprint.present
           ? data.hostKeyFingerprint.value
           : this.hostKeyFingerprint,
+      isTailscale: data.isTailscale.present
+          ? data.isTailscale.value
+          : this.isTailscale,
       lastConnectedAt: data.lastConnectedAt.present
           ? data.lastConnectedAt.value
           : this.lastConnectedAt,
@@ -6514,6 +6556,7 @@ class SshHost extends DataClass implements Insertable<SshHost> {
           ..write('secretRef: $secretRef, ')
           ..write('passphraseRef: $passphraseRef, ')
           ..write('hostKeyFingerprint: $hostKeyFingerprint, ')
+          ..write('isTailscale: $isTailscale, ')
           ..write('lastConnectedAt: $lastConnectedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -6532,6 +6575,7 @@ class SshHost extends DataClass implements Insertable<SshHost> {
     secretRef,
     passphraseRef,
     hostKeyFingerprint,
+    isTailscale,
     lastConnectedAt,
     createdAt,
     updatedAt,
@@ -6549,6 +6593,7 @@ class SshHost extends DataClass implements Insertable<SshHost> {
           other.secretRef == this.secretRef &&
           other.passphraseRef == this.passphraseRef &&
           other.hostKeyFingerprint == this.hostKeyFingerprint &&
+          other.isTailscale == this.isTailscale &&
           other.lastConnectedAt == this.lastConnectedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -6564,6 +6609,7 @@ class SshHostsCompanion extends UpdateCompanion<SshHost> {
   final Value<String> secretRef;
   final Value<String?> passphraseRef;
   final Value<String?> hostKeyFingerprint;
+  final Value<bool> isTailscale;
   final Value<DateTime?> lastConnectedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -6578,6 +6624,7 @@ class SshHostsCompanion extends UpdateCompanion<SshHost> {
     this.secretRef = const Value.absent(),
     this.passphraseRef = const Value.absent(),
     this.hostKeyFingerprint = const Value.absent(),
+    this.isTailscale = const Value.absent(),
     this.lastConnectedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -6593,6 +6640,7 @@ class SshHostsCompanion extends UpdateCompanion<SshHost> {
     required String secretRef,
     this.passphraseRef = const Value.absent(),
     this.hostKeyFingerprint = const Value.absent(),
+    this.isTailscale = const Value.absent(),
     this.lastConnectedAt = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -6615,6 +6663,7 @@ class SshHostsCompanion extends UpdateCompanion<SshHost> {
     Expression<String>? secretRef,
     Expression<String>? passphraseRef,
     Expression<String>? hostKeyFingerprint,
+    Expression<bool>? isTailscale,
     Expression<DateTime>? lastConnectedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -6631,6 +6680,7 @@ class SshHostsCompanion extends UpdateCompanion<SshHost> {
       if (passphraseRef != null) 'passphrase_ref': passphraseRef,
       if (hostKeyFingerprint != null)
         'host_key_fingerprint': hostKeyFingerprint,
+      if (isTailscale != null) 'is_tailscale': isTailscale,
       if (lastConnectedAt != null) 'last_connected_at': lastConnectedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -6648,6 +6698,7 @@ class SshHostsCompanion extends UpdateCompanion<SshHost> {
     Value<String>? secretRef,
     Value<String?>? passphraseRef,
     Value<String?>? hostKeyFingerprint,
+    Value<bool>? isTailscale,
     Value<DateTime?>? lastConnectedAt,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -6663,6 +6714,7 @@ class SshHostsCompanion extends UpdateCompanion<SshHost> {
       secretRef: secretRef ?? this.secretRef,
       passphraseRef: passphraseRef ?? this.passphraseRef,
       hostKeyFingerprint: hostKeyFingerprint ?? this.hostKeyFingerprint,
+      isTailscale: isTailscale ?? this.isTailscale,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -6700,6 +6752,9 @@ class SshHostsCompanion extends UpdateCompanion<SshHost> {
     if (hostKeyFingerprint.present) {
       map['host_key_fingerprint'] = Variable<String>(hostKeyFingerprint.value);
     }
+    if (isTailscale.present) {
+      map['is_tailscale'] = Variable<bool>(isTailscale.value);
+    }
     if (lastConnectedAt.present) {
       map['last_connected_at'] = Variable<DateTime>(lastConnectedAt.value);
     }
@@ -6727,6 +6782,7 @@ class SshHostsCompanion extends UpdateCompanion<SshHost> {
           ..write('secretRef: $secretRef, ')
           ..write('passphraseRef: $passphraseRef, ')
           ..write('hostKeyFingerprint: $hostKeyFingerprint, ')
+          ..write('isTailscale: $isTailscale, ')
           ..write('lastConnectedAt: $lastConnectedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -12618,6 +12674,7 @@ typedef $$SshHostsTableCreateCompanionBuilder =
       required String secretRef,
       Value<String?> passphraseRef,
       Value<String?> hostKeyFingerprint,
+      Value<bool> isTailscale,
       Value<DateTime?> lastConnectedAt,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -12634,6 +12691,7 @@ typedef $$SshHostsTableUpdateCompanionBuilder =
       Value<String> secretRef,
       Value<String?> passphraseRef,
       Value<String?> hostKeyFingerprint,
+      Value<bool> isTailscale,
       Value<DateTime?> lastConnectedAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -12691,6 +12749,11 @@ class $$SshHostsTableFilterComposer
 
   ColumnFilters<String> get hostKeyFingerprint => $composableBuilder(
     column: $table.hostKeyFingerprint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isTailscale => $composableBuilder(
+    column: $table.isTailscale,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12764,6 +12827,11 @@ class $$SshHostsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isTailscale => $composableBuilder(
+    column: $table.isTailscale,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get lastConnectedAt => $composableBuilder(
     column: $table.lastConnectedAt,
     builder: (column) => ColumnOrderings(column),
@@ -12820,6 +12888,11 @@ class $$SshHostsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get isTailscale => $composableBuilder(
+    column: $table.isTailscale,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get lastConnectedAt => $composableBuilder(
     column: $table.lastConnectedAt,
     builder: (column) => column,
@@ -12869,6 +12942,7 @@ class $$SshHostsTableTableManager
                 Value<String> secretRef = const Value.absent(),
                 Value<String?> passphraseRef = const Value.absent(),
                 Value<String?> hostKeyFingerprint = const Value.absent(),
+                Value<bool> isTailscale = const Value.absent(),
                 Value<DateTime?> lastConnectedAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -12883,6 +12957,7 @@ class $$SshHostsTableTableManager
                 secretRef: secretRef,
                 passphraseRef: passphraseRef,
                 hostKeyFingerprint: hostKeyFingerprint,
+                isTailscale: isTailscale,
                 lastConnectedAt: lastConnectedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -12899,6 +12974,7 @@ class $$SshHostsTableTableManager
                 required String secretRef,
                 Value<String?> passphraseRef = const Value.absent(),
                 Value<String?> hostKeyFingerprint = const Value.absent(),
+                Value<bool> isTailscale = const Value.absent(),
                 Value<DateTime?> lastConnectedAt = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -12913,6 +12989,7 @@ class $$SshHostsTableTableManager
                 secretRef: secretRef,
                 passphraseRef: passphraseRef,
                 hostKeyFingerprint: hostKeyFingerprint,
+                isTailscale: isTailscale,
                 lastConnectedAt: lastConnectedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

@@ -49,6 +49,42 @@ void main() {
     return list.firstWhere((s) => s.provider.name == name).provider.id;
   }
 
+  group('系统访问令牌（先建后补填场景回归）', () {
+    test('创建时不填令牌，编辑补填后 buildContext 能读到', () async {
+      await repo.upsertProvider(
+        id: null,
+        name: '中转C',
+        type: ProviderType.relay,
+        adapterKind: AdapterKind.newapi,
+        baseUrl: 'https://c.example.com',
+        accountLabel: '',
+      );
+      final id =
+          (await repo.watchHomeList(includeHidden: true).first).first.provider.id;
+
+      // 先建时无令牌：ref 为 null
+      var p = await repo.loadOne(id);
+      expect(p!.provider.systemTokenRef, isNull);
+
+      // 编辑补填：ref 列必须落库（此前只写安全存储导致站点报 invalid token）
+      await repo.upsertProvider(
+        id: id,
+        name: '中转C',
+        type: ProviderType.relay,
+        adapterKind: AdapterKind.newapi,
+        baseUrl: 'https://c.example.com',
+        accountLabel: '',
+        systemToken: 'sys-token-abc',
+        systemUserId: '27',
+      );
+      p = await repo.loadOne(id);
+      expect(p!.provider.systemTokenRef, isNotNull);
+      final ctx = await repo.buildContext(p.provider);
+      expect(ctx.systemToken, 'sys-token-abc');
+      expect(ctx.systemUserId, '27');
+    });
+  });
+
   group('签到开关（checkinDisabled）', () {
     test('关闭后 canCheckIn 为 false 且导出导入保留', () async {
       await repo.upsertProvider(

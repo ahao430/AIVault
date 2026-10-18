@@ -27,6 +27,7 @@ class NewApiAdapter extends OpenAICompatibleAdapter {
   /// NewAPI user/self 里的 used_quota 为本月累计已用（内部配额单位），
   /// 换算为美元（Plan #43：API 用量 = 已用量 + 周期）。
   Future<double?> getUsedThisMonth(ProviderContext ctx) async {
+    if (_missingTokenHint(ctx) != null) return null;
     try {
       final res = await dio.get('${_origin(ctx)}/api/user/self',
           options: _options(ctx));
@@ -65,6 +66,14 @@ class NewApiAdapter extends OpenAICompatibleAdapter {
           'New-Api-User': ctx.systemUserId!,
       };
 
+  /// 未配置系统访问令牌时给出可定位的错误（而不是发空 Bearer 让
+  /// 站点报 invalid access token）。
+  String? _missingTokenHint(ProviderContext ctx) =>
+      (ctx.systemToken == null || ctx.systemToken!.isEmpty)
+          ? '未配置系统访问令牌：编辑供应商，在「系统访问令牌」填入控制台'
+              '个人设置生成的访问令牌（不是 sk- API 密钥）'
+          : null;
+
   Options _options(ProviderContext ctx) => Options(
         headers: _userHeaders(ctx),
         sendTimeout: const Duration(milliseconds: 20000),
@@ -74,6 +83,10 @@ class NewApiAdapter extends OpenAICompatibleAdapter {
 
   @override
   Future<BalanceResult> getBalance(ProviderContext ctx) async {
+    final hint = _missingTokenHint(ctx);
+    if (hint != null) {
+      return BalanceResult(amount: 0, success: false, message: hint);
+    }
     try {
       final res = await dio.get('${_origin(ctx)}/api/user/self',
           options: _options(ctx));
@@ -127,6 +140,10 @@ class NewApiAdapter extends OpenAICompatibleAdapter {
 
   @override
   Future<CheckinResult> checkIn(ProviderContext ctx) async {
+    final hint = _missingTokenHint(ctx);
+    if (hint != null) {
+      return CheckinResult(success: false, message: hint);
+    }
     try {
       final hit = await _postCheckin(ctx);
       if (hit == null) {

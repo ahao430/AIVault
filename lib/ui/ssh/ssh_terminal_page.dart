@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xterm/xterm.dart';
 
+import '../../services/ssh_service.dart' show tailscaleHint;
 import '../../state/ssh_providers.dart';
 import 'terminal_ai_assist.dart';
 
@@ -159,7 +160,8 @@ class _SshTerminalPageState extends ConsumerState<SshTerminalPage> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  '连接失败：$_error',
+                  '连接失败：$_error'
+                  '${tailscaleHint(isTailscale: host?.isTailscale ?? false, error: _error ?? '')}',
                   style: const TextStyle(color: Colors.red),
                 ),
               ),

@@ -30,7 +30,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -53,6 +53,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 7) {
             await m.addColumn(providers, providers.checkinDisabled);
+          }
+          if (from < 8) {
+            await m.addColumn(sshHosts, sshHosts.isTailscale);
           }
         },
       );

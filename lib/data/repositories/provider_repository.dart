@@ -290,6 +290,8 @@ class ProviderRepository {
         await _secure.write(SecureStore.systemTokenRef(newId), systemToken);
       }
     } else {
+      // 关键：先建后编辑补填系统令牌时，必须同时落 systemTokenRef 列，
+      // 否则 buildContext 读不到令牌（表现为站点报 invalid access token）
       await (_db.providers.update()
             ..where((p) => p.id.equals(id)))
           .write(ProvidersCompanion(
@@ -302,6 +304,9 @@ class ProviderRepository {
         pinned: Value(pinned),
         hidden: Value(hidden),
         checkinDisabled: Value(checkinDisabled),
+        systemTokenRef: systemToken != null && systemToken.isNotEmpty
+            ? Value(SecureStore.systemTokenRef(id))
+            : const Value.absent(),
         updatedAt: Value(now),
       ));
       if (systemToken != null && systemToken.isNotEmpty) {
