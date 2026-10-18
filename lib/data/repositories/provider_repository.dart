@@ -17,6 +17,7 @@ class ProviderWithState {
     required this.modelCount,
     this.latestQuota,
     this.latestBalance,
+    this.latestUsage,
     this.todayCheckin,
     this.lastPrewarm,
   });
@@ -30,6 +31,9 @@ class ProviderWithState {
 
   /// 最近一次成功的余额快照
   final QuotaSnapshot? latestBalance;
+
+  /// 最近一次成功的用量快照（本月已用）
+  final QuotaSnapshot? latestUsage;
 
   /// 今日签到记录（null = 今日未签到或无签到能力）
   final CheckinRecord? todayCheckin;
@@ -122,6 +126,8 @@ class ProviderRepository {
         p.id, QuotaKind.windowQuota, successOnly: true);
     final latestBalance = await _latestSnapshot(
         p.id, QuotaKind.balance, successOnly: true);
+    final latestUsage = await _latestSnapshot(
+        p.id, QuotaKind.usage, successOnly: true);
 
     final startOfDay = DateTime.now();
     final dayStart = DateTime(startOfDay.year, startOfDay.month, startOfDay.day);
@@ -144,6 +150,7 @@ class ProviderRepository {
       modelCount: modelCount,
       latestQuota: latestQuota,
       latestBalance: latestBalance,
+      latestUsage: latestUsage,
       todayCheckin: checkins,
       lastPrewarm: prewarms,
     );
@@ -665,6 +672,18 @@ class ProviderRepository {
       source: Value(result.source),
       success: result.success,
       message: Value(result.message),
+    ));
+  }
+
+  Future<void> recordUsage(String providerId, double usedUsd) async {
+    await _db.quotaSnapshots.insertOne(QuotaSnapshotsCompanion.insert(
+      providerId: providerId,
+      timestamp: DateTime.now(),
+      kind: QuotaKind.usage,
+      amount: Value(usedUsd),
+      currency: const Value('USD'),
+      success: true,
+      message: const Value('本月已用'),
     ));
   }
 

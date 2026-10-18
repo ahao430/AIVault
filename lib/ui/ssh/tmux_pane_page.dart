@@ -4,13 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../services/agent_chat_parser.dart';
 import '../../services/tmux.dart';
 import '../../state/ssh_providers.dart';
 import 'ssh_terminal_page.dart';
 
-/// tmux 会话交互（Plan #34 的基础形态 / Plan #36）：
+/// tmux 会话交互（Plan #34 完整版 / Plan #36）：
+/// [聊天] 视图按本会话输入历史分割 Agent 输出为对话块；
+/// [终端] 视图切完整 xterm 终端兜底（Plan #35）。
 /// capture-pane 读取输出 + send-keys 发送输入，支持自动刷新。
-/// 完整 xterm 终端视图在下一批迭代（Plan #35 终端兜底）。
 class TmuxPanePage extends ConsumerStatefulWidget {
   const TmuxPanePage({
     super.key,
@@ -33,6 +35,8 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
   String? _error;
   bool _loading = false;
   bool _autoRefresh = true;
+  bool _chatView = true; // Plan #34：聊天式为上层，终端为兜底
+  final List<String> _sentInputs = [];
   Timer? _timer;
 
   /// shell 转义：单引号包裹，内部单引号转义
@@ -45,7 +49,7 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
       final service = ref.read(sshServiceProvider);
       final output = await service.execute(
         widget.hostId,
-        'tmux capture-pane -t ${_sh(widget.session)} -p -S -60 2>&1',
+        'tmux capture-pane -t ${_sh(widget.session)} -p -S -400 2>&1',
       );
       if (!mounted) return;
       setState(() {
@@ -70,10 +74,66 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
     });
   }
 
+  /// 聊天视图（Plan #34）：输入历史分割对话块；遇到解析不了的
+  /// 复杂 TUI 内容，用户可切 [终端] 视图兜底（Plan #35）。
+  Widget _buildChatView() {
+    final cs = Theme.of(context).colorScheme;
+    final blocks = splitPaneIntoChat(_output, _sentInputs);
+    if (blocks.isEmpty) {
+      return Center(
+        child: Text('暂无输出，发送消息开始',
+            style: TextStyle(color: cs.outline)),
+      );
+    }
+    return ListView.builder(
+      controller: _scrollCtrl,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: blocks.length,
+      itemBuilder: (_, i) {
+        final b = blocks[i];
+        final isUser = b.isUser;
+        return Align(
+          alignment:
+              isUser ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.all(10),
+            constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.82),
+            decoration: BoxDecoration(
+              color: isUser
+                  ? cs.primary.withValues(alpha: 0.10)
+                  : cs.surfaceContainerLow,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(12),
+                topRight: const Radius.circular(12),
+                bottomLeft: Radius.circular(isUser ? 12 : 4),
+                bottomRight: Radius.circular(isUser ? 4 : 12),
+              ),
+            ),
+            child: isUser
+                ? Text(b.text,
+                    style: const TextStyle(fontSize: 13, height: 1.4))
+                : SelectableText(
+                    b.text,
+                    style: TextStyle(
+                        fontSize: 12,
+                        height: 1.45,
+                        fontFamily: 'monospace',
+                        color: cs.onSurface),
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _send() async {
     final text = _inputCtrl.text;
     if (text.isEmpty) return;
     _inputCtrl.clear();
+    _sentInputs.add(text);
+    setState(() => _chatView = true);
     final service = ref.read(sshServiceProvider);
     await service.execute(
       widget.hostId,
@@ -134,9 +194,24 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
           ],
         ),
         actions: [
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(
+                  value: true, icon: Icon(Icons.chat, size: 14), label: Text('聊天')),
+              ButtonSegment(
+                  value: false,
+                  icon: Icon(Icons.terminal, size: 14),
+                  label: Text('终端')),
+            ],
+            selected: {_chatView},
+            showSelectedIcon: false,
+            onSelectionChanged: (v) =>
+                setState(() => _chatView = v.first),
+          ),
+          const SizedBox(width: 4),
           IconButton(
-            tooltip: '终端模式（tmux attach）',
-            icon: const Icon(Icons.terminal, size: 20),
+            tooltip: '完整终端（tmux attach）',
+            icon: const Icon(Icons.open_in_new, size: 18),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => SshTerminalPage(
                 hostId: widget.hostId,
@@ -175,22 +250,24 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
                       const TextStyle(fontSize: 12, color: Colors.red)),
             ),
           Expanded(
-            child: Container(
-              color: const Color(0xFF1E1E1E),
-              child: SingleChildScrollView(
-                controller: _scrollCtrl,
-                padding: const EdgeInsets.all(10),
-                child: SelectableText(
-                  _output.isEmpty ? '（暂无输出）' : _output,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    height: 1.45,
-                    color: Color(0xFFD4D4D4),
-                    fontFamily: 'monospace',
+            child: _chatView
+                ? _buildChatView()
+                : Container(
+                    color: const Color(0xFF1E1E1E),
+                    child: SingleChildScrollView(
+                      controller: _scrollCtrl,
+                      padding: const EdgeInsets.all(10),
+                      child: SelectableText(
+                        _output.isEmpty ? '（暂无输出）' : _output,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          height: 1.45,
+                          color: Color(0xFFD4D4D4),
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
           ),
           SafeArea(
             child: Padding(

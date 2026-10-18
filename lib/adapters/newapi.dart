@@ -24,6 +24,27 @@ class NewApiAdapter extends OpenAICompatibleAdapter {
         checkIn: true,
       );
 
+  /// NewAPI user/self 里的 used_quota 为本月累计已用（内部配额单位），
+  /// 换算为美元（Plan #43：API 用量 = 已用量 + 周期）。
+  Future<double?> getUsedThisMonth(ProviderContext ctx) async {
+    try {
+      final res = await dio.get('${_origin(ctx)}/api/user/self',
+          options: _options(ctx));
+      final body = res.data;
+      if (res.statusCode == 200 &&
+          body is Map &&
+          body['success'] == true &&
+          body['data'] is Map) {
+        final used = (body['data']['used_quota'] as num?)?.toDouble();
+        if (used == null) return null;
+        return used / quotaPerDollar;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// NewAPI 内部 quota 换算：1 美元 = 500000 配额。
   static const quotaPerDollar = 500000.0;
 

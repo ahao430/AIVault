@@ -225,19 +225,36 @@ class ProviderDetailPage extends ConsumerWidget {
 
   Widget _balanceBlock(
       BuildContext context, ProviderWithState state, DateTime now) {
+    final cs = Theme.of(context).colorScheme;
     final b = state.latestBalance;
-    return Row(
+    final u = state.latestUsage;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          b != null && b.success
-              ? '${formatBalance(b.amount ?? 0, b.currency ?? 'USD')}（${b.currency ?? 'USD'}）'
-              : '余额：未知',
-          style: Theme.of(context).textTheme.titleMedium,
+        Row(
+          children: [
+            Text(
+              b != null && b.success
+                  ? '${formatBalance(b.amount ?? 0, b.currency ?? 'USD')}（${b.currency ?? 'USD'}）'
+                  : '余额：未知',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            if (u != null) ...[
+              const SizedBox(width: 16),
+              Text(
+                '本月已用 ${formatBalance(u.amount ?? 0, u.currency ?? 'USD')}',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: cs.outline),
+              ),
+            ],
+            const Spacer(),
+            if (b != null)
+              Text('更新于 ${formatRelative(b.timestamp, now)}',
+                  style: Theme.of(context).textTheme.bodySmall),
+          ],
         ),
-        const Spacer(),
-        if (b != null)
-          Text('更新于 ${formatRelative(b.timestamp, now)}',
-              style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }

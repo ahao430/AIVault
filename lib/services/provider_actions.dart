@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../adapters/newapi.dart';
 import '../adapters/provider_adapter.dart';
 import '../adapters/registry.dart';
 import '../data/db/database.dart';
@@ -72,6 +73,13 @@ class ProviderActions {
       final result = await adapter.getBalance(ctx);
       if (result != null) {
         await _repo.recordBalance(provider.id, result);
+      }
+      // NewAPI 系：本月已用（Plan #43 API 用量）
+      if (adapter is NewApiAdapter) {
+        final used = await adapter.getUsedThisMonth(ctx);
+        if (used != null) {
+          await _repo.recordUsage(provider.id, used);
+        }
       }
     }
   }
