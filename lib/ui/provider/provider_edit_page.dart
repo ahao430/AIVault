@@ -70,11 +70,14 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
       if (type == ProviderType.official) {
         switch (_adapter) {
           case AdapterKind.zhipu:
+          case AdapterKind.zhipuAnthropic:
+          case AdapterKind.deepseek:
+          case AdapterKind.deepseekAnthropic:
           case AdapterKind.claude:
           case AdapterKind.openai:
             break;
           default:
-            _adapter = AdapterKind.openai;
+            _adapter = AdapterKind.zhipu;
         }
       } else {
         switch (_adapter) {
@@ -86,7 +89,24 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
             _adapter = AdapterKind.newapi;
         }
       }
+      _syncPresetBaseUrl();
     });
+  }
+
+  /// 官方适配器切换时自动填入预设地址：输入框为空、或当前值是某个
+  /// 官方预设（说明是上次自动填的）时才覆盖，不碰用户自定义地址。
+  void _syncPresetBaseUrl() {
+    final preset = AdapterRegistry.presetBaseUrls[_adapter];
+    if (preset == null) return;
+    final current = _baseUrlCtrl.text.trim();
+    if (current.isEmpty || AdapterRegistry.presetBaseUrls.values.contains(current)) {
+      _baseUrlCtrl.text = preset;
+    }
+  }
+
+  void _onAdapterChanged(AdapterKind? v) {
+    setState(() => _adapter = v ?? _adapter);
+    _syncPresetBaseUrl();
   }
 
   Future<void> _save() async {
@@ -118,6 +138,7 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
     final showSystemToken =
         _adapter == AdapterKind.newapi || _adapter == AdapterKind.sub2api;
 
+    final presetUrl = AdapterRegistry.presetBaseUrls[_adapter];
     return Scaffold(
       appBar: AppBar(
         title: Text(isEdit ? '编辑供应商' : '添加供应商'),
@@ -162,10 +183,10 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
               initialValue: _adapter,
               decoration: const InputDecoration(
                 labelText: '适配器',
-                helperText: '决定额度 / 余额 / 签到 / 预热等能力的实现方式',
+                helperText: '决定请求格式与额度 / 余额 / 签到 / 预热等能力的实现方式',
               ),
               items: _adapterOptions(),
-              onChanged: (v) => setState(() => _adapter = v ?? _adapter),
+              onChanged: _onAdapterChanged,
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -187,10 +208,11 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
             TextFormField(
               controller: _baseUrlCtrl,
               decoration: InputDecoration(
-                labelText: _type == ProviderType.official
-                    ? 'Base URL（官方订阅可不填）'
-                    : 'Base URL',
-                hintText: 'https://api.example.com 或 https://api.example.com/v1',
+                labelText: 'Base URL',
+                helperText: _type == ProviderType.official
+                    ? '官方适配器已按所选格式预设，留空即用预设地址'
+                    : null,
+                hintText: presetUrl ?? 'https://api.example.com 或 https://api.example.com/v1',
               ),
               validator: (v) {
                 if (_type == ProviderType.relay &&
@@ -252,6 +274,9 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
     const relay = [AdapterKind.newapi, AdapterKind.sub2api, AdapterKind.generic];
     const official = [
       AdapterKind.zhipu,
+      AdapterKind.zhipuAnthropic,
+      AdapterKind.deepseek,
+      AdapterKind.deepseekAnthropic,
       AdapterKind.openai,
       AdapterKind.claude,
     ];
@@ -260,9 +285,12 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
       AdapterKind.newapi: 'NewAPI 中转站',
       AdapterKind.sub2api: 'Sub2API',
       AdapterKind.generic: '通用 OpenAI 兼容',
-      AdapterKind.zhipu: '智谱 AI（官方）',
-      AdapterKind.openai: 'OpenAI（官方）',
-      AdapterKind.claude: 'Claude（官方）',
+      AdapterKind.zhipu: '智谱 Coding Plan（OpenAI 格式）',
+      AdapterKind.zhipuAnthropic: '智谱 Coding Plan（Anthropic 格式）',
+      AdapterKind.deepseek: 'DeepSeek（OpenAI 格式）',
+      AdapterKind.deepseekAnthropic: 'DeepSeek（Anthropic 格式）',
+      AdapterKind.openai: 'OpenAI 官方',
+      AdapterKind.claude: 'Anthropic / Claude 官方',
     };
     return [
       for (final k in options)

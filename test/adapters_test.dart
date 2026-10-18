@@ -1,3 +1,4 @@
+import 'package:aivault/adapters/anthropic_compatible.dart';
 import 'package:aivault/adapters/openai_compatible.dart';
 import 'package:aivault/adapters/provider_adapter.dart';
 import 'package:aivault/adapters/registry.dart';
@@ -24,6 +25,21 @@ void main() {
       const ctx2 =
           ProviderContext(providerId: 'p', baseUrl: 'https://a.com/v1');
       expect(adapter.apiBase(ctx2), 'https://a.com/v1');
+    });
+
+    test('apiBase：路径已带版本段不再补 /v1（智谱 v4 场景）', () {
+      const ctx = ProviderContext(
+          providerId: 'p', baseUrl: 'https://open.bigmodel.cn/api/coding/paas/v4');
+      expect(adapter.apiBase(ctx), 'https://open.bigmodel.cn/api/coding/paas/v4');
+
+      const ctx2 =
+          ProviderContext(providerId: 'p', baseUrl: 'https://a.com/v1beta');
+      expect(adapter.apiBase(ctx2), 'https://a.com/v1beta');
+    });
+
+    test('apiBase：空地址返回空串而不是相对路径', () {
+      const ctx = ProviderContext(providerId: 'p', baseUrl: '');
+      expect(adapter.apiBase(ctx), '');
     });
 
     test('错误分类：401 → 认证失败', () {
@@ -109,6 +125,160 @@ void main() {
       final caps = AdapterRegistry.of(AdapterKind.zhipu).capabilities;
       expect(caps.prewarm, isTrue);
       expect(caps.checkIn, isFalse);
+    });
+  });
+
+  group('官方订阅预设', () {
+    test('预设地址映射完整', () {
+      expect(AdapterRegistry.presetBaseUrls[AdapterKind.zhipu],
+          'https://open.bigmodel.cn/api/coding/paas/v4');
+      expect(AdapterRegistry.presetBaseUrls[AdapterKind.zhipuAnthropic],
+          'https://open.bigmodel.cn/api/anthropic');
+      expect(AdapterRegistry.presetBaseUrls[AdapterKind.deepseek],
+          'https://api.deepseek.com');
+      expect(AdapterRegistry.presetBaseUrls[AdapterKind.deepseekAnthropic],
+          'https://api.deepseek.com/anthropic');
+      expect(AdapterRegistry.presetBaseUrls[AdapterKind.openai],
+          'https://api.openai.com/v1');
+      expect(AdapterRegistry.presetBaseUrls[AdapterKind.claude],
+          'https://api.anthropic.com');
+    });
+
+    test('OpenAI 格式官方适配器：未填地址时回退预设且不再补 /v1', () {
+      final adapter =
+          AdapterRegistry.of(AdapterKind.zhipu) as OpenAICompatibleAdapter;
+      const ctx = ProviderContext(providerId: 'p', baseUrl: '');
+      expect(adapter.apiBase(ctx), 'https://open.bigmodel.cn/api/coding/paas/v4');
+
+      const ctx2 = ProviderContext(providerId: 'p', baseUrl: '  ');
+      expect(
+          (AdapterRegistry.of(AdapterKind.deepseek) as OpenAICompatibleAdapter)
+              .apiBase(ctx2),
+          'https://api.deepseek.com/v1');
+    });
+
+    test('用户自填地址优先于预设', () {
+      const ctx =
+          ProviderContext(providerId: 'p', baseUrl: 'https://my-relay.com');
+      expect(
+          (AdapterRegistry.of(AdapterKind.zhipu) as OpenAICompatibleAdapter)
+              .apiBase(ctx),
+          'https://my-relay.com/v1');
+    });
+  });
+
+  group('Anthropic 格式适配器', () {
+    final adapter = AnthropicAdapter();
+
+    test('messagesBase：追加 /v1，已有时不重复', () {
+      const ctx = ProviderContext(
+          providerId: 'p', baseUrl: 'https://open.bigmodel.cn/api/anthropic');
+      expect(adapter.messagesBase(ctx),
+          'https://open.bigmodel.cn/api/anthropic/v1');
+
+      const ctx2 =
+          ProviderContext(providerId: 'p', baseUrl: 'https://api.deepseek.com/anthropic/');
+      expect(adapter.messagesBase(ctx2), 'https://api.deepseek.com/anthropic/v1');
+
+      const ctx3 =
+          ProviderContext(providerId: 'p', baseUrl: 'https://api.anthropic.com');
+      expect(adapter.messagesBase(ctx3), 'https://api.anthropic.com/v1');
+    });
+
+    test('官方 Anthropic 适配器：未填地址回退预设', () {
+      const ctx = ProviderContext(providerId: 'p', baseUrl: '');
+      expect(
+          (AdapterRegistry.of(AdapterKind.zhipuAnthropic) as AnthropicAdapter)
+              .messagesBase(ctx),
+          'https://open.bigmodel.cn/api/anthropic/v1');
+      expect(
+          (AdapterRegistry.of(AdapterKind.deepseekAnthropic)
+                  as AnthropicAdapter)
+              .messagesBase(ctx),
+          'https://api.deepseek.com/anthropic/v1');
+    });
+
+    test('空地址测试模型：给出明确错误', () async {
+      const ctx = ProviderContext(providerId: 'p', baseUrl: '');
+      final r = await adapter.testModel(ctx, 'glm-4.6');
+      expect(r.success, isFalse);
+      expect(r.message, contains('Base URL'));
+    });
+
+    test('错误分类：authentication_error → 认证失败', () {
+      final res = Response(
+        requestOptions: RequestOptions(path: '/x'),
+        statusCode: 401,
+        data: {
+          'type': 'error',
+          'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'},
+        },
+      );
+      expect(adapter.classify(res, 50).errorType, ModelTestErrorType.auth);
+    });
+
+    test('错误分类：rate_limit_error → 限流', () {
+      final res = Response(
+        requestOptions: RequestOptions(path: '/x'),
+        statusCode: 429,
+        data: {
+          'type': 'error',
+          'error': {'type': 'rate_limit_error'},
+        },
+      );
+      expect(
+          adapter.classify(res, 30).errorType, ModelTestErrorType.rateLimited);
+    });
+
+    test('错误分类：overloaded_error / 529 → 上游过载', () {
+      final res = Response(
+        requestOptions: RequestOptions(path: '/x'),
+        statusCode: 529,
+        data: {
+          'type': 'error',
+          'error': {'type': 'overloaded_error'},
+        },
+      );
+      expect(adapter.classify(res, 30).errorType, ModelTestErrorType.upstream);
+    });
+
+    test('错误分类：not_found_error → 不存在', () {
+      final res = Response(
+        requestOptions: RequestOptions(path: '/x'),
+        statusCode: 404,
+        data: {
+          'type': 'error',
+          'error': {'type': 'not_found_error'},
+        },
+      );
+      expect(
+          adapter.classify(res, 30).errorType, ModelTestErrorType.notFound);
+    });
+
+    test('错误分类：无结构化错误体时按状态码兜底', () {
+      final res = Response(
+        requestOptions: RequestOptions(path: '/x'),
+        statusCode: 403,
+        data: 'forbidden',
+      );
+      expect(
+          adapter.classify(res, 30).errorType, ModelTestErrorType.permission);
+    });
+
+    test('200 → 成功', () {
+      final res = Response(
+        requestOptions: RequestOptions(path: '/x'),
+        statusCode: 200,
+        data: {
+          'id': 'msg_1',
+          'content': [
+            {'type': 'text', 'text': 'pong'}
+          ],
+        },
+      );
+      final r = adapter.classify(res, 88);
+      expect(r.success, isTrue);
+      expect(r.latencyMs, 88);
     });
   });
 

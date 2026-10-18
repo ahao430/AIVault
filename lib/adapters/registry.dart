@@ -1,34 +1,26 @@
 
 import '../data/db/tables.dart';
+import 'anthropic_compatible.dart';
 import 'newapi.dart';
 import 'openai_compatible.dart';
 import 'provider_adapter.dart';
 
-/// 官方订阅适配器。
-///
-/// P0 阶段官方额度查询 / 网页授权预留接口：模型列表与模型测试先按
-/// OpenAI 兼容协议处理（智谱 v4 兼容 OpenAI 格式），quota/authorize 待
-/// 各官方适配器后续独立实现。
-class OfficialAdapter extends OpenAICompatibleAdapter {
-  OfficialAdapter({super.dio, required this.kindStr});
+/// 官方订阅预设端点。Coding Plan 通常同时暴露 OpenAI 与 Anthropic 两种
+/// 请求格式，端点地址不同，用户按需选择对应格式的适配器即可，无需手动
+/// 查文档填地址。
+const kZhipuOpenaiBase = 'https://open.bigmodel.cn/api/coding/paas/v4';
+const kZhipuAnthropicBase = 'https://open.bigmodel.cn/api/anthropic';
+const kDeepseekOpenaiBase = 'https://api.deepseek.com';
+const kDeepseekAnthropicBase = 'https://api.deepseek.com/anthropic';
+const kOpenaiOfficialBase = 'https://api.openai.com/v1';
+const kClaudeOfficialBase = 'https://api.anthropic.com';
 
-  final String kindStr;
-
-  @override
-  String get kind => kindStr;
-
-  @override
-  AdapterCapabilities get capabilities => const AdapterCapabilities(
-        models: true,
-        testModel: true,
-        // 预热：额度满 100% 后才执行，由 PreWarmService 统一把关
-        prewarm: true,
-      );
-
+/// 官方订阅共性行为：额度查询暂未接入（返回 null 表示未知而非 0），
+/// 预热 = 额度恢复后对轻量模型发一次最小对话请求。
+mixin OfficialAdapterMixin on ProviderAdapter {
   @override
   Future<QuotaResult?> getQuota(ProviderContext ctx) async {
-    // TODO(P1): 官方额度查询（Claude OAuth / 智谱订阅接口），当前返回 null
-    // 表示状态未知，UI 显示「未接入」而不是 0。
+    // TODO(P1): 官方额度查询（Claude OAuth / 智谱订阅接口）
     return null;
   }
 
@@ -54,6 +46,60 @@ class OfficialAdapter extends OpenAICompatibleAdapter {
   }
 }
 
+/// OpenAI 格式的官方订阅适配器：用户未填 Base URL 时回退到预设地址。
+class OfficialAdapter extends OpenAICompatibleAdapter
+    with OfficialAdapterMixin {
+  OfficialAdapter({super.dio, required this.kindStr, this.defaultBaseUrl});
+
+  final String kindStr;
+  final String? defaultBaseUrl;
+
+  @override
+  String get kind => kindStr;
+
+  @override
+  AdapterCapabilities get capabilities => const AdapterCapabilities(
+        models: true,
+        testModel: true,
+        // 预热：额度满 100% 后才执行，由 PreWarmService 统一把关
+        prewarm: true,
+      );
+
+  @override
+  String effectiveBase(ProviderContext ctx) {
+    final raw = ctx.baseUrl.trim();
+    if (raw.isEmpty) return defaultBaseUrl ?? '';
+    return raw;
+  }
+}
+
+/// Anthropic 格式的官方订阅适配器（Claude / Claude Code 协议）。
+class AnthropicOfficialAdapter extends AnthropicAdapter
+    with OfficialAdapterMixin {
+  AnthropicOfficialAdapter(
+      {super.dio, required this.kindStr, this.defaultBaseUrl});
+
+  final String kindStr;
+  final String? defaultBaseUrl;
+
+  @override
+  String get kind => kindStr;
+
+  @override
+  AdapterCapabilities get capabilities => const AdapterCapabilities(
+        models: true,
+        testModel: true,
+        prewarm: true,
+      );
+
+  @override
+  String effectiveBase(ProviderContext ctx) {
+    final raw = ctx.baseUrl.trim();
+    if (raw.isEmpty) return defaultBaseUrl ?? '';
+    return raw;
+  }
+}
+
 /// 适配器注册表：根据 AdapterKind 创建适配器实例。
 class AdapterRegistry {
   AdapterRegistry._();
@@ -62,11 +108,28 @@ class AdapterRegistry {
   static final ProviderAdapter newapi = NewApiAdapter();
   static final ProviderAdapter sub2api = Sub2ApiAdapter();
   static final ProviderAdapter zhipu =
-      OfficialAdapter(kindStr: 'zhipu');
-  static final ProviderAdapter claude =
-      OfficialAdapter(kindStr: 'claude');
+      OfficialAdapter(kindStr: 'zhipu', defaultBaseUrl: kZhipuOpenaiBase);
+  static final ProviderAdapter zhipuAnthropic = AnthropicOfficialAdapter(
+      kindStr: 'zhipuAnthropic', defaultBaseUrl: kZhipuAnthropicBase);
+  static final ProviderAdapter deepseek =
+      OfficialAdapter(kindStr: 'deepseek', defaultBaseUrl: kDeepseekOpenaiBase);
+  static final ProviderAdapter deepseekAnthropic = AnthropicOfficialAdapter(
+      kindStr: 'deepseekAnthropic',
+      defaultBaseUrl: kDeepseekAnthropicBase);
+  static final ProviderAdapter claude = AnthropicOfficialAdapter(
+      kindStr: 'claude', defaultBaseUrl: kClaudeOfficialBase);
   static final ProviderAdapter openai =
-      OfficialAdapter(kindStr: 'openai');
+      OfficialAdapter(kindStr: 'openai', defaultBaseUrl: kOpenaiOfficialBase);
+
+  /// 各官方适配器的预设 Base URL（编辑页自动填入 / 展示用）。
+  static const Map<AdapterKind, String> presetBaseUrls = {
+    AdapterKind.zhipu: kZhipuOpenaiBase,
+    AdapterKind.zhipuAnthropic: kZhipuAnthropicBase,
+    AdapterKind.deepseek: kDeepseekOpenaiBase,
+    AdapterKind.deepseekAnthropic: kDeepseekAnthropicBase,
+    AdapterKind.openai: kOpenaiOfficialBase,
+    AdapterKind.claude: kClaudeOfficialBase,
+  };
 
   static ProviderAdapter of(AdapterKind kind) {
     switch (kind) {
@@ -78,6 +141,12 @@ class AdapterRegistry {
         return sub2api;
       case AdapterKind.zhipu:
         return zhipu;
+      case AdapterKind.zhipuAnthropic:
+        return zhipuAnthropic;
+      case AdapterKind.deepseek:
+        return deepseek;
+      case AdapterKind.deepseekAnthropic:
+        return deepseekAnthropic;
       case AdapterKind.claude:
         return claude;
       case AdapterKind.openai:

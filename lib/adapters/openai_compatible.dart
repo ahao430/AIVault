@@ -40,10 +40,16 @@ class OpenAICompatibleAdapter extends ProviderAdapter {
     return url;
   }
 
-  /// 用户可能只填根地址，也可能带 /v1，模型接口按 /v1 路径探测。
+  /// 子类可覆写：官方适配器在用户未填 Base URL 时回退到预设地址。
+  String effectiveBase(ProviderContext ctx) => ctx.baseUrl;
+
+  /// 用户可能只填根地址，也可能带版本段（/v1、/v4、/v1beta 等）。
+  /// 只有路径末尾没有版本段时才补 /v1，否则智谱 …/paas/v4 会被拼成
+  /// …/paas/v4/v1 导致 404。
   String apiBase(ProviderContext ctx) {
-    final base = normalizeBaseUrl(ctx.baseUrl);
-    if (base.endsWith('/v1') || base.endsWith('/v1beta')) return base;
+    final base = normalizeBaseUrl(effectiveBase(ctx));
+    if (base.isEmpty) return '';
+    if (RegExp(r'/v\d+[a-z0-9]*$').hasMatch(base)) return base;
     return '$base/v1';
   }
 
@@ -59,9 +65,10 @@ class OpenAICompatibleAdapter extends ProviderAdapter {
 
   @override
   Future<List<String>> getModels(ProviderContext ctx) async {
+    final base = apiBase(ctx);
+    if (base.isEmpty) return const [];
     try {
-      final res =
-          await _dio.get('${apiBase(ctx)}/models', options: _options(ctx));
+      final res = await _dio.get('$base/models', options: _options(ctx));
       if (res.statusCode != 200 || ctx.apiKey == null) {
         if (res.statusCode != 200) return const [];
       }
@@ -104,8 +111,12 @@ class OpenAICompatibleAdapter extends ProviderAdapter {
     }
 
     try {
+      final base = apiBase(ctx);
+      if (base.isEmpty) {
+        return fail(ModelTestErrorType.unknown, '未配置 Base URL');
+      }
       final res = await _dio.post(
-        '${apiBase(ctx)}/chat/completions',
+        '$base/chat/completions',
         data: {
           'model': modelId,
           'messages': [

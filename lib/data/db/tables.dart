@@ -3,8 +3,22 @@ import 'package:drift/drift.dart';
 /// 供应商类型：官方订阅 / API 中转站
 enum ProviderType { official, relay }
 
-/// 适配器种类，决定使用哪个 ProviderAdapter 实现
-enum AdapterKind { generic, newapi, sub2api, zhipu, claude, openai }
+/// 适配器种类，决定使用哪个 ProviderAdapter 实现。
+///
+/// 官方订阅的 Coding Plan 通常同时暴露 OpenAI 与 Anthropic 两种请求格式，
+/// 端点地址不同，故按「厂商 + 格式」拆分为两个适配器；textEnum 存储，
+/// 追加新值不影响旧数据。
+enum AdapterKind {
+  generic,
+  newapi,
+  sub2api,
+  zhipu,
+  claude,
+  openai,
+  zhipuAnthropic,
+  deepseek,
+  deepseekAnthropic
+}
 
 /// 额度快照类型
 enum QuotaKind { windowQuota, weeklyQuota, balance, usage, subscription }

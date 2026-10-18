@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.1（2026-10-18）
+
+- 官方订阅预设修复：新增智谱 Coding Plan 双格式预设
+  （OpenAI 格式 `…/api/coding/paas/v4`、Anthropic 格式 `…/api/anthropic`）
+  与 DeepSeek 双格式预设（`https://api.deepseek.com`、`…/anthropic`），
+  选择适配器自动填入，留空即用预设
+- 新增 Anthropic 格式适配器（Claude / Claude Code 协议）：`x-api-key` +
+  `anthropic-version` 鉴权，`/v1/models` 拉列表、`/v1/messages` 测试与预热，
+  按 Anthropic error.type 精确分类失败原因（含 529 过载）
+- 修复 Base URL 拼接：路径已带版本段（如智谱 `…/paas/v4`）不再错误追加
+  `/v1`（此前导致测试 404）；空地址不再发出相对路径请求
+
 ## 0.4.0（2026-10-18）
 
 - Android 发版流水线：GitHub Actions 按 ABI 拆分 APK（arm64-v8a / armeabi-v7a / x86_64，
