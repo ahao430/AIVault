@@ -7,7 +7,15 @@ import 'provider_adapter.dart';
 /// - 模型列表：GET  {base}/models
 /// - 模型测试：POST {base}/chat/completions（最小请求）
 class OpenAICompatibleAdapter extends ProviderAdapter {
-  OpenAICompatibleAdapter({Dio? dio}) : _dio = dio ?? Dio();
+  OpenAICompatibleAdapter({Dio? dio})
+      : _dio = dio ??
+            Dio(BaseOptions(
+              // connectTimeout 兜底不可达主机：否则要等系统 TCP 超时（分钟级），
+              // UI 上表现为按钮一直转圈
+              connectTimeout: timeout,
+              sendTimeout: timeout,
+              receiveTimeout: timeout,
+            ));
 
   final Dio _dio;
 

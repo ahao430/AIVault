@@ -48,8 +48,15 @@ class NewApiAdapter extends OpenAICompatibleAdapter {
   /// NewAPI 内部 quota 换算：1 美元 = 500000 配额。
   static const quotaPerDollar = 500000.0;
 
-  String _origin(ProviderContext ctx) =>
-      OpenAICompatibleAdapter.normalizeBaseUrl(ctx.baseUrl);
+  /// NewAPI 控制台 API 位于站点根（/api/user/*），而用户填的 Base URL
+  /// 常带版本段（/v1，即聊天端点）：拼接前先去掉末尾版本段。
+  static String consoleOrigin(String raw) {
+    var base = OpenAICompatibleAdapter.normalizeBaseUrl(raw);
+    base = base.replaceAll(RegExp(r'/v\d+[a-z0-9]*$'), '');
+    return base;
+  }
+
+  String _origin(ProviderContext ctx) => consoleOrigin(ctx.baseUrl);
 
   Map<String, String> _userHeaders(ProviderContext ctx) => {
         'Authorization': 'Bearer ${ctx.systemToken ?? ''}',

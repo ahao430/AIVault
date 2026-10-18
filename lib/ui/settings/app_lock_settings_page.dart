@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -45,13 +46,11 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
       await ref.read(lockProvider.notifier).onPinConfigured();
       await _reload();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('App 锁已启用')));
+        Toast.show(context, 'App 锁已启用');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('设置失败：$e')));
+        Toast.show(context, '设置失败：$e');
       }
     }
   }
@@ -62,8 +61,7 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
     final ok = await ref.read(lockServiceProvider).verifyPin(old);
     if (!ok) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('PIN 不正确')));
+        Toast.show(context, 'PIN 不正确');
       }
       return;
     }
@@ -78,13 +76,11 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
       await ref.read(lockProvider.notifier).onDisabled();
       await _reload();
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('App 锁已关闭')));
+        Toast.show(context, 'App 锁已关闭');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
+        Toast.show(context, '$e');
       }
     }
   }
@@ -259,8 +255,7 @@ class _PinDialogState extends State<_PinDialog> {
               onPressed: () {
                 final second = ctrl2.text.trim();
                 if (second != first) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('两次输入不一致')));
+                  Toast.show(context, '两次输入不一致');
                   return;
                 }
                 Navigator.pop(context, second);

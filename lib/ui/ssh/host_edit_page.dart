@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -74,10 +75,9 @@ class _HostEditPageState extends ConsumerState<HostEditPage> {
         final result =
             await ref.read(sshServiceProvider).testConnection(host);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(result.success
+        Toast.show(context, result.success
                 ? '连接成功'
-                : '连接失败：${result.error ?? '未知错误'}')));
+                : '连接失败：${result.error ?? '未知错误'}');
         return;
       }
       if (mounted) Navigator.pop(context);

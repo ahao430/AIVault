@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/backup_service.dart';
 import '../../services/local_notifier.dart';
 import '../../state/app_providers.dart';
+import '../../core/toast.dart';
 import 'dart:io' show Platform;
 
 import 'app_lock_settings_page.dart';
@@ -247,8 +248,7 @@ class SettingsPage extends ConsumerWidget {
     final data = await repo.exportJson(includeSecrets: includeSecrets);
     final path = await backup.exportToFile(data);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(path == null ? '已取消导出' : '已导出到 $path')));
+    Toast.show(context, path == null ? '已取消导出' : '已导出到 $path');
   }
 
   Future<void> _import(BuildContext context, WidgetRef ref) async {
@@ -258,8 +258,7 @@ class SettingsPage extends ConsumerWidget {
     final data = await backup.pickAndRead();
     if (data == null) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('未选择文件或文件不是有效的 JSON')));
+        Toast.show(context, '未选择文件或文件不是有效的 JSON');
       }
       return;
     }
@@ -268,8 +267,7 @@ class SettingsPage extends ConsumerWidget {
     final count = providers is List ? providers.length : 0;
     if (count == 0) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('文件中没有供应商数据')));
+        Toast.show(context, '文件中没有供应商数据');
       }
       return;
     }
@@ -295,8 +293,7 @@ class SettingsPage extends ConsumerWidget {
 
     final (created, updated) = await repo.importJson(data);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('导入完成：新增 $created 个，更新 $updated 个')));
+    Toast.show(context, '导入完成：新增 $created 个，更新 $updated 个');
   }
 
   // ------------------------------------------------------------------ widgets

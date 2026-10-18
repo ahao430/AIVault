@@ -6,6 +6,7 @@ import '../../core/formatters.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/provider_repository.dart';
 import '../../state/app_providers.dart';
+import '../../core/toast.dart';
 import 'model_test_history_sheet.dart';
 import 'quota_history_page.dart';
 import 'token_edit_sheet.dart';
@@ -110,10 +111,7 @@ class ProviderDetailPage extends ConsumerWidget {
                                             .read(actionsProvider)
                                             .prewarm(state, force: true);
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(SnackBar(
-                                                  content: Text(
-                                                      '${p.name}：${r.message ?? r.status}')));
+                                          Toast.show(context, '${p.name}：${r.message ?? r.status}');
                                         }
                                       }
                                     : null,
@@ -273,7 +271,9 @@ class _TokenCard extends ConsumerStatefulWidget {
 
 class _TokenCardState extends ConsumerState<_TokenCard> {
   bool _expanded = false;
-  bool _testing = false;
+
+  /// 正在测试的模型集合：按模型独立转圈，点一个不再带动整卡。
+  final Set<String> _testingModels = {};
 
   Token get token => widget.group.token;
 
@@ -284,13 +284,12 @@ class _TokenCardState extends ConsumerState<_TokenCard> {
     if (key == null) return;
     await Clipboard.setData(ClipboardData(text: key));
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('令牌已复制到剪贴板')));
+      Toast.show(context, '令牌已复制到剪贴板');
     }
   }
 
   Future<void> _testModel(String modelId) async {
-    setState(() => _testing = true);
+    setState(() => _testingModels.add(modelId));
     try {
       final result = await ref
           .read(actionsProvider)
@@ -299,9 +298,10 @@ class _TokenCardState extends ConsumerState<_TokenCard> {
       final msg = result.success
           ? '$modelId 可用（${result.latencyMs ?? 0}ms）'
           : '$modelId ${result.errorType?.label ?? '失败'}：${result.message ?? ''}';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      Toast.show(context, msg,
+          icon: result.success ? Icons.check_circle : Icons.error_outline);
     } finally {
-      if (mounted) setState(() => _testing = false);
+      if (mounted) setState(() => _testingModels.remove(modelId));
     }
   }
 
@@ -310,8 +310,7 @@ class _TokenCardState extends ConsumerState<_TokenCard> {
         .read(actionsProvider)
         .syncModels(widget.providerId, tokenId: token.id);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(count > 0 ? '已同步 $count 个模型' : '未获取到模型列表，请检查 Base URL 与 Key')));
+    Toast.show(context, count > 0 ? '已同步 $count 个模型' : '未获取到模型列表，请检查 Base URL 与 Key');
   }
 
   @override
@@ -456,8 +455,10 @@ class _TokenCardState extends ConsumerState<_TokenCard> {
                                       ? Colors.green
                                       : Colors.red)),
                       trailing: TextButton(
-                        onPressed: _testing ? null : () => _testModel(m.modelId),
-                        child: _testing
+                        onPressed: _testingModels.contains(m.modelId)
+                            ? null
+                            : () => _testModel(m.modelId),
+                        child: _testingModels.contains(m.modelId)
                             ? const SizedBox(
                                 width: 14,
                                 height: 14,

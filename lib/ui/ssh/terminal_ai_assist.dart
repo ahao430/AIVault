@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
@@ -383,8 +384,7 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
                             visualDensity: VisualDensity.compact),
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: cmd));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('已复制命令')));
+                          Toast.show(context, '已复制命令');
                         },
                         icon: const Icon(Icons.copy, size: 14),
                         label: const Text('复制'),

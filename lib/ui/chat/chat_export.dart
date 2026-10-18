@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'dart:ui' as ui;
 
 import 'package:file_selector/file_selector.dart';
@@ -16,15 +17,13 @@ Future<void> exportConversationImage(
   String conversationId,
 ) async {
   final repo = ref.read(chatRepoProvider);
-  final messenger = ScaffoldMessenger.of(context);
   final overlayState = Overlay.of(context, rootOverlay: true);
   final conv = await repo.getConversation(conversationId);
   if (conv == null) return;
   final messages = await repo.messages(conversationId);
   if (messages.isEmpty) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('会话没有消息，无法导出')));
+      Toast.show(context, '会话没有消息，无法导出');
     }
     return;
   }
@@ -114,8 +113,7 @@ Future<void> exportConversationImage(
     final file = XFile.fromData(bytes.buffer.asUint8List(),
         mimeType: 'image/png');
     await file.saveTo(location.path);
-    messenger.showSnackBar(
-        SnackBar(content: Text('已导出到 ${location.path}')));
+    Toast.showOn(overlayState, '已导出到 ${location.path}');
   } finally {
     overlay.remove();
   }

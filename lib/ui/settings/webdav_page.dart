@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -172,8 +173,7 @@ class _WebdavPageState extends ConsumerState<WebdavPage> {
 
   void _toast(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    Toast.show(context, message);
   }
 
   @override

@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -66,8 +67,7 @@ class _ImageStudioPageState extends ConsumerState<ImageStudioPage> {
   }
 
   void _toast(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    Toast.show(context, message);
   }
 
   @override

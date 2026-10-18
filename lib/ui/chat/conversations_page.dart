@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/formatters.dart';
 import '../../data/db/database.dart';
 import '../../state/chat_providers.dart';
+import '../../core/toast.dart';
 import 'chat_page.dart';
 
 /// 会话列表（Plan #22）：新建 / 历史 / 删除 / 重命名。
@@ -23,8 +24,7 @@ class ConversationsPage extends ConsumerWidget {
         onPressed: () async {
           final options = optionsAsync.value ?? const <ChatModelOption>[];
           if (options.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('先在订阅里添加供应商与令牌，并同步模型列表')));
+            Toast.show(context, '先在订阅里添加供应商与令牌，并同步模型列表');
             return;
           }
           final created =

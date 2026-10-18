@@ -14,9 +14,18 @@ import 'provider_adapter.dart';
 /// 鉴权走 `x-api-key` 头 + `anthropic-version`，与 Bearer 方式的
 /// OpenAI 格式不同，所以独立成适配器而不是加参数。
 class AnthropicAdapter extends ProviderAdapter {
-  AnthropicAdapter({Dio? dio}) : _dio = dio ?? Dio();
+  AnthropicAdapter({Dio? dio})
+      : _dio = dio ??
+            Dio(BaseOptions(
+              connectTimeout: timeout,
+              sendTimeout: timeout,
+              receiveTimeout: timeout,
+            ));
 
   final Dio _dio;
+
+  /// 供子类（官方订阅适配器）复用同一 client
+  Dio get dio => _dio;
 
   static const timeout = Duration(milliseconds: 20000);
   static const anthropicVersion = '2023-06-01';

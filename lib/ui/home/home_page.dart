@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -133,38 +134,29 @@ class HomePage extends ConsumerWidget {
   void _refreshAll(BuildContext context, WidgetRef ref) {
     final list = ref.read(homeListProvider).value ?? const [];
     ref.read(taskCenterProvider.notifier).startRefreshAll(list);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('已发起批量刷新，可在任务中心查看进度'),
-        duration: Duration(seconds: 2)));
+    Toast.show(context, '已发起批量刷新，可在任务中心查看进度');
   }
 
   void _batch(BuildContext context, WidgetRef ref, String action) {
     final list = ref.read(homeListProvider).value ?? const [];
     final tasks = ref.read(taskCenterProvider.notifier);
-    final messenger = ScaffoldMessenger.of(context);
 
     switch (action) {
       case 'checkin':
         if (!list.any((s) => s.canCheckIn && !s.checkedInToday)) {
-          messenger.showSnackBar(
-              const SnackBar(content: Text('没有待签到的供应商')));
+          Toast.show(context, '没有待签到的供应商');
           return;
         }
         unawaited(tasks.startCheckInAll(list));
-        messenger.showSnackBar(const SnackBar(
-            content: Text('已发起批量签到，可在任务中心查看进度'),
-            duration: Duration(seconds: 2)));
+        Toast.show(context, '已发起批量签到，可在任务中心查看进度');
         break;
       case 'prewarm':
         if (!list.any((s) => s.canPrewarm)) {
-          messenger.showSnackBar(
-              const SnackBar(content: Text('没有支持预热的供应商')));
+          Toast.show(context, '没有支持预热的供应商');
           return;
         }
         unawaited(tasks.startPrewarmAll(list));
-        messenger.showSnackBar(const SnackBar(
-            content: Text('已发起批量预热，可在任务中心查看进度'),
-            duration: Duration(seconds: 2)));
+        Toast.show(context, '已发起批量预热，可在任务中心查看进度');
         break;
     }
   }
@@ -520,16 +512,13 @@ class ProviderCard extends ConsumerWidget {
   Future<void> _checkIn(BuildContext context, WidgetRef ref) async {
     final result = await ref.read(actionsProvider).checkIn(state);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${state.provider.name}：${result.message}')));
+    Toast.show(context, '${state.provider.name}：${result.message}');
   }
 
   Future<void> _prewarm(BuildContext context, WidgetRef ref) async {
     final result = await ref.read(actionsProvider).prewarm(state, force: true);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content:
-            Text('${state.provider.name}：${result.message ?? result.status}')));
+    Toast.show(context, '${state.provider.name}：${result.message ?? result.status}');
   }
 
   Future<void> _onMenu(

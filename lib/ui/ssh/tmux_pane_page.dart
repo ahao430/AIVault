@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -157,8 +158,7 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
   Future<void> _copyOutput() async {
     await Clipboard.setData(ClipboardData(text: _output));
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('输出已复制')));
+      Toast.show(context, '输出已复制');
     }
   }
 

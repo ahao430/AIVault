@@ -1,7 +1,10 @@
 import 'package:aivault/adapters/anthropic_compatible.dart';
+import 'package:aivault/adapters/deepseek.dart';
+import 'package:aivault/adapters/newapi.dart';
 import 'package:aivault/adapters/openai_compatible.dart';
 import 'package:aivault/adapters/provider_adapter.dart';
 import 'package:aivault/adapters/registry.dart';
+import 'package:aivault/adapters/zhipu_coding_plan.dart';
 import 'package:aivault/core/formatters.dart';
 import 'package:aivault/data/db/tables.dart';
 import 'package:dio/dio.dart';
@@ -125,6 +128,101 @@ void main() {
       final caps = AdapterRegistry.of(AdapterKind.zhipu).capabilities;
       expect(caps.prewarm, isTrue);
       expect(caps.checkIn, isFalse);
+    });
+
+    test('智谱 Coding Plan：5 小时额度能力（双格式）', () {
+      expect(AdapterRegistry.of(AdapterKind.zhipu).capabilities.quota, isTrue);
+      expect(AdapterRegistry.of(AdapterKind.zhipuAnthropic).capabilities.quota,
+          isTrue);
+    });
+
+    test('DeepSeek：余额能力（双格式）', () {
+      expect(AdapterRegistry.of(AdapterKind.deepseek).capabilities.balance,
+          isTrue);
+      expect(
+          AdapterRegistry.of(AdapterKind.deepseekAnthropic).capabilities.balance,
+          isTrue);
+    });
+  });
+
+  group('智谱 Coding Plan 用量解析', () {
+    test('TOKENS_LIMIT 双窗口：取最早重置的为 5 小时额度', () {
+      final body = {
+        'success': true,
+        'data': {
+          'level': 'pro',
+          'limits': [
+            {'type': 'TIME_LIMIT', 'percentage': 7, 'usage': 1000, 'currentValue': 72, 'remaining': 928},
+            {'type': 'TOKENS_LIMIT', 'percentage': 44, 'nextResetTime': 1760000000000},
+            {'type': 'TOKENS_LIMIT', 'percentage': 53, 'nextResetTime': 1761000000000},
+          ],
+        },
+      };
+      final r = parseZhipuUsage(body);
+      expect(r, isNotNull);
+      expect(r!.success, isTrue);
+      expect(r.ratio, closeTo(0.56, 0.001)); // 1 - 44%
+      expect(r.resetAt, DateTime.fromMillisecondsSinceEpoch(1760000000000));
+      expect(r.message, contains('pro'));
+    });
+
+    test('秒级时间戳兼容', () {
+      final body = {
+        'success': true,
+        'data': {
+          'limits': [
+            {'type': 'TOKENS_LIMIT', 'percentage': 10, 'nextResetTime': 1760000000},
+          ],
+        },
+      };
+      final r = parseZhipuUsage(body);
+      expect(r!.resetAt, DateTime.fromMillisecondsSinceEpoch(1760000000000));
+    });
+
+    test('失败 / 结构不符返回 null', () {
+      expect(parseZhipuUsage({'success': false}), isNull);
+      expect(parseZhipuUsage({'success': true, 'data': {'limits': []}}), isNull);
+      expect(parseZhipuUsage({'success': true}), isNull);
+    });
+  });
+
+  group('DeepSeek 余额解析', () {
+    test('balance_infos[0] total_balance', () {
+      final body = {
+        'is_available': true,
+        'balance_infos': [
+          {
+            'currency': 'CNY',
+            'total_balance': '110.35',
+            'granted_balance': '10.00',
+            'topped_up_balance': '100.35',
+          }
+        ],
+      };
+      final b = parseDeepSeekBalance(body)!;
+      expect(b.success, isTrue);
+      expect(b.amount, 110.35);
+      expect(b.currency, 'CNY');
+    });
+
+    test('结构不符返回 null', () {
+      expect(parseDeepSeekBalance({}), isNull);
+      expect(parseDeepSeekBalance({'balance_infos': []}), isNull);
+    });
+  });
+
+  group('NewAPI 控制台 origin', () {
+    test('Base URL 带版本段时去掉', () {
+      expect(NewApiAdapter.consoleOrigin('https://x.com/v1'), 'https://x.com');
+      expect(NewApiAdapter.consoleOrigin('https://x.com/v1/'), 'https://x.com');
+      expect(NewApiAdapter.consoleOrigin('https://x.com'), 'https://x.com');
+      expect(NewApiAdapter.consoleOrigin('https://x.com/v4'),
+          'https://x.com');
+    });
+
+    test('子路径站点保留路径', () {
+      expect(NewApiAdapter.consoleOrigin('https://x.com/relay/v1'),
+          'https://x.com/relay');
     });
   });
 

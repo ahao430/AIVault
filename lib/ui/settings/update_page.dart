@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -108,8 +109,7 @@ class _UpdatePageState extends ConsumerState<UpdatePage> {
 
   void _toast(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    Toast.show(context, message);
   }
 
   @override

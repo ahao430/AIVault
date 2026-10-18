@@ -1,9 +1,11 @@
 
 import '../data/db/tables.dart';
 import 'anthropic_compatible.dart';
+import 'deepseek.dart';
 import 'newapi.dart';
 import 'openai_compatible.dart';
 import 'provider_adapter.dart';
+import 'zhipu_coding_plan.dart';
 
 /// 官方订阅预设端点。Coding Plan 通常同时暴露 OpenAI 与 Anthropic 两种
 /// 请求格式，端点地址不同，用户按需选择对应格式的适配器即可，无需手动
@@ -107,15 +109,10 @@ class AdapterRegistry {
   static final ProviderAdapter generic = OpenAICompatibleAdapter();
   static final ProviderAdapter newapi = NewApiAdapter();
   static final ProviderAdapter sub2api = Sub2ApiAdapter();
-  static final ProviderAdapter zhipu =
-      OfficialAdapter(kindStr: 'zhipu', defaultBaseUrl: kZhipuOpenaiBase);
-  static final ProviderAdapter zhipuAnthropic = AnthropicOfficialAdapter(
-      kindStr: 'zhipuAnthropic', defaultBaseUrl: kZhipuAnthropicBase);
-  static final ProviderAdapter deepseek =
-      OfficialAdapter(kindStr: 'deepseek', defaultBaseUrl: kDeepseekOpenaiBase);
-  static final ProviderAdapter deepseekAnthropic = AnthropicOfficialAdapter(
-      kindStr: 'deepseekAnthropic',
-      defaultBaseUrl: kDeepseekAnthropicBase);
+  static final ProviderAdapter zhipu = ZhipuCodingPlanAdapter();
+  static final ProviderAdapter zhipuAnthropic = ZhipuAnthropicAdapter();
+  static final ProviderAdapter deepseek = DeepSeekAdapter();
+  static final ProviderAdapter deepseekAnthropic = DeepSeekAnthropicAdapter();
   static final ProviderAdapter claude = AnthropicOfficialAdapter(
       kindStr: 'claude', defaultBaseUrl: kClaudeOfficialBase);
   static final ProviderAdapter openai =

@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
@@ -84,9 +85,7 @@ class ImageDetailPage extends ConsumerWidget {
                             onPressed: () {
                               Clipboard.setData(
                                   ClipboardData(text: task.prompt));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Prompt 已复制')));
+                              Toast.show(context, 'Prompt 已复制');
                             },
                           ),
                         ],
@@ -189,8 +188,7 @@ class ImageDetailPage extends ConsumerWidget {
     final file = XFile.fromData(bytes, mimeType: 'image/png');
     await file.saveTo(location.path);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('已保存到 ${location.path}')));
+      Toast.show(context, '已保存到 ${location.path}');
     }
   }
 }

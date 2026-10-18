@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -282,8 +283,7 @@ Future<void> _showActions(
     case 'copy':
       await Clipboard.setData(ClipboardData(text: message.content));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('已复制'), duration: Duration(seconds: 1)));
+        Toast.show(context, '已复制');
       }
       break;
     case 'delete':

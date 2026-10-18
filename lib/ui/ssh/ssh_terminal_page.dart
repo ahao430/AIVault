@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -239,8 +240,7 @@ class _SshTerminalPageState extends ConsumerState<SshTerminalPage> {
     _terminalCtrl.clearSelection();
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(selection == null ? '已复制全部输出' : '已复制选中内容')));
+      Toast.show(context, selection == null ? '已复制全部输出' : '已复制选中内容');
     }
   }
 

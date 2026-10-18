@@ -1,3 +1,4 @@
+import '../../core/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,8 +17,7 @@ Future<void> showTokenExportDialog(
   final apiKey = await readApiKey();
   if (apiKey == null || apiKey.isEmpty) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('没有可用的 API Key')));
+      Toast.show(context, '没有可用的 API Key');
     }
     return;
   }
@@ -83,8 +83,7 @@ class _TokenExportDialogState extends State<_TokenExportDialog> {
   Future<void> _copy() async {
     await Clipboard.setData(ClipboardData(text: _link));
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('导入链接已复制到剪贴板')));
+      Toast.show(context, '导入链接已复制到剪贴板');
     }
   }
 
