@@ -160,3 +160,39 @@ class WebdavConfigs extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// AI 聊天会话（Plan #23）。只保存本地。
+class Conversations extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text().withDefault(const Constant('新会话'))();
+
+  /// 会话使用的供应商 / 令牌 / 模型（模型可切换，随会话保存）
+  TextColumn get providerId => text()
+      .references(Providers, #id, onDelete: KeyAction.cascade)();
+  TextColumn get tokenId =>
+      text().references(Tokens, #id, onDelete: KeyAction.cascade)();
+  TextColumn get model => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// 聊天消息
+class Messages extends Table {
+  TextColumn get id => text()();
+  TextColumn get conversationId => text()
+      .references(Conversations, #id, onDelete: KeyAction.cascade)();
+
+  /// user / assistant
+  TextColumn get role => text()();
+  TextColumn get content => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  /// JSON：错误信息、模型、耗时等
+  TextColumn get metadata => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

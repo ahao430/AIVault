@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// 工作台：功能入口卡片。P0 为占位，AI 聊天 / 画图 / 远程开发在 P2/P3 迭代。
+import '../chat/conversations_page.dart';
+
+/// 工作台：功能入口卡片。AI 聊天已可用；画图 / 远程开发在后续版本迭代。
 class WorkbenchPage extends StatelessWidget {
   const WorkbenchPage({super.key});
 
@@ -20,7 +22,9 @@ class WorkbenchPage extends StatelessWidget {
                   title: 'AI 聊天',
                   subtitle: '使用已配置的模型对话',
                   color: cs.primary,
-                  onTap: () => _soon(context, 'AI 聊天'),
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const ConversationsPage(),
+                  )),
                 ),
               ),
               const SizedBox(width: 12),
@@ -30,6 +34,7 @@ class WorkbenchPage extends StatelessWidget {
                   title: 'AI 画图',
                   subtitle: '生成与管理图片',
                   color: cs.tertiary,
+                  badge: '即将推出',
                   onTap: () => _soon(context, 'AI 画图'),
                 ),
               ),
@@ -41,6 +46,7 @@ class WorkbenchPage extends StatelessWidget {
             title: '远程开发',
             subtitle: 'SSH / Agent / tmux 会话',
             color: cs.secondary,
+            badge: '即将推出',
             onTap: () => _soon(context, '远程开发'),
           ),
         ],
@@ -49,8 +55,8 @@ class WorkbenchPage extends StatelessWidget {
   }
 
   void _soon(BuildContext context, String name) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$name 将在后续版本提供（P2 / P3 阶段）')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$name 将在后续版本提供')));
   }
 }
 
@@ -61,6 +67,7 @@ class _EntryCard extends StatelessWidget {
     required this.subtitle,
     required this.color,
     required this.onTap,
+    this.badge,
   });
 
   final IconData icon;
@@ -68,6 +75,7 @@ class _EntryCard extends StatelessWidget {
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -101,9 +109,12 @@ class _EntryCard extends StatelessWidget {
                       .bodySmall
                       ?.copyWith(
                           color: Theme.of(context).colorScheme.outline)),
-              const SizedBox(height: 6),
-              const Text('即将推出',
-                  style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic)),
+              if (badge != null) ...[
+                const SizedBox(height: 6),
+                Text(badge!,
+                    style: const TextStyle(
+                        fontSize: 11, fontStyle: FontStyle.italic)),
+              ],
             ],
           ),
         ),

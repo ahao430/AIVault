@@ -22,6 +22,7 @@ AI 订阅与 API 账号管理为中心的本地优先跨平台 App —— 随时
 - CC Switch / Magpie 导出：Token 层生成导入链接（`ccswitch://v1/import` / `magpie://import`，含 API Key 安全警告）
 - WebDAV 同步：个人设备间同步（推送 / 拉取 / 冲突检测，两边都改过时由用户选择保留哪份）；密钥是否随同步单独控制；WebDAV 密码只存系统安全存储
 - 已隐藏供应商管理：恢复或彻底删除
+- AI 聊天（P2）：会话管理（新建 / 重命名 / 删除，历史只存本地）、OpenAI 兼容流式输出（SSE 解析支持跨 chunk 半行与 UTF-8 截断）、Markdown 渲染（gpt_markdown）、推理模型 reasoning 折叠显示、停止生成（保留已生成部分）、会话内切换模型、长按复制消息
 
 ## 目录结构
 
