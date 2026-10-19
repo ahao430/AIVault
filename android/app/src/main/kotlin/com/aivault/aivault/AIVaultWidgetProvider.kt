@@ -22,17 +22,11 @@ import io.flutter.FlutterInjector
  * 展示前 4 个供应商的额度/余额 + 重置倒计时。
  * 数据键与 lib/services/widget_sync.dart 对应：updated / t0..t3 / v0..v3。
  *
- * 刷新链路（防循环）：
- * - 刷新按钮 → 发给自己（ACTION_REFRESH）：先立刻显示「刷新中…」，
- *   再入队后台 Worker 拉取数据
- * - 系统周期 APPWIDGET_UPDATE（updatePeriodMillis）→ 同样触发后台拉取
- * - Dart 侧 sync 完成的 updateWidget 广播带 triggeredFromHomeWidget=true
- *   → 只重绘、不再拉取，避免「拉取→刷新→再拉取」死循环
- *
- * 不走插件的 HomeWidgetBackgroundReceiver：它以 ExistingWorkPolicy.APPEND
- * 入队，历史上只要失败过一次（如低内存时引擎初始化异常），该唯一任务链就
- * 永久 FAILED，之后所有刷新点击都会被直接标失败而不执行（小米上按钮无反应
- * 的根因）。这里改由我们自己以 REPLACE 入队插件的 Worker，可自愈毒链。
+ * 纯手动刷新（用户要求，不做任何自动拉取）：
+ * - 刷新按钮（ACTION_REFRESH）→ 显示「刷新中…」→ 后台拉取 → 重绘
+ * - 其余 APPWIDGET_UPDATE（系统/桌面发起）只重绘已存数据，不拉取：
+ *   部分桌面（MIUI 等）会频繁发送更新广播，逐次拉取会让组件不停闪烁
+ * - Dart 侧 sync 的 updateWidget 广播带 triggeredFromHomeWidget=true → 重绘
  */
 class AIVaultWidgetProvider : AppWidgetProvider() {
 
@@ -40,17 +34,14 @@ class AIVaultWidgetProvider : AppWidgetProvider() {
         val fromSelfSync = intent.getBooleanExtra(EXTRA_TRIGGERED_FROM_HOME_WIDGET, false)
         Log.d(TAG, "onReceive action=${intent.action} fromSelfSync=$fromSelfSync")
         if (intent.action == ACTION_REFRESH) {
-            // 刷新按钮：先立刻给可见反馈，再走后台拉取
+            // 刷新按钮：先立刻给可见反馈，再走后台拉取（唯一拉取入口）
             redraw(context, updatedLabel = "刷新中…")
             triggerBackgroundFetch(context, intent.data)
             super.onReceive(context, intent)
             return
         }
+        // 其余更新只重绘（super → onUpdate），不再后台拉取
         super.onReceive(context, intent)
-        if (intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE && !fromSelfSync) {
-            // 系统周期刷新（非我们自己的 sync 触发）→ 后台拉取最新数据
-            triggerBackgroundFetch(context, intent.data)
-        }
     }
 
     override fun onUpdate(
@@ -138,7 +129,8 @@ class AIVaultWidgetProvider : AppWidgetProvider() {
             val loader = FlutterInjector.instance().flutterLoader()
             loader.startInitialization(context)
             loader.ensureInitializationComplete(context, null)
-            // 常量与 home_widget 0.10.0 的 HomeWidgetBackgroundWorker 对齐
+            // 直接以 REPLACE 入队插件的 Worker（不走其接收器的 APPEND 路径）：
+            // APPEND 下历史任务只要失败过一次，唯一链永久失效、后续点击全被丢弃
             val workData = Data.Builder()
                 .putString(WORK_DATA_KEY, data?.toString() ?: "")
                 .build()

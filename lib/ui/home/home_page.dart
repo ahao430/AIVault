@@ -31,8 +31,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    // 恢复用户配置的自动刷新频率（不触发刷新）
-    ref.read(homeRefresherProvider).load();
     // 启动即同步一次桌面小组件（沿用最近快照，强制刷新时间戳）
     unawaited(WidgetSyncService.sync(
       ref.read(repositoryProvider),

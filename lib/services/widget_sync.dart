@@ -21,6 +21,11 @@ class WidgetSyncService {
   /// 上次重绘时的行内容；数值没变就不重绘，避免组件闪烁
   static String? _lastPayload;
 
+  /// 非强制重绘的最小间隔：一轮串行刷新里数值逐个变化时，
+  /// 也不再跟着逐次重绘
+  static DateTime _lastDrawnAt = DateTime.fromMillisecondsSinceEpoch(0);
+  static const _redrawInterval = Duration(seconds: 60);
+
   /// 防抖同步：批量刷新时每个供应商刷新完都会触发一次同步，
   /// 合并为一次重绘（等待 2 秒无新调用才真正执行）
   static void syncDebounced(ProviderRepository repo) {
@@ -130,8 +135,10 @@ class WidgetSyncService {
 
       final payload = picks.map(_stableKey).join(';;');
       final changed = payload != _lastPayload;
-      if (force || changed) {
+      final due = now.difference(_lastDrawnAt) >= _redrawInterval;
+      if (force || (changed && due)) {
         _lastPayload = payload;
+        _lastDrawnAt = now;
         await HomeWidget.saveWidgetData<String>('updated', '更新于 $hh:$mm');
         for (var i = 0; i < rowCount; i++) {
           final s = i < picks.length ? picks[i] : null;

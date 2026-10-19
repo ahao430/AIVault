@@ -56,19 +56,7 @@ final notificationPrefsProvider =
   return NotificationPrefsStore(ref.watch(secureStoreProvider)).load();
 });
 
-/// 首页看板静默刷新（定时 + 切回首页立即触发）
+/// 首页看板静默刷新（切回首页等事件触发；无定时器）
 final homeRefresherProvider = Provider<HomeRefresher>((ref) {
-  final refresher = HomeRefresher(ref);
-  ref.onDispose(refresher.dispose);
-  return refresher;
+  return HomeRefresher(ref);
 });
-
-/// 首页自动刷新设置变更信号（驱动设置页副标题重建）
-class AutoRefreshTick extends Notifier<int> {
-  @override
-  int build() => 0;
-  void bump() => state++;
-}
-
-final autoRefreshTickProvider =
-    NotifierProvider<AutoRefreshTick, int>(AutoRefreshTick.new);
