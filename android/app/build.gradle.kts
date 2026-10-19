@@ -91,6 +91,9 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    // 小组件后台刷新需要直接以 REPLACE 策略入队 home_widget 的后台 Worker，
+    // 插件内部用 implementation 声明 work-runtime，需在此补编译期可见性（版本保持一致）
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
 }
 
 flutter {

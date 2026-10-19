@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 
 import '../core/formatters.dart';
@@ -47,6 +48,7 @@ class WidgetSyncService {
   /// 无界面拉取 + 同步：小组件刷新按钮 / 系统周期刷新触发，
   /// 在 home_widget 的后台 isolate 中运行（独立于主 App 的容器）。
   static Future<void> refreshAndSync() async {
+    debugPrint('[WidgetSync] 后台刷新开始');
     if (!Platform.isAndroid) return;
     final db = AppDatabase();
     try {
@@ -59,9 +61,24 @@ class WidgetSyncService {
         } catch (_) {}
       }
       await sync(repo);
+      debugPrint('[WidgetSync] 后台刷新完成');
+    } catch (e) {
+      debugPrint('[WidgetSync] 后台刷新失败：$e');
+      await _showError();
     } finally {
       await db.close();
     }
+  }
+
+  /// 刷新失败也要让用户在组件上看得见，而不是无任何反应
+  static Future<void> _showError() async {
+    try {
+      final now = DateTime.now();
+      final hh = now.hour.toString().padLeft(2, '0');
+      final mm = now.minute.toString().padLeft(2, '0');
+      await HomeWidget.saveWidgetData<String>('updated', '刷新失败 $hh:$mm');
+      await HomeWidget.updateWidget(androidName: 'AIVaultWidgetProvider');
+    } catch (_) {}
   }
 
   static Future<void> sync(ProviderRepository repo) async {

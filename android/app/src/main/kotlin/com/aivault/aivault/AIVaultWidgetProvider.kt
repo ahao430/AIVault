@@ -3,12 +3,19 @@ package com.aivault.aivault
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
-import es.antonborri.home_widget.HomeWidgetBackgroundIntent
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import es.antonborri.home_widget.HomeWidgetBackgroundWorker
+import io.flutter.FlutterInjector
 
 /**
  * 桌面看板小组件：读取 home_widget 写入的 HomeWidgetPreferences，
@@ -16,19 +23,33 @@ import es.antonborri.home_widget.HomeWidgetBackgroundIntent
  * 数据键与 lib/services/widget_sync.dart 对应：updated / t0..t3 / v0..v3。
  *
  * 刷新链路（防循环）：
- * - 刷新按钮 → HomeWidgetBackgroundIntent → 后台 Dart 回调拉取数据
+ * - 刷新按钮 → 发给自己（ACTION_REFRESH）：先立刻显示「刷新中…」，
+ *   再入队后台 Worker 拉取数据
  * - 系统周期 APPWIDGET_UPDATE（updatePeriodMillis）→ 同样触发后台拉取
  * - Dart 侧 sync 完成的 updateWidget 广播带 triggeredFromHomeWidget=true
  *   → 只重绘、不再拉取，避免「拉取→刷新→再拉取」死循环
+ *
+ * 不走插件的 HomeWidgetBackgroundReceiver：它以 ExistingWorkPolicy.APPEND
+ * 入队，历史上只要失败过一次（如低内存时引擎初始化异常），该唯一任务链就
+ * 永久 FAILED，之后所有刷新点击都会被直接标失败而不执行（小米上按钮无反应
+ * 的根因）。这里改由我们自己以 REPLACE 入队插件的 Worker，可自愈毒链。
  */
 class AIVaultWidgetProvider : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val fromSelfSync = intent.getBooleanExtra(EXTRA_TRIGGERED_FROM_HOME_WIDGET, false)
+        Log.d(TAG, "onReceive action=${intent.action} fromSelfSync=$fromSelfSync")
+        if (intent.action == ACTION_REFRESH) {
+            // 刷新按钮：先立刻给可见反馈，再走后台拉取
+            redraw(context, updatedLabel = "刷新中…")
+            triggerBackgroundFetch(context, intent.data)
+            super.onReceive(context, intent)
+            return
+        }
         super.onReceive(context, intent)
         if (intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE && !fromSelfSync) {
             // 系统周期刷新（非我们自己的 sync 触发）→ 后台拉取最新数据
-            triggerBackgroundFetch(context)
+            triggerBackgroundFetch(context, intent.data)
         }
     }
 
@@ -37,15 +58,38 @@ class AIVaultWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        drawWidgets(context, appWidgetManager, appWidgetIds, updatedLabel = null)
+    }
+
+    /// 重绘全部实例；[updatedLabel] 非空时用于临时覆盖头部时间戳（如「刷新中…」）
+    private fun redraw(context: Context, updatedLabel: String?) {
+        val manager = AppWidgetManager.getInstance(context)
+        val ids = manager.getAppWidgetIds(
+            ComponentName(context, AIVaultWidgetProvider::class.java)
+        )
+        drawWidgets(context, manager, ids, updatedLabel)
+    }
+
+    private fun drawWidgets(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray,
+        updatedLabel: String?
+    ) {
         val prefs = context.getSharedPreferences("HomeWidgetPreferences", Context.MODE_PRIVATE)
         val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val launch = PendingIntent.getActivity(
             context, 0, launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        // 刷新按钮：后台 Dart 回调拉数据（不打开 App）
-        val refresh = HomeWidgetBackgroundIntent.getBroadcast(
-            context, Uri.parse("aivault://widget/refresh")
+        // 刷新按钮：发给自己（不走 home_widget 的接收器，见类注释）
+        val refreshIntent = Intent(context, AIVaultWidgetProvider::class.java).apply {
+            action = ACTION_REFRESH
+            data = Uri.parse("aivault://widget/refresh")
+        }
+        val refresh = PendingIntent.getBroadcast(
+            context, 1, refreshIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val rowIds = listOf(
@@ -57,7 +101,10 @@ class AIVaultWidgetProvider : AppWidgetProvider() {
 
         for (id in appWidgetIds) {
             val views = RemoteViews(context.packageName, R.layout.aivault_widget)
-            views.setTextViewText(R.id.updated, prefs.getString("updated", "AIVault 看板"))
+            views.setTextViewText(
+                R.id.updated,
+                updatedLabel ?: prefs.getString("updated", "AIVault 看板")
+            )
 
             var visibleRows = 0
             for (i in rowIds.indices) {
@@ -85,18 +132,33 @@ class AIVaultWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    private fun triggerBackgroundFetch(context: Context) {
-        val intent = Intent(context, Class.forName(BACKGROUND_RECEIVER)).apply {
-            action = BACKGROUND_ACTION
-            data = Uri.parse("aivault://widget/refresh")
+    private fun triggerBackgroundFetch(context: Context, data: Uri?) {
+        Log.d(TAG, "triggerBackgroundFetch")
+        try {
+            val loader = FlutterInjector.instance().flutterLoader()
+            loader.startInitialization(context)
+            loader.ensureInitializationComplete(context, null)
+            // 常量与 home_widget 0.10.0 的 HomeWidgetBackgroundWorker 对齐
+            val workData = Data.Builder()
+                .putString(WORK_DATA_KEY, data?.toString() ?: "")
+                .build()
+            val request = OneTimeWorkRequestBuilder<HomeWidgetBackgroundWorker>()
+                .setInputData(workData)
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                WORK_NAME, ExistingWorkPolicy.REPLACE, request
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "后台刷新入队失败", e)
+            redraw(context, updatedLabel = "刷新失败")
         }
-        context.sendBroadcast(intent)
     }
 
     private companion object {
+        const val TAG = "AIVaultWidget"
+        const val ACTION_REFRESH = "com.aivault.aivault.action.WIDGET_REFRESH"
         const val EXTRA_TRIGGERED_FROM_HOME_WIDGET = "triggeredFromHomeWidget"
-        const val BACKGROUND_RECEIVER =
-            "es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
-        const val BACKGROUND_ACTION = "es.antonborri.home_widget.action.BACKGROUND"
+        const val WORK_NAME = "home_widget_background"
+        const val WORK_DATA_KEY = "uri_data"
     }
 }
