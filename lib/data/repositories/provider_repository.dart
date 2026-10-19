@@ -123,6 +123,11 @@ class ProviderRepository {
     }
   }
 
+  /// 一次性加载首页状态（小组件同步等非流式场景）
+  Future<List<ProviderWithState>> loadHomeList(
+          {bool includeHidden = false}) =>
+      _loadAll(includeHidden);
+
   Future<List<ProviderWithState>> _loadAll(bool includeHidden) async {
     final providers = await (_db.providers.select()
           ..where((p) => includeHidden ? const Constant(true) : p.hidden.equals(false))

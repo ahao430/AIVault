@@ -8,6 +8,7 @@ import '../adapters/registry.dart';
 import '../data/db/database.dart';
 import '../data/db/tables.dart';
 import '../data/repositories/provider_repository.dart';
+import 'widget_sync.dart';
 
 /// 批量操作结果统计
 class BatchOutcome {
@@ -87,6 +88,8 @@ class ProviderActions {
         }
       }
     }
+    // 快照有变化 → 同步桌面小组件（失败静默）
+    unawaited(WidgetSyncService.sync(_repo));
   }
 
   /// 刷新全部供应商额度（完成后异步清理过期快照）。

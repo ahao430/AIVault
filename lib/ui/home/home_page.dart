@@ -8,6 +8,7 @@ import '../../core/formatters.dart';
 import '../../data/repositories/provider_repository.dart';
 import '../../services/provider_actions.dart';
 import '../../services/task_center.dart';
+import '../../services/widget_sync.dart';
 import '../../state/app_providers.dart';
 import '../provider/provider_detail_page.dart';
 import '../provider/provider_edit_page.dart';
@@ -32,6 +33,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     // 恢复用户配置的自动刷新频率（不触发刷新）
     ref.read(homeRefresherProvider).load();
+    // 启动即同步一次桌面小组件（沿用最近快照）
+    unawaited(WidgetSyncService.sync(ref.read(repositoryProvider)));
   }
 
   @override

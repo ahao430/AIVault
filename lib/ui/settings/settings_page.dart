@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../services/backup_service.dart';
+import '../../services/widget_sync.dart';
 import '../../services/local_notifier.dart';
 import '../../state/app_providers.dart';
 import '../../core/toast.dart';
@@ -242,7 +243,13 @@ class SettingsPage extends ConsumerWidget {
             _item(
               icon: Icons.widgets_outlined,
               title: '桌面 Widget',
-              subtitle: '额度 / 余额 / 重置时间快捷查看（后续版本）',
+              subtitle: '长按桌面添加「AIVault 看板」；此处手动同步最新数据',
+              onTap: () async {
+                await WidgetSyncService.sync(ref.read(repositoryProvider));
+                if (context.mounted) {
+                  Toast.show(context, '已同步到桌面小组件');
+                }
+              },
             ),
           ]),
           if (Platform.isAndroid)
