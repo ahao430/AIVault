@@ -42,6 +42,34 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "build=$BUILD" >> "$GITHUB_OUTPUT"
 
+      - name: Extract changelog notes
+        id: notes
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          BUILD: ${{ steps.ver.outputs.build }}
+        run: |
+          # 从 CHANGELOG.md 提取当前版本段（## x.y.z 到下一个 ## 之前），
+          # 边界校验版本号后必须紧跟（/(/空，避免 0.4.1 误匹配 0.4.12
+          BODY=$(awk -v ver="## $VERSION" '{
+            if (index($0, ver) == 1) {
+              rest = substr($0, length(ver) + 1)
+              if (rest == "" || rest ~ /^[ （(]/) { found = 1; next }
+            }
+            if (found && /^## /) exit
+            if (found) print
+          }' CHANGELOG.md | sed '/./,$!d')
+          if [ -z "$BODY" ]; then
+            BODY="版本 $VERSION（build $BUILD）更新。升级不丢失本地数据。"
+          fi
+          {
+            echo "body<<NOTES_DELIM"
+            echo "$BODY"
+            echo "NOTES_DELIM"
+          } >> "$GITHUB_OUTPUT"
+          # update-info.json 用单行（JSON 内嵌），截断 500 字符并转义引号
+          ONE=$(printf '%s' "$BODY" | tr '\n' ' ' | sed 's/  */ /g; s/"/\\"/g' | cut -c1-500)
+          echo "oneline=$ONE" >> "$GITHUB_OUTPUT"
+
       - name: Check signing Secrets (固定令牌前置检查)
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -110,13 +138,14 @@ jobs:
           REPO: ${{ github.repository }}
           VERSION: ${{ steps.ver.outputs.version }}
           BUILD: ${{ steps.ver.outputs.build }}
+          NOTES_ONELINE: ${{ steps.notes.outputs.oneline }}
         run: |
           RELEASE_URL="https://github.com/$REPO/releases/download/${GITHUB_REF_NAME}"
           cat > build/app/outputs/flutter-apk/update-info.json <<EOF
           {
             "version": "$VERSION",
             "buildNumber": $BUILD,
-            "notes": "版本 $VERSION（build $BUILD）。升级不丢失本地数据。",
+            "notes": "$NOTES_ONELINE",
             "apkUrls": {
               "arm64-v8a": "$RELEASE_URL/aivault-arm64-v8a.apk",
               "armeabi-v7a": "$RELEASE_URL/aivault-armeabi-v7a.apk",
@@ -138,6 +167,10 @@ jobs:
           name: AIVault ${{ steps.ver.outputs.version }}
           body: |
             ## v${{ steps.ver.outputs.version }} (build ${{ steps.ver.outputs.build }})
+
+            ${{ steps.notes.outputs.body }}
+
+            ---
 
             ### 安装包（按设备架构选择，覆盖安装升级不丢数据）
             | 安装包 | 适用设备 |
