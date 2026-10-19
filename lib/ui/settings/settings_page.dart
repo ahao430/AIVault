@@ -245,7 +245,10 @@ class SettingsPage extends ConsumerWidget {
               title: '桌面 Widget',
               subtitle: '长按桌面添加「AIVault 看板」；此处手动同步最新数据',
               onTap: () async {
-                await WidgetSyncService.sync(ref.read(repositoryProvider));
+                await WidgetSyncService.sync(
+                  ref.read(repositoryProvider),
+                  force: true,
+                );
                 if (context.mounted) {
                   Toast.show(context, '已同步到桌面小组件');
                 }

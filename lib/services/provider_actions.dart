@@ -88,8 +88,9 @@ class ProviderActions {
         }
       }
     }
-    // 快照有变化 → 同步桌面小组件（失败静默）
-    unawaited(WidgetSyncService.sync(_repo));
+    // 快照有变化 → 同步桌面小组件（失败静默）。
+    // 防抖：批量刷新时每个供应商都会走到这里，合并为一次组件重绘
+    WidgetSyncService.syncDebounced(_repo);
   }
 
   /// 刷新全部供应商额度（完成后异步清理过期快照）。
