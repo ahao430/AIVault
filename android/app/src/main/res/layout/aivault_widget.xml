@@ -33,9 +33,18 @@
             android:id="@+id/updated"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
             android:text="AIVault 看板"
             android:textColor="#8A90B8"
             android:textSize="10sp" />
+
+        <ImageView
+            android:id="@+id/refresh_btn"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:padding="2dp"
+            android:src="@drawable/widget_refresh"
+            android:contentDescription="刷新" />
     </LinearLayout>
 
     <TextView

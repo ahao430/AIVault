@@ -3,7 +3,10 @@ import 'dart:io';
 import 'package:home_widget/home_widget.dart';
 
 import '../core/formatters.dart';
+import '../core/secure_store.dart';
+import '../data/db/database.dart';
 import '../data/repositories/provider_repository.dart';
+import 'provider_actions.dart';
 
 /// 桌面小组件数据同步（Android）：
 /// 取置顶/排序前 4 个供应商，写入额度/余额 + 重置倒计时，触发刷新。
@@ -39,6 +42,26 @@ class WidgetSyncService {
         return a.provider.sortOrder.compareTo(b.provider.sortOrder);
       });
     return sorted.take(count).toList();
+  }
+
+  /// 无界面拉取 + 同步：小组件刷新按钮 / 系统周期刷新触发，
+  /// 在 home_widget 的后台 isolate 中运行（独立于主 App 的容器）。
+  static Future<void> refreshAndSync() async {
+    if (!Platform.isAndroid) return;
+    final db = AppDatabase();
+    try {
+      final repo = ProviderRepository(db, FlutterSecureStore());
+      final actions = ProviderActions(repo);
+      final states = await repo.loadHomeList();
+      for (final s in states) {
+        try {
+          await actions.refresh(s);
+        } catch (_) {}
+      }
+      await sync(repo);
+    } finally {
+      await db.close();
+    }
   }
 
   static Future<void> sync(ProviderRepository repo) async {

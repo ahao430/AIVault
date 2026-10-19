@@ -33,6 +33,19 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- home_widget 后台回调：小组件刷新按钮 / 周期刷新跑 Dart 拉取 -->
+        <receiver
+            android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
+            </intent-filter>
+        </receiver>
+        <service
+            android:name="es.antonborri.home_widget.HomeWidgetBackgroundService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true" />
+
         <receiver
             android:name=".AIVaultWidgetProvider"
             android:exported="true"
