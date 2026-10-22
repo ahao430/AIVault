@@ -95,7 +95,7 @@ class WidgetSyncService {
       final hh = now.hour.toString().padLeft(2, '0');
       final mm = now.minute.toString().padLeft(2, '0');
       await HomeWidget.saveWidgetData<String>('updated', '刷新失败 $hh:$mm');
-      await HomeWidget.updateWidget(androidName: 'AIVaultWidgetProvider');
+      await _updateAllWidgets();
     } catch (_) {}
   }
 
@@ -147,10 +147,16 @@ class WidgetSyncService {
           await HomeWidget.saveWidgetData<String>(
               'v$i', s == null ? '' : rowValue(s, now));
         }
-        await HomeWidget.updateWidget(androidName: 'AIVaultWidgetProvider');
+        await _updateAllWidgets();
       }
     } catch (_) {
       // 小组件失败不影响主流程
     }
+  }
+
+  /// 通用版与 HyperOS 专用变体共用同一套数据键，更新时两个 Provider 都广播
+  static Future<void> _updateAllWidgets() async {
+    await HomeWidget.updateWidget(androidName: 'AIVaultWidgetProvider');
+    await HomeWidget.updateWidget(androidName: 'HyperOsWidgetProvider');
   }
 }

@@ -191,17 +191,41 @@ class WebDavService {
     final data = await _repo.exportJson(includeSecrets: config.includeSecrets);
     final content = const JsonEncoder.withIndent('  ').convert(data);
 
+    final bytes = Uint8List.fromList(utf8.encode(content));
     try {
-      await client.mkdir(config.remotePath.trim());
-    } on DioException catch (e) {
-      // 405 = 已存在（method not allowed on collection）
-      if (e.response?.statusCode != 405) rethrow;
+      await client.write(remoteFilePath(config), bytes);
+    } on DioException {
+      // 409 = 父目录不存在（坚果云等网盘不会自动创建中间目录，返回干净的
+      // [bad response] 409）；部分服务器（如 rclone）返回 409 时直接断开
+      // 连接，dio 只抛 [unknown] 连接错误。两类统一处理：逐级建目录后
+      // 重试一次（PUT 幂等，重试无副作用），再失败则把错误抛给页面。
+      await _ensureRemoteDir(client, config.remotePath);
+      await client.write(remoteFilePath(config), bytes);
     }
-    await client.write(
-      remoteFilePath(config),
-      Uint8List.fromList(utf8.encode(content)),
-    );
     await _markSynced();
+  }
+
+  /// 逐级创建远端目录（MKCOL 只能建一层，父目录缺失时坚果云等返回 409）。
+  /// 已存在（405）视为成功。
+  Future<void> _ensureRemoteDir(
+      webdav.Client client, String remotePath) async {
+    var path = remotePath.trim();
+    while (path.endsWith('/')) {
+      path = path.substring(0, path.length - 1);
+    }
+    if (path.isEmpty) return;
+    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+    var current = '';
+    for (final seg in segments) {
+      current = '$current/$seg';
+      try {
+        await client.mkdir(current);
+      } on DioException catch (e) {
+        final code = e.response?.statusCode;
+        // 405 = 目录已存在；409 = 父级刚建好时的竞态，下一轮会自愈
+        if (code != 405 && code != 409) rethrow;
+      }
+    }
   }
 
   /// 用远端数据覆盖本地（按 id 合并导入）

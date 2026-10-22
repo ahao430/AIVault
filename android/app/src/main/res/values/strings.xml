@@ -1,3 +1,4 @@
 <resources>
     <string name="widget_desc">订阅额度 / 余额 / 重置时间看板</string>
+    <string name="widget_desc_hyperos">HyperOS 适配版看板：系统圆角、加大字号</string>
 </resources>

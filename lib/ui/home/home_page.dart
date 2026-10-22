@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/formatters.dart';
+import '../../core/provider_icons.dart';
 import '../../data/repositories/provider_repository.dart';
 import '../../services/provider_actions.dart';
 import '../../services/task_center.dart';
@@ -342,6 +343,11 @@ class ProviderCard extends ConsumerWidget {
                     Padding(
                       padding: const EdgeInsets.only(right: 4),
                       child: Icon(Icons.star, size: 16, color: cs.primary),
+                    ),
+                  if (ProviderIcons.badge(p.adapterKind) case final badge?)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: badge,
                     ),
                   Expanded(
                     child: Text(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../adapters/registry.dart';
 import '../../core/formatters.dart';
+import '../../core/provider_icons.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/provider_repository.dart';
 import '../../state/app_providers.dart';
@@ -56,6 +57,12 @@ class ProviderDetailPage extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
+                            if (ProviderIcons.badge(p.adapterKind, size: 28)
+                                case final badge?)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 10),
+                                child: badge,
+                              ),
                             Expanded(
                               child: Text(
                                 p.accountLabel.isEmpty

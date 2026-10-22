@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIVault — AI 订阅看板 · SSH 远程开发 · 随身 AI 工作台</title>
+<meta name="description" content="AIVault：本地优先的跨平台 App。管理所有 AI 订阅的额度、余额与重置时间，批量签到 / 预热；内置 AI 聊天与画图；SSH + tmux 在手机上接管电脑里的 Agent。">
+<meta property="og:title" content="AIVault — AI 订阅看板 · SSH 远程开发 · 随身 AI 工作台">
+<meta property="og:description" content="本地优先：额度看板 / 批量预热 / 桌面小组件 / AI 聊天画图 / SSH 终端 + 终端 AI 助手。数据全在本机，API Key 只进系统安全存储。">
+<meta property="og:image" content="images/s/home.png">
+<style>
+  :root {
+    --bg: #0d1224;
+    --bg2: #121a33;
+    --card: rgba(255, 255, 255, .045);
+    --line: rgba(159, 168, 255, .16);
+    --text: #e6e8f5;
+    --muted: #8a90b8;
+    --accent: #9fa8ff;
+    --accent2: #6366f1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(99, 102, 241, .22), transparent 60%),
+      radial-gradient(900px 500px at 10% 10%, rgba(159, 168, 255, .10), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    line-height: 1.6;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---- nav ---- */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(12px);
+    background: rgba(13, 18, 36, .8);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .wrap { display: flex; align-items: center; gap: 10px; height: 56px; }
+  nav img { width: 26px; height: 26px; border-radius: 7px; }
+  nav .brand { font-weight: 700; letter-spacing: .5px; }
+  nav .links { margin-left: auto; display: flex; gap: 18px; font-size: 14px; color: var(--muted); }
+  nav .links a:hover { color: var(--text); }
+  @media (max-width: 640px) { nav .links { gap: 12px; font-size: 13px; } }
+
+  /* ---- hero ---- */
+  header { padding: 72px 0 56px; text-align: center; }
+  header img.logo { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 12px 40px rgba(99, 102, 241, .35); }
+  header h1 { font-size: 40px; margin: 20px 0 8px; letter-spacing: 1px; }
+  header h1 .grad {
+    background: linear-gradient(120deg, #c7cbff, #6366f1 55%, #9fa8ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header .tagline { font-size: 17px; color: var(--muted); max-width: 640px; margin: 0 auto; }
+  header .badges { margin-top: 18px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .badge {
+    font-size: 12px; color: var(--accent);
+    border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px;
+    background: var(--card);
+  }
+  .cta { margin-top: 28px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px; border-radius: 12px; font-size: 15px; font-weight: 600;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    color: #fff; box-shadow: 0 8px 24px rgba(99, 102, 241, .4);
+  }
+  .btn-ghost { border: 1px solid var(--line); color: var(--text); background: var(--card); }
+  .cta .note { width: 100%; font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ---- features ---- */
+  section { padding: 48px 0; }
+  h2 { font-size: 26px; margin-bottom: 6px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 22px; transition: border-color .2s ease, transform .2s ease;
+  }
+  .card:hover { border-color: rgba(159, 168, 255, .4); transform: translateY(-3px); }
+  .card .ico { font-size: 26px; }
+  .card h3 { font-size: 16px; margin: 10px 0 6px; }
+  .card p { font-size: 13.5px; color: var(--muted); }
+  .card p b { color: var(--text); font-weight: 600; }
+
+  /* ---- screenshots ---- */
+  .shots {
+    display: flex; gap: 20px; overflow-x: auto; padding: 8px 4px 24px;
+    scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+  }
+  .shot { flex: 0 0 auto; width: 250px; scroll-snap-align: center; }
+  .phone {
+    border: 1px solid var(--line); border-radius: 30px; overflow: hidden;
+    background: #000; box-shadow: 0 16px 48px rgba(0, 0, 0, .5);
+  }
+  .phone img { display: block; width: 100%; }
+  .shot figcaption { text-align: center; font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+  /* ---- download ---- */
+  .dl {
+    background: linear-gradient(160deg, rgba(99, 102, 241, .14), rgba(159, 168, 255, .05));
+    border: 1px solid var(--line); border-radius: 20px; padding: 32px;
+  }
+  .dl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 18px; }
+  @media (max-width: 760px) { .dl-grid { grid-template-columns: 1fr; } }
+  .dl h4 { font-size: 15px; margin-bottom: 10px; color: var(--accent); }
+  .dl ul { list-style: none; font-size: 13.5px; color: var(--muted); }
+  .dl li { padding: 5px 0; border-bottom: 1px dashed rgba(159, 168, 255, .12); }
+  .dl li:last-child { border-bottom: none; }
+  .dl li a { color: var(--text); border-bottom: 1px solid rgba(159, 168, 255, .4); }
+  .dl .apk { display: flex; flex-direction: column; gap: 10px; }
+  .dl .apk a {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 16px; font-size: 14px; transition: border-color .15s ease;
+  }
+  .dl .apk a:hover { border-color: rgba(159, 168, 255, .45); }
+  .dl .apk .arch { color: var(--muted); font-size: 12px; }
+  .dl .small { font-size: 12px; color: var(--muted); margin-top: 14px; }
+
+  /* ---- steps ---- */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: step; }
+  @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; position: relative; }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    display: inline-flex; width: 26px; height: 26px; align-items: center; justify-content: center;
+    background: var(--accent2); color: #fff; border-radius: 8px; font-size: 13px; font-weight: 700;
+  }
+  .step h3 { font-size: 15px; margin: 10px 0 4px; }
+  .step p { font-size: 13px; color: var(--muted); }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0 40px; margin-top: 40px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; font-size: 13px; color: var(--muted); }
+  footer a { color: var(--muted); border-bottom: 1px solid rgba(159, 168, 255, .3); }
+  footer a:hover { color: var(--text); }
+  footer .right { margin-left: auto; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <img src="images/app_icon.png" alt="AIVault">
+    <span class="brand">AIVault</span>
+    <div class="links">
+      <a href="#features">功能</a>
+      <a href="#shots">截图</a>
+      <a href="#download">下载</a>
+      <a href="https://github.com/ahao430/AIVault" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <img class="logo" src="images/app_icon.png" alt="AIVault 图标">
+    <h1><span class="grad">AIVault</span></h1>
+    <p class="tagline">AI 订阅看板 · SSH 远程开发 · 随身 AI 工作台<br>
+      把散落的 AI 订阅、中转站与远程 Agent，收进一个本地优先的 App。</p>
+    <div class="badges">
+      <span class="badge">Flutter · iOS / Android / macOS / Windows</span>
+      <span class="badge">本地优先 · 数据不出设备</span>
+      <span class="badge">开源</span>
+    </div>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/ahao430/AIVault/releases/latest" target="_blank" rel="noopener">⬇ 下载最新版 APK</a>
+      <a class="btn btn-ghost" href="https://github.com/ahao430/AIVault" target="_blank" rel="noopener">★ GitHub 仓库</a>
+      <span class="note">Android 按机型选择对应架构安装包，见下方下载区；已安装用户可在「设置 → 检查更新」内升级。</span>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <h2>核心功能</h2>
+    <p class="sub">一个 App，管好你的 AI 资产与远程工作流</p>
+    <div class="grid">
+      <div class="card"><div class="ico">📊</div><h3>订阅额度看板</h3>
+        <p>所有订阅与中转站一屏看清：<b>额度进度、重置倒计时、余额、本月已用</b>。批量签到 / 预热，预热只在额度 100% 时执行；查询失败保留上次成功数据。</p></div>
+      <div class="card"><div class="ico">🧩</div><h3>桌面小组件</h3>
+        <p>Android 看板小组件：置顶订阅的额度与倒计时直达桌面，<b>手动刷新不打开 App</b>；另有 <b>HyperOS（小米澎湃 OS）专用变体</b>，适配系统圆角与排版密度。</p></div>
+      <div class="card"><div class="ico">💬</div><h3>AI 聊天 &amp; 画图</h3>
+        <p>用已配置的模型直接对话与生图：<b>流式输出、Markdown / 代码高亮、推理折叠</b>、会话管理、导出长图；画图支持参考图与历史网格。</p></div>
+      <div class="card"><div class="ico">🖥️</div><h3>SSH 远程开发</h3>
+        <p>主机管理（Key / 密码，TOFU 指纹校验）、<b>完整 xterm 终端</b>、tmux 会话列表与 Agent 识别（Claude Code / Codex / OpenCode / Pi），手机随时连回电脑。</p></div>
+      <div class="card"><div class="ico">🤖</div><h3>终端 AI 助手</h3>
+        <p>以当前终端屏幕为上下文提问；命令一键执行后<b>自动读回输出继续分析</b>；打开「自动续跑」，执行 → 看结果 → 下一步自动循环到任务完成（上限 8 轮，可随时停止）。</p></div>
+      <div class="card"><div class="ico">🔒</div><h3>本地优先 &amp; 可选同步</h3>
+        <p>数据全在本机，API Key 只进<b>系统安全存储</b>；可选 WebDAV 同步（内置坚果云预设，自动创建远端目录），冲突由你决定保留哪一份；App 锁 + 生物识别。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="shots">
+  <div class="wrap">
+    <h2>截图</h2>
+    <p class="sub">演示数据 · 左右滑动查看</p>
+  </div>
+  <div class="wrap">
+    <div class="shots">
+      <figure class="shot"><div class="phone"><img src="images/s/home.png" alt="首页订阅看板" loading="lazy"></div><figcaption>首页 · 订阅看板</figcaption></figure>
+      <figure class="shot"><div class="phone"><img src="images/s/detail.png" alt="供应商详情" loading="lazy"></div><figcaption>供应商详情 · 额度走势</figcaption></figure>
+      <figure class="shot"><div class="phone"><img src="images/s/workbench.png" alt="工作台" loading="lazy"></div><figcaption>工作台 · 功能入口</figcaption></figure>
+      <figure class="shot"><div class="phone"><img src="images/s/sshhosts.png" alt="SSH 主机" loading="lazy"></div><figcaption>SSH 主机管理</figcaption></figure>
+      <figure class="shot"><div class="phone"><img src="images/s/chat.png" alt="AI 聊天" loading="lazy"></div><figcaption>AI 聊天 · 代码高亮</figcaption></figure>
+      <figure class="shot"><div class="phone"><img src="images/s/webdav.png" alt="WebDAV 同步" loading="lazy"></div><figcaption>WebDAV · 坚果云预设</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <div class="dl">
+      <h2>下载</h2>
+      <p class="sub">最新版本：<a href="https://github.com/ahao430/AIVault/releases/latest" target="_blank" rel="noopener" style="color:var(--accent)">GitHub Releases</a>（固定签名，覆盖升级不丢数据）</p>
+      <div class="dl-grid">
+        <div>
+          <h4>Android 安装包（按 CPU 架构选择）</h4>
+          <div class="apk">
+            <a href="https://github.com/ahao430/AIVault/releases/latest" target="_blank" rel="noopener">aivault-arm64-v8a.apk <span class="arch">2019 年后的绝大多数手机</span></a>
+            <a href="https://github.com/ahao430/AIVault/releases/latest" target="_blank" rel="noopener">aivault-armeabi-v7a.apk <span class="arch">较老的 32 位设备</span></a>
+            <a href="https://github.com/ahao430/AIVault/releases/latest" target="_blank" rel="noopener">aivault-x86_64.apk <span class="arch">模拟器</span></a>
+          </div>
+          <p class="small">不清楚架构？无脑选 arm64-v8a。安装时系统若提示未知来源，允许即可。</p>
+        </div>
+        <div>
+          <h4>升级与更新源</h4>
+          <ul>
+            <li><b>应用内更新</b>：设置 → 检查更新，自动检测新版本并安装；GitHub 直连不通时自动走公共镜像，国内网络无需 VPN</li>
+            <li><b>更新内容</b>：每个版本的说明自动取自 CHANGELOG，装之前可以先看改了什么</li>
+            <li><b>macOS / Windows / iOS</b>：代码已支持，安装包暂未随 Release 分发，可自行构建</li>
+            <li><b>桌面小组件</b>：安装后长按桌面 → 添加小组件 → 「AIVault 看板」（小米设备可选「· HyperOS」变体）</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="start">
+  <div class="wrap">
+    <h2>快速上手</h2>
+    <p class="sub">三分钟接入你的第一个订阅</p>
+    <div class="steps">
+      <div class="step"><h3>添加供应商</h3><p>首页右上角 +：选择 NewAPI / 智谱 / DeepSeek / OpenAI 兼容等类型，填入站点地址与令牌。中转站粘贴「系统访问令牌」，模型 Key 存系统安全存储。</p></div>
+      <div class="step"><h3>刷新看板</h3><p>下拉或点刷新按钮拉取额度与余额；需要预热 / 签到时在卡片或批量操作里一键执行，任务进度在任务中心可见。</p></div>
+      <div class="step"><h3>连上远程（可选）</h3><p>工作台 → SSH 主机：填主机、用户名与私钥即可连入完整终端；电脑上 tmux 跑着 Claude Code 时，手机端可直接观战并接手。</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>AIVault — 本地优先的 AI 订阅与远程开发工作台</span>
+    <span class="right">
+      <a href="https://github.com/ahao430/AIVault" target="_blank" rel="noopener">GitHub</a> ·
+      <a href="https://github.com/ahao430/AIVault/blob/main/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a> ·
+      <a href="https://github.com/ahao430/AIVault/blob/main/README.md" target="_blank" rel="noopener">文档</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>

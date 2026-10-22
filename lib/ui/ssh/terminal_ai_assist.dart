@@ -97,6 +97,11 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
   String? _error;
   ChatModelOption? _model;
 
+  /// 自动续跑：助手给出命令块时自动执行并继续，直到任务完成或达轮次上限
+  bool _autoRun = false;
+  int _autoRounds = 0;
+  static const int _maxAutoRounds = 8;
+
   /// 上次读到的终端屏幕（剥 ANSI 后），用于执行命令后 diff 新输出
   String _lastSnapshot = '';
   bool _waitingOutput = false;
@@ -123,7 +128,9 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
     return cur;
   }
 
-  /// 直接执行命令并自动读回输出（最多两段等待，共约 6.5s）
+  /// 直接执行命令并自动读回输出（最多两段等待，共约 6.5s），
+  /// 随后把新输出自动发给模型继续分析（多轮闭环的关键一步）；
+  /// 若「自动续跑」开启且回复中带命令块，则继续执行直到任务完成或达上限。
   Future<void> _runCommand(String cmd) async {
     widget.onRunCommand(cmd);
     setState(() => _waitingOutput = true);
@@ -144,13 +151,18 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
     if (!mounted) return;
     setState(() {
       _waitingOutput = false;
-      if (delta.isNotEmpty) {
-        if (delta.length > 1500) delta = delta.substring(delta.length - 1500);
-        _turns.add(
-            ChatMessage(role: 'user', content: '$kTerminalOutputTag\n$delta'));
-      }
+      if (delta.length > 1500) delta = delta.substring(delta.length - 1500);
+      // 无新输出也告知模型，避免它误以为命令卡死
+      _turns.add(ChatMessage(
+        role: 'user',
+        content: delta.isEmpty
+            ? '$kTerminalOutputTag\n（命令已执行，终端暂无新输出）'
+            : '$kTerminalOutputTag\n$delta',
+      ));
     });
     _scrollToBottom();
+    // 是否继续由 _ask 统一决策（自动续跑开关 + 轮次上限），避免双重触发
+    await _ask();
   }
 
   void _scrollToBottom() {
@@ -161,11 +173,18 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
     });
   }
 
+  /// 输入框发送：带新问题，重置自动续跑轮次
   Future<void> _send() async {
     final question = _inputCtrl.text.trim();
     if (question.isEmpty) return;
     _inputCtrl.clear();
+    _autoRounds = 0;
+    await _ask(question: question);
+  }
 
+  /// 与模型对话一轮。[question] 为空表示继续分析（最新一条 user 消息
+  /// 已是终端输出观察）。回复后若自动续跑开启且带命令块，自动执行并循环。
+  Future<void> _ask({String? question}) async {
     final options = await ref.read(chatModelOptionsProvider.future);
     if (!mounted) return;
     if (options.isEmpty) {
@@ -182,7 +201,9 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
         ? screen.substring(screen.length - 3000)
         : screen;
 
-    _turns.add(ChatMessage(role: 'user', content: question));
+    if (question != null) {
+      _turns.add(ChatMessage(role: 'user', content: question));
+    }
     setState(() {
       _error = null;
       _streaming = '';
@@ -210,7 +231,9 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
             '用户会把当前终端的最近输出贴给你，也可能直接执行你给的命令并把'
             '$kTerminalOutputTag 后的新输出发回来。回答要简短直接；'
             '需要执行命令时给出一个 ```bash 代码块，只给一条可直接执行的命令，'
-            '不要编造输出。看到终端输出后据此分析并给下一步。',
+            '不要编造输出。看到终端输出后据此分析并给下一步；'
+            '任务已完成或无法继续时，用一句话给出结论，不要再给命令块。'
+            '破坏性命令（rm -rf、mkfs、dd 等）永远不要执行，改用安全替代或说明原因。',
       ),
       if (ctxText.trim().isNotEmpty)
         ChatMessage(
@@ -234,17 +257,29 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
         );
 
     if (!mounted) return;
+    var reply = '';
     setState(() {
       _streaming = '';
       if (result.error != null) {
         _error = result.error;
       } else {
-        final reply = result.content.trim();
+        reply = result.content.trim();
         if (reply.isNotEmpty) {
           _turns.add(ChatMessage(role: 'assistant', content: reply));
         }
       }
     });
+    _scrollToBottom();
+
+    // 自动续跑：回复带命令块时自动执行第一块，循环至任务完成或达轮次上限
+    if (_autoRun &&
+        reply.isNotEmpty &&
+        extractCommandBlocks(reply).isNotEmpty &&
+        _autoRounds < _maxAutoRounds) {
+      _autoRounds++;
+      if (mounted) setState(() {});
+      await _runCommand(extractCommandBlocks(reply).first);
+    }
   }
 
   @override
@@ -268,11 +303,35 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
                   Text('终端 AI 助手',
                       style: Theme.of(context).textTheme.titleMedium),
                   const Spacer(),
+                  if (_autoRun && _autoRounds > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Text('续跑 $_autoRounds/$_maxAutoRounds',
+                          style:
+                              TextStyle(fontSize: 11, color: cs.outline)),
+                    ),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      foregroundColor:
+                          _autoRun ? cs.primary : cs.outline,
+                    ),
+                    onPressed: () => setState(() => _autoRun = !_autoRun),
+                    icon: Icon(
+                      _autoRun
+                          ? Icons.autorenew
+                          : Icons.autorenew_outlined,
+                      size: 15,
+                    ),
+                    label: const Text('自动续跑',
+                        style: TextStyle(fontSize: 12)),
+                  ),
                   if (_turns.isNotEmpty || _streaming.isNotEmpty)
                     TextButton(
                       onPressed: () => setState(() {
                         _turns.clear();
                         _error = null;
+                        _autoRounds = 0;
                       }),
                       child: const Text('清空'),
                     ),
@@ -314,7 +373,9 @@ class _TerminalAiAssistState extends ConsumerState<TerminalAiAssist> {
                           '· 磁盘满了，看看哪个目录最大\n'
                           '· 这个报错怎么修\n'
                           '· 帮我把这个服务重启一下\n\n'
-                          '命令可一键执行，执行后自动读回终端新输出继续分析。',
+                          '命令可一键执行，执行后自动读回终端新输出继续分析；\n'
+                          '打开右上角「自动续跑」，命令会自动连续执行\n'
+                          '直到任务完成（最多 8 轮，可随时关闭）。',
                           style: TextStyle(color: cs.outline, fontSize: 13),
                         ),
                       ),

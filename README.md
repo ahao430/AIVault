@@ -1,35 +1,46 @@
 # AIVault
 
-AI 订阅与 API 账号管理为中心的本地优先跨平台 App —— 随时查看所有 AI 订阅的额度、余额、重置时间，批量预热 / 签到，管理 Token 与模型，并临时测试模型可用性。
+**AI 订阅看板 · SSH 远程开发 · 随身 AI 工作台** —— 一个本地优先的跨平台 App：管理所有 AI 订阅与中转站的额度、余额、重置时间，批量签到 / 预热；内置 AI 聊天与画图；通过 SSH + tmux 在手机上观战和接管电脑里的 Agent（Claude Code / Codex / OpenCode）。
 
-技术方案：**Flutter（iOS / Android / macOS / Windows）+ SQLite（drift）+ 本地优先 + WebDAV 可选同步（P1）**
+[项目主页](https://ahao430.github.io/AIVault/) · [下载最新版](https://github.com/ahao430/AIVault/releases/latest) · [更新日志](./CHANGELOG.md) · [设计基线](./Plan.md)
 
-产品设计基线见 [Plan.md](./Plan.md)。
+| 首页看板 | SSH 主机与远程开发 | AI 聊天 |
+| --- | --- | --- |
+| ![首页看板](docs/images/home.png) | ![工作台](docs/images/workbench.png) | ![AI 聊天](docs/images/chat.png) |
 
-## 当前范围（MVP P0 + P1 第一批）
+技术方案：**Flutter（iOS / Android / macOS / Windows）+ SQLite（drift）+ 本地优先 + WebDAV 可选同步**
 
-- 供应商 / Token / 模型 三级数据模型（同一供应商的不同账户视为不同实例）
-- 首页订阅卡片：额度进度 + 重置倒计时、余额、本月已用（NewAPI 系，Plan #43）、置顶 / 隐藏、批量签到 / 批量预热
-- 供应商编辑：官方订阅 / 中转站、适配器选择（NewAPI / Sub2API / 通用 OpenAI 兼容 / 智谱 / OpenAI / Claude）、Base URL、系统访问令牌
-- Token 管理：API Key 加密存系统安全存储（Keychain / Keystore），数据库只存引用
-- 模型列表同步 + 单模型临时测试（9 类失败原因分类：认证 / 权限 / 不存在 / 余额 / 限流 / 上游 / 超时 / 协议 / 未知）
-- 预热规则：**只有额度达到 100% 才执行**；查询失败 / 状态未知一律跳过
-- 额度快照：查询失败保留上一次成功数据，不显示为 0
-- 任务中心：批量签到 / 预热 / 刷新作为后台任务执行，支持进度、取消、重试失败项、结果明细
-- 额度历史：快照走势（sparkline）+ 明细列表
-- 模型测试历史：单个模型的最近测试记录（延迟 / HTTP / 错误分类）
-- JSON 导入导出：默认脱敏，可选包含密钥（明确警告）；按 id 合并导入
-- CC Switch / Magpie 导出：Token 层生成导入链接（`ccswitch://v1/import` / `magpie://import`，含 API Key 安全警告）
-- WebDAV 同步：个人设备间同步（推送 / 拉取 / 冲突检测，两边都改过时由用户选择保留哪份）；密钥是否随同步单独控制；WebDAV 密码只存系统安全存储
-- 已隐藏供应商管理：恢复或彻底删除
-- 通知中心（P1，Plan #49）：批量刷新后自动检测「额度已恢复可预热 / 今日可签到 / 数据超过 24 小时未更新」三类需用户行动的事件；额度恢复需前后状态对比（首次查询不打扰）；签到可用与数据过期按供应商+类型当日去重；首页铃铛 + 未读角标，点击跳转对应供应商；系统本地通知并行转发（flutter_local_notifications，Android 分渠道，未授权时静默降级 App 内）；通知偏好页支持总开关 / 系统通知开关 / 三类分类开关
-- 终端快捷键条（Plan #40 移动端补全）：Esc / Tab / 方向键 / C-c + 粘滞 Ctrl，控制序列直写 pty，可隐藏
-- 聊天导出长图（Plan #25）：最近 50 条消息离屏渲染（Markdown / 代码块已渲染）为 720px 宽 PNG，2x 像素密度，系统保存对话框
-- App 锁（Plan #54）：PIN（4-6 位，SHA-256 + 盐哈希存安全存储）+ 生物识别优先（Touch ID / Face ID / 指纹，local_auth，允许系统密码兜底）；可配置「启动时锁定 / 切后台后锁定」；锁屏数字键盘（错误抖动、6 位自动提交）
-- 首页拖拽排序（Plan #42）：长按卡片拖动，顺序即时持久化；置顶项仍优先
-- AI 聊天（P2）：会话管理（新建 / 重命名 / 删除，历史只存本地）、OpenAI 兼容流式输出（SSE 解析支持跨 chunk 半行与 UTF-8 截断）、Markdown 渲染（gpt_markdown）、推理模型 reasoning 折叠显示、停止生成（保留已生成部分）、会话内切换模型、消息长按复制 / 删除、重新生成最后一条回答
-- AI 画图（P2）：单次生成任务、参考图（/v1/images/edits multipart）、b64/url 双响应格式、画图类模型优先排序、尺寸选择、历史网格（prompt / 模型 / 时间 / 状态）、图片详情（放大预览 / 另存为 / 复制 Prompt）、图片文件随记录删除
-- 远程开发（P3）：SSH 主机管理（dartssh2，Key/密码认证，凭证只存安全存储）、首次连接 host key TOFU 校验（指纹变化拒绝连接防中间人）、连接池与断开、tmux 会话列表（窗口数/创建时间/attached，会话名含冒号可解析）、会话 Agent 识别（Claude Code/Codex/OpenCode/Pi）、tmux pane 交互（capture-pane 输出 / send-keys 输入 / Ctrl+C / 自动刷新）、**完整 xterm 终端**（pty + xterm-256color，ANSI / 光标控制 / 全屏 TUI / tmux attach，桌面端 Ctrl 组合 / Tab / Esc / 方向键 / 右键复制粘贴）、pane 页聊天↔终端模式切换（Plan #35）、首页远程状态区（在线主机 + 最近连接，Plan #41）、首次使用五步引导（Plan #32）
+> 数据全部存在本机，API Key 只进系统安全存储（Keychain / Keystore）；同步是可选的，且密钥是否随同步单独控制。
+
+## 功能总览
+
+### 订阅看板
+- 供应商 / Token / 模型三级数据模型（同一供应商的不同账户视为不同实例）
+- 首页卡片：额度进度 + 重置倒计时、余额、本月已用，官方供应商带品牌图标（Claude / OpenAI / 智谱 / DeepSeek / NewAPI 等），长按拖拽排序、置顶 / 隐藏
+- 适配器：NewAPI / Sub2API / 智谱 Coding Plan（双格式）/ DeepSeek（双格式）/ OpenAI 兼容 / Claude 官方订阅
+- 批量签到 / 批量预热；预热规则：**只有额度达到 100% 才执行**，状态未知一律跳过
+- 查询失败保留上一次成功快照，不显示为 0
+- 任务中心：批量操作后台执行，进度 / 取消 / 重试失败项 / 结果明细
+- 额度历史（sparkline 走势 + 明细）、模型测试历史（9 类失败原因分类）
+- **桌面小组件（Android）**：置顶前 4 个供应商的额度 / 余额 + 倒计时，手动刷新按钮（后台拉取不打开 App）；另有 **HyperOS（小米澎湃 OS）专用变体**——系统圆角裁切适配、加大字号
+- 通知中心：额度恢复可预热 / 今日可签到 / 数据过期三类事件 + 系统本地通知转发
+- App 锁：PIN + 生物识别（Touch ID / Face ID / 指纹）
+
+### AI 工作台
+- AI 聊天：会话管理、OpenAI 兼容流式输出、Markdown / 代码高亮、推理模型 reasoning 折叠、重新生成、导出长图
+- AI 画图：单次生成、参考图（edits multipart）、历史网格、图片详情
+
+### SSH 远程开发
+- SSH 主机管理（dartssh2，Key / 密码认证，凭证只存安全存储），首次连接 host key TOFU 校验（指纹变化拒绝连接），Tailscale 标记提示
+- 完整 xterm 终端（pty + xterm-256color，ANSI / 全屏 TUI / tmux attach，桌面端快捷键 / 右键复制粘贴）+ 移动端快捷键条
+- tmux 会话列表（窗口数 / attached / Agent 识别：Claude Code / Codex / OpenCode / Pi），App 内新建 / 恢复会话
+- **终端 AI 助手**：当前屏幕作上下文提问；命令一键「执行」后自动读回终端新增输出继续分析；**自动续跑**模式会把「执行 → 读结果 → 分析 → 下一步」循环跑到任务完成（上限 8 轮，随时可停；破坏性命令拒执行）
+- 首页远程状态区（在线主机 + 最近连接）、首次使用引导
+
+### 数据与安全
+- JSON 导入导出（默认脱敏，按 id 合并）；CC Switch / Magpie 导出链接
+- WebDAV 同步：推送 / 拉取 / 冲突检测，**内置坚果云 / InfiniCloud 预设**；父目录不存在（坚果云返回 409）时自动逐级建目录重试；密钥是否随同步单独控制
+- 应用内更新：按 ABI 拆包（arm64 / armv7 / x86_64），固定签名覆盖升级不丢数据，GitHub 直连不通时自动走镜像
 
 ## 目录结构
 
@@ -37,17 +48,21 @@ AI 订阅与 API 账号管理为中心的本地优先跨平台 App —— 随时
 lib/
 ├── main.dart / app.dart          # 入口 + 底部三 Tab（首页 / 工作台 / 设置）
 ├── adapters/                     # ProviderAdapter 适配器（核心抽象）
-│   ├── provider_adapter.dart     #   接口 + 能力声明 + 结果类型
-│   ├── openai_compatible.dart    #   OpenAI 兼容：模型列表 / 模型测试 / 错误分类
-│   ├── newapi.dart               #   NewAPI / Sub2API：余额查询 + 签到
-│   └── registry.dart             #   适配器注册表 + 官方订阅适配器
-├── core/                         # 安全存储封装、主题、格式化
+├── core/                         # 安全存储、主题、格式化、品牌图标映射
 ├── data/
 │   ├── db/                       # drift 表定义 + 数据库（SQLite）
 │   └── repositories/             # 仓库层（聚合视图模型）
-├── services/                     # 业务服务：刷新 / 签到 / 预热 / 批量 / 测试
+├── services/                     # 刷新 / 签到 / 预热 / 任务中心 / WebDAV /
+│                                 #   小组件同步 / 更新检查 / SSH / tmux
 ├── state/                        # Riverpod providers
-└── ui/                           # 首页 / 供应商详情与编辑 / 工作台 / 设置
+└── ui/
+    ├── home/                     # 订阅看板（卡片 + 拖拽 + 远程状态区）
+    ├── provider/                 # 供应商详情 / 编辑 / 额度历史
+    ├── chat/  image/             # AI 聊天 / AI 画图
+    ├── ssh/                      # 主机管理 / 终端 / tmux / 终端 AI 助手
+    ├── workbench/  tasks/        # 工作台入口 / 任务中心
+    └── settings/  lock/  ...     # 设置 / WebDAV / App 锁 / 通知
+android/…/AIVaultWidgetProvider.kt  # 桌面小组件（含 HyperOS 变体）
 ```
 
 ## 开发
@@ -78,14 +93,12 @@ flutter build macos --debug                                            # 构建
 应用内「设置 → 检查更新」自动检测 GitHub Release 并安装。
 
 ```bash
-git tag v0.4.0+5 && git push origin v0.4.0+5   # 触发发版流水线
+git tag v0.4.18+19 && git push origin v0.4.18+19   # 触发发版流水线
 ```
 
 完整流程（密钥生成、Secrets 配置、故障排查）见 [RELEASING.md](./RELEASING.md)。
 
-## 迭代路线（见 Plan.md）
+## 迭代路线
 
-- **P1**：额度历史、任务中心、通知、WebDAV 同步、JSON 导入导出、CC Switch / Magpie 导出、桌面 Widget、App 锁
-- **P2**：AI 聊天（Markdown / LaTeX / Mermaid）、AI 画图
-- **P3**：远程开发（SSH / tmux / Claude Code / Codex / OpenCode / Pi）
-- **P4**：ECharts、PlantUML、SFTP、端口转发、更多官方适配器
+- ✅ **P0-P3 已完成**：订阅看板全量、任务中心、通知、WebDAV、桌面小组件（含 HyperOS）、App 锁、AI 聊天 / 画图、SSH 远程开发 + 终端 AI 助手
+- **P4 规划**：SFTP 文件管理、端口转发、更多官方适配器（MiniMax 等）、iOS 小组件（WidgetKit）

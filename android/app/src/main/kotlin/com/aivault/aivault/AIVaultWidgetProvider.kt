@@ -28,7 +28,10 @@ import io.flutter.FlutterInjector
  *   部分桌面（MIUI 等）会频繁发送更新广播，逐次拉取会让组件不停闪烁
  * - Dart 侧 sync 的 updateWidget 广播带 triggeredFromHomeWidget=true → 重绘
  */
-class AIVaultWidgetProvider : AppWidgetProvider() {
+open class AIVaultWidgetProvider : AppWidgetProvider() {
+
+    /// 布局资源：HyperOS 专用变体（HyperOsWidgetProvider）覆写
+    protected open val layoutRes: Int = R.layout.aivault_widget
 
     override fun onReceive(context: Context, intent: Intent) {
         val fromSelfSync = intent.getBooleanExtra(EXTRA_TRIGGERED_FROM_HOME_WIDGET, false)
@@ -52,12 +55,11 @@ class AIVaultWidgetProvider : AppWidgetProvider() {
         drawWidgets(context, appWidgetManager, appWidgetIds, updatedLabel = null)
     }
 
-    /// 重绘全部实例；[updatedLabel] 非空时用于临时覆盖头部时间戳（如「刷新中…」）
+    /// 重绘本 Provider 的全部实例（用 javaClass，子类变体各自维护实例集）；
+    /// [updatedLabel] 非空时用于临时覆盖头部时间戳（如「刷新中…」）
     private fun redraw(context: Context, updatedLabel: String?) {
         val manager = AppWidgetManager.getInstance(context)
-        val ids = manager.getAppWidgetIds(
-            ComponentName(context, AIVaultWidgetProvider::class.java)
-        )
+        val ids = manager.getAppWidgetIds(ComponentName(context, javaClass))
         drawWidgets(context, manager, ids, updatedLabel)
     }
 
@@ -73,8 +75,9 @@ class AIVaultWidgetProvider : AppWidgetProvider() {
             context, 0, launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        // 刷新按钮：发给自己（不走 home_widget 的接收器，见类注释）
-        val refreshIntent = Intent(context, AIVaultWidgetProvider::class.java).apply {
+        // 刷新按钮：发给自己（不走 home_widget 的接收器，见类注释；
+        // 用 javaClass 让 HyperOS 变体的按钮广播回自身）
+        val refreshIntent = Intent(context, javaClass).apply {
             action = ACTION_REFRESH
             data = Uri.parse("aivault://widget/refresh")
         }
@@ -91,7 +94,7 @@ class AIVaultWidgetProvider : AppWidgetProvider() {
         )
 
         for (id in appWidgetIds) {
-            val views = RemoteViews(context.packageName, R.layout.aivault_widget)
+            val views = RemoteViews(context.packageName, layoutRes)
             views.setTextViewText(
                 R.id.updated,
                 updatedLabel ?: prefs.getString("updated", "AIVault 看板")

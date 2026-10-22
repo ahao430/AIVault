@@ -238,6 +238,26 @@ class _WebdavPageState extends ConsumerState<WebdavPage> {
                   Text('配置',
                       style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 8),
+                  // 常用网盘预设：点按填入服务器地址
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final preset in const [
+                        ('坚果云', 'https://dav.jianguoyun.com/dav/'),
+                        ('InfiniCloud', 'https://webdav.infinicloud.com.cn/dav/'),
+                      ])
+                        ActionChip(
+                          label: Text(preset.$1, style: const TextStyle(fontSize: 12)),
+                          onPressed: () => setState(() {
+                            _urlCtrl.text = preset.$2;
+                            if (_pathCtrl.text.trim().isEmpty) {
+                              _pathCtrl.text = '/aivault';
+                            }
+                          }),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   TextFormField(
                     controller: _urlCtrl,
                     decoration: const InputDecoration(
