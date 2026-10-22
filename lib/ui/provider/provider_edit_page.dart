@@ -73,8 +73,11 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
         switch (_adapter) {
           case AdapterKind.zhipu:
           case AdapterKind.zhipuAnthropic:
+          case AdapterKind.kimi:
+          case AdapterKind.opencode:
           case AdapterKind.deepseek:
           case AdapterKind.deepseekAnthropic:
+          case AdapterKind.moonshot:
           case AdapterKind.claude:
           case AdapterKind.openai:
             break;
@@ -289,8 +292,11 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
     const official = [
       AdapterKind.zhipu,
       AdapterKind.zhipuAnthropic,
+      AdapterKind.kimi,
+      AdapterKind.opencode,
       AdapterKind.deepseek,
       AdapterKind.deepseekAnthropic,
+      AdapterKind.moonshot,
       AdapterKind.openai,
       AdapterKind.claude,
     ];
@@ -301,8 +307,11 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
       AdapterKind.generic: '通用 OpenAI 兼容',
       AdapterKind.zhipu: '智谱 Coding Plan（OpenAI 格式）',
       AdapterKind.zhipuAnthropic: '智谱 Coding Plan（Anthropic 格式）',
+      AdapterKind.kimi: 'Kimi Code（月之暗面）',
+      AdapterKind.opencode: 'OpenCode Go',
       AdapterKind.deepseek: 'DeepSeek（OpenAI 格式）',
       AdapterKind.deepseekAnthropic: 'DeepSeek（Anthropic 格式）',
+      AdapterKind.moonshot: 'Moonshot 开放平台（按量）',
       AdapterKind.openai: 'OpenAI 官方',
       AdapterKind.claude: 'Anthropic / Claude 官方',
     };

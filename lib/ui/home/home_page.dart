@@ -375,6 +375,8 @@ class ProviderCard extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               ..._quotaSection(context, now, cs),
+              ..._weeklySection(context, now, cs),
+              ..._subscriptionSection(context, now, cs),
               ..._balanceSection(context, now, cs),
               const SizedBox(height: 6),
               Row(
@@ -393,6 +395,65 @@ class ProviderCard extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// 周窗口（智谱 / Kimi / OpenCode 双窗口）：主进度条下方的小字行
+  List<Widget> _weeklySection(BuildContext context, DateTime now, ColorScheme cs) {
+    final w = state.latestWeekly;
+    if (w == null || !w.success) return const [];
+    final ratio = (w.ratio ?? 0).clamp(0.0, 1.0);
+    return [
+      const SizedBox(height: 6),
+      Row(
+        children: [
+          Icon(Icons.date_range, size: 14, color: cs.outline),
+          const SizedBox(width: 4),
+          Text('本周剩余 ${(ratio * 100).round()}%',
+              style: Theme.of(context).textTheme.bodySmall),
+          if (w.resetAt != null) ...[
+            const SizedBox(width: 8),
+            Text(formatRemaining(w.resetAt!.difference(now)),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: cs.outline)),
+          ],
+        ],
+      ),
+    ];
+  }
+
+  /// 订阅信息：套餐名（+档位）与续费日期（智谱 subscription/list 等）
+  List<Widget> _subscriptionSection(
+      BuildContext context, DateTime now, ColorScheme cs) {
+    final s = state.latestSubscription;
+    if (s == null || !s.success) return const [];
+    final plan = s.message?.trim();
+    final widgets = <Widget>[
+      const SizedBox(height: 6),
+      Row(
+        children: [
+          Icon(Icons.workspace_premium_outlined, size: 14, color: cs.tertiary),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              plan == null || plan.isEmpty ? '订阅套餐' : plan,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: cs.tertiary, fontWeight: FontWeight.w600),
+            ),
+          ),
+          if (s.resetAt != null)
+            Text('${s.resetAt!.month}-${s.resetAt!.day.toString().padLeft(2, '0')} 续费',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: cs.outline)),
+        ],
+      ),
+    ];
+    return widgets;
   }
 
   List<Widget> _quotaSection(BuildContext context, DateTime now, ColorScheme cs) {

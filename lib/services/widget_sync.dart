@@ -103,6 +103,8 @@ class WidgetSyncService {
   /// 而非展示文本——倒计时文本随当前时间变化，拿它比较会永远「有变化」
   static String _stableKey(ProviderWithState s) {
     final q = s.latestQuota;
+    final w = s.latestWeekly;
+    final sub = s.latestSubscription;
     final b = s.latestBalance;
     return [
       s.provider.id,
@@ -112,6 +114,14 @@ class WidgetSyncService {
         q.success ? 1 : 0,
         q.ratio?.toStringAsFixed(4) ?? '',
         q.resetAt?.toIso8601String() ?? '',
+      ],
+      if (w != null) ...[
+        w.ratio?.toStringAsFixed(4) ?? '',
+        w.resetAt?.toIso8601String() ?? '',
+      ],
+      if (sub != null) ...[
+        sub.message ?? '',
+        sub.resetAt?.toIso8601String() ?? '',
       ],
       if (b != null) ...[
         b.success ? 1 : 0,

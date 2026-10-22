@@ -17,6 +17,9 @@ class ProviderIcons {
     AdapterKind.deepseekAnthropic: 'assets/logos/deepseek.png',
     AdapterKind.newapi: 'assets/logos/newapi.png',
     AdapterKind.sub2api: 'assets/logos/newapi.png',
+    AdapterKind.kimi: 'assets/logos/kimi.png',
+    AdapterKind.opencode: 'assets/logos/opencode.png',
+    AdapterKind.moonshot: 'assets/logos/moonshot.png',
   };
 
   /// 有官方图标返回资源路径；自定义条目返回 null（调用方不画图标）

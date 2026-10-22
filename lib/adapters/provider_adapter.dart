@@ -8,6 +8,7 @@ class AdapterCapabilities {
     this.testModel = false,
     this.prewarm = false,
     this.checkIn = false,
+    this.subscription = false,
   });
 
   /// 窗口额度（如 Claude 5 小时额度）
@@ -27,6 +28,9 @@ class AdapterCapabilities {
 
   /// 中转站签到
   final bool checkIn;
+
+  /// 订阅信息（套餐名 / 档位 / 续费日期，如智谱 subscription/list）
+  final bool subscription;
 }
 
 /// 适配器调用上下文：仓库层从数据库 + 安全存储组装。
@@ -86,6 +90,25 @@ class BalanceResult {
   final String currency;
   final bool success;
   final String? message;
+}
+
+/// 订阅信息查询结果（智谱 / Kimi 等 Coding Plan 提供商）。
+/// 字段全部来自上游接口，适配器不臆造：接口没给的字段为 null。
+class SubscriptionResult {
+  const SubscriptionResult({
+    this.planName,
+    this.level,
+    this.renewAt,
+  });
+
+  /// 产品名，如「GLM Coding Max」
+  final String? planName;
+
+  /// 档位，如 lite / pro / max
+  final String? level;
+
+  /// 续费 / 下次扣费日期
+  final DateTime? renewAt;
 }
 
 /// 签到结果
@@ -159,6 +182,13 @@ abstract class ProviderAdapter {
   AdapterCapabilities get capabilities;
 
   Future<QuotaResult?> getQuota(ProviderContext ctx) async => null;
+
+  /// 周窗口额度（智谱 / Kimi / OpenCode 等双窗口 Coding Plan）。
+  /// 5 小时窗口走 [getQuota]，此处返回 7 天窗口；无周窗口的供应商返回 null。
+  Future<QuotaResult?> getWeeklyQuota(ProviderContext ctx) async => null;
+
+  /// 订阅信息（套餐名 / 档位 / 续费日期）；无此接口的供应商返回 null。
+  Future<SubscriptionResult?> getSubscription(ProviderContext ctx) async => null;
 
   Future<BalanceResult?> getBalance(ProviderContext ctx) async => null;
 

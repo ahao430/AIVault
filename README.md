@@ -19,7 +19,7 @@
 ### 订阅看板
 - 供应商 / Token / 模型三级数据模型（同一供应商的不同账户视为不同实例）
 - 首页卡片：额度进度 + 重置倒计时、余额、本月已用，官方供应商带品牌图标（Claude / OpenAI / 智谱 / DeepSeek / NewAPI 等），长按拖拽排序、置顶 / 隐藏
-- 适配器：NewAPI / Sub2API / 智谱 Coding Plan（双格式）/ DeepSeek（双格式）/ OpenAI 兼容 / Claude 官方订阅
+- 适配器：NewAPI / Sub2API / 智谱 Coding Plan（双格式，**套餐名 + 续费日期 + 周/5h 双窗口**）/ Kimi Code（双窗口 + 档位）/ OpenCode Go（三窗口）/ DeepSeek（双格式）/ Moonshot 按量 / OpenAI 兼容 / Claude 官方订阅
 - 批量签到 / 批量预热；预热规则：**只有额度达到 100% 才执行**，状态未知一律跳过
 - 查询失败保留上一次成功快照，不显示为 0
 - 任务中心：批量操作后台执行，进度 / 取消 / 重试失败项 / 结果明细

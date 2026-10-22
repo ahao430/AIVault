@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.4.19（2026-10-23）
+
+- 智谱 Coding Plan：新增订阅信息查询（/api/biz/subscription/list），看板卡片
+  直接展示**套餐名与续费日期**（如「GLM Coding Max · 11-08 续费」）；
+  用量查询升级为**双窗口**——5 小时主进度之外新增「本周剩余」行；
+  国际站（api.z.ai）自动识别切换
+- 新增三家供应商适配器（接口参考社区验证的 dsh-provider-balance）：
+  - **Kimi Code**（月之暗面）：双窗口额度（周 + 5 小时，配额点数换算）+
+    档位（basic / pro / max）展示，预设 OpenAI 格式地址 api.kimi.com/coding/v1
+  - **OpenCode Go**：5 小时滚动 + 周窗口百分比，非正常状态（限流/阻断）
+    显示在卡片上
+  - **Moonshot 开放平台**：按量预付费余额查询（注意与 Kimi Code 订阅 Key
+    不互通）
+- 看板卡片信息升级：周窗口行（📅 本周剩余）、订阅行（🏅 套餐 · 续费日期）；
+  桌面小组件数据同步判定纳入新数据
+- 新适配器配套官方图标（Kimi / OpenCode / Moonshot）与编辑页预设下拉
+
 ## 0.4.18（2026-10-22）
 
 - WebDAV：配置页新增「坚果云 / InfiniCloud」服务器地址预设；修复同步到坚果云等

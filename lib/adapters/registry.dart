@@ -1,5 +1,6 @@
 
 import '../data/db/tables.dart';
+import 'additional_providers.dart';
 import 'anthropic_compatible.dart';
 import 'deepseek.dart';
 import 'newapi.dart';
@@ -117,6 +118,9 @@ class AdapterRegistry {
       kindStr: 'claude', defaultBaseUrl: kClaudeOfficialBase);
   static final ProviderAdapter openai =
       OfficialAdapter(kindStr: 'openai', defaultBaseUrl: kOpenaiOfficialBase);
+  static final ProviderAdapter kimi = KimiCodeAdapter();
+  static final ProviderAdapter opencode = OpenCodeGoAdapter();
+  static final ProviderAdapter moonshot = MoonshotAdapter();
 
   /// 各官方适配器的预设 Base URL（编辑页自动填入 / 展示用）。
   static const Map<AdapterKind, String> presetBaseUrls = {
@@ -126,6 +130,9 @@ class AdapterRegistry {
     AdapterKind.deepseekAnthropic: kDeepseekAnthropicBase,
     AdapterKind.openai: kOpenaiOfficialBase,
     AdapterKind.claude: kClaudeOfficialBase,
+    AdapterKind.moonshot: kMoonshotBase,
+    AdapterKind.kimi: kKimiDefaultBase,
+    AdapterKind.opencode: kOpencodeDefaultBase,
   };
 
   static ProviderAdapter of(AdapterKind kind) {
@@ -148,6 +155,12 @@ class AdapterRegistry {
         return claude;
       case AdapterKind.openai:
         return openai;
+      case AdapterKind.kimi:
+        return kimi;
+      case AdapterKind.opencode:
+        return opencode;
+      case AdapterKind.moonshot:
+        return moonshot;
     }
   }
 }

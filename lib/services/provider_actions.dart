@@ -70,6 +70,32 @@ class ProviderActions {
       if (result != null) {
         await _repo.recordSnapshot(provider.id, QuotaKind.windowQuota, result);
       }
+      // 双窗口 Coding Plan（智谱 / Kimi / OpenCode）：7 天窗口单独落库
+      final weekly = await adapter.getWeeklyQuota(ctx);
+      if (weekly != null) {
+        await _repo
+            .recordSnapshot(provider.id, QuotaKind.weeklyQuota, weekly);
+      }
+      // 订阅信息（套餐名 / 档位 / 续费日期）
+      if (caps.subscription) {
+        final sub = await adapter.getSubscription(ctx);
+        if (sub != null) {
+          await _repo.recordSnapshot(
+            provider.id,
+            QuotaKind.subscription,
+            QuotaResult(
+              success: true,
+              resetAt: sub.renewAt,
+              source: 'official',
+              message: [
+                if (sub.planName != null && sub.planName!.isNotEmpty)
+                  sub.planName!,
+                if (sub.level != null && sub.level!.isNotEmpty) sub.level!,
+              ].join(' · '),
+            ),
+          );
+        }
+      }
     }
     if (caps.balance) {
       // DeepSeek 等按量官方的余额走 API Key 鉴权，必须带上；

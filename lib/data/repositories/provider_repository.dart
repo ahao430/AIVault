@@ -16,6 +16,8 @@ class ProviderWithState {
     required this.tokenCount,
     required this.modelCount,
     this.latestQuota,
+    this.latestWeekly,
+    this.latestSubscription,
     this.latestBalance,
     this.latestUsage,
     this.todayCheckin,
@@ -28,6 +30,12 @@ class ProviderWithState {
 
   /// 最近一次成功的窗口额度快照（查询失败时保留上一次成功数据）
   final QuotaSnapshot? latestQuota;
+
+  /// 最近一次成功的周窗口快照（智谱 / Kimi / OpenCode 双窗口）
+  final QuotaSnapshot? latestWeekly;
+
+  /// 最近一次订阅信息快照（套餐名 message + 续费日期 resetAt）
+  final QuotaSnapshot? latestSubscription;
 
   /// 最近一次成功的余额快照
   final QuotaSnapshot? latestBalance;
@@ -176,6 +184,10 @@ class ProviderRepository {
 
     final latestQuota = await _latestSnapshot(
         p.id, QuotaKind.windowQuota, successOnly: true);
+    final latestWeekly = await _latestSnapshot(
+        p.id, QuotaKind.weeklyQuota, successOnly: true);
+    final latestSubscription = await _latestSnapshot(
+        p.id, QuotaKind.subscription, successOnly: true);
     // 余额读最近一条（含失败）：失败原因直接上屏，便于定位配置问题
     final latestBalance = await _latestSnapshot(p.id, QuotaKind.balance);
     final latestUsage = await _latestSnapshot(
@@ -201,6 +213,8 @@ class ProviderRepository {
       tokenCount: tokenCount,
       modelCount: modelCount,
       latestQuota: latestQuota,
+      latestWeekly: latestWeekly,
+      latestSubscription: latestSubscription,
       latestBalance: latestBalance,
       latestUsage: latestUsage,
       todayCheckin: checkins,

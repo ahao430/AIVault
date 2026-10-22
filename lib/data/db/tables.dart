@@ -17,7 +17,10 @@ enum AdapterKind {
   openai,
   zhipuAnthropic,
   deepseek,
-  deepseekAnthropic
+  deepseekAnthropic,
+  kimi,
+  opencode,
+  moonshot,
 }
 
 /// 额度快照类型
