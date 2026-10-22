@@ -4,9 +4,9 @@
 
 [项目主页](https://ahao430.github.io/AIVault/) · [下载最新版](https://github.com/ahao430/AIVault/releases/latest) · [更新日志](./CHANGELOG.md) · [设计基线](./Plan.md)
 
-| 首页看板 | SSH 主机与远程开发 | AI 聊天 |
+| 首页看板 | SSH 终端 | AI 聊天 |
 | --- | --- | --- |
-| ![首页看板](docs/images/home.png) | ![工作台](docs/images/workbench.png) | ![AI 聊天](docs/images/chat.png) |
+| ![首页看板](docs/images/home.png) | ![SSH 终端](docs/images/terminal.png) | ![AI 聊天](docs/images/chat.png) |
 
 技术方案：**Flutter（iOS / Android / macOS / Windows）+ SQLite（drift）+ 本地优先 + WebDAV 可选同步**
 
