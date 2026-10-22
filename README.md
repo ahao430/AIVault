@@ -1,6 +1,6 @@
 # AIVault
 
-**AI 订阅看板 · SSH 远程开发 · 随身 AI 工作台** —— 一个本地优先的跨平台 App：管理所有 AI 订阅与中转站的额度、余额、重置时间，批量签到 / 预热；内置 AI 聊天与画图；通过 SSH + tmux 在手机上观战和接管电脑里的 Agent（Claude Code / Codex / OpenCode）。
+**AI 订阅看板 · SSH 远程开发 · 随身 AI 工作台** —— 一个本地优先的 Android App：管理所有 AI 订阅与中转站的额度、余额、重置时间，批量签到 / 预热；内置 AI 聊天与画图；通过 SSH + tmux 在手机上观战和接管电脑里的 Agent（Claude Code / Codex / OpenCode）。
 
 [项目主页](https://ahao430.github.io/AIVault/) · [下载最新版](https://github.com/ahao430/AIVault/releases/latest) · [更新日志](./CHANGELOG.md) · [设计基线](./Plan.md)
 
@@ -8,7 +8,9 @@
 | --- | --- | --- |
 | ![首页看板](docs/images/home.png) | ![SSH 终端](docs/images/terminal.png) | ![AI 聊天](docs/images/chat.png) |
 
-技术方案：**Flutter（iOS / Android / macOS / Windows）+ SQLite（drift）+ 本地优先 + WebDAV 可选同步**
+技术方案：**Flutter + SQLite（drift）+ 本地优先 + WebDAV 可选同步**。
+目前只分发 Android 安装包；iOS / macOS / Windows 由 Flutter 支持，但**未经编译适配
+测试**，欢迎 fork 仓库自行构建验证。
 
 > 数据全部存在本机，API Key 只进系统安全存储（Keychain / Keystore）；同步是可选的，且密钥是否随同步单独控制。
 
@@ -71,20 +73,20 @@ android/…/AIVaultWidgetProvider.kt  # 桌面小组件（含 HyperOS 变体）
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs --force-jit   # 生成 drift 代码
 flutter test                                                           # 单元测试
-flutter run -d macos                                                   # 运行
-flutter build macos --debug                                            # 构建
+flutter run                                                            # 运行到连接的设备 / 模拟器
+flutter build apk --debug                                              # Android 调试包
 ```
 
 > 注：当前工具链（Dart 3.10）运行 build_runner 需带 `--force-jit`。
 
-### macOS 权限与签名
+### 其他平台（iOS / macOS / Windows，未经适配测试）
 
-`macos/Runner/*.entitlements` 已包含 `network.client`（访问 API）。
-
-> 注意：`keychain-access-groups`（flutter_secure_storage 的 Keychain 共享）需要有效的
-> 开发团队签名才能生效 —— 无签名团队时该 entitlement 会导致 macOS 以
-> `Code Signature Invalid` 杀掉 App。当前 debug 构建未包含它；正式分发时请在 Xcode
-> 中开启 Keychain Sharing（配合签名团队）后再构建。
+Flutter 本身跨平台，但本项目目前只在 Android 上做过编译、安装与功能测试；
+其他平台未验证，欢迎 fork 仓库自行构建测试。macOS 注意：`keychain-access-groups`
+（flutter_secure_storage 的 Keychain 共享）需要有效的开发团队签名才能生效 ——
+无签名团队时该 entitlement 会导致 App 以 `Code Signature Invalid` 被杀；当前
+debug 构建未包含它，正式分发前请在 Xcode 中开启 Keychain Sharing（配合签名
+团队）后再构建。
 
 ## Android 发版
 
