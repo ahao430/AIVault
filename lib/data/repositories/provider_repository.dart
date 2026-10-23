@@ -358,6 +358,13 @@ class ProviderRepository {
         .write(ProvidersCompanion(hidden: Value(hidden), updatedAt: Value(DateTime.now())));
   }
 
+  /// 是否参与桌面小组件展示（与首页 hidden 相互独立）
+  Future<void> setShowOnWidget(String providerId, bool value) async {
+    await (_db.providers.update()..where((p) => p.id.equals(providerId)))
+        .write(ProvidersCompanion(
+            showOnWidget: Value(value), updatedAt: Value(DateTime.now())));
+  }
+
   Future<void> deleteProvider(String providerId) async {
     final p = await (_db.providers.select()
           ..where((p) => p.id.equals(providerId)))

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../chat/conversations_page.dart';
+import '../bookmarks/bookmarks_page.dart';
 import '../image/image_studio_page.dart';
 import '../monitor/monitor_sites_page.dart';
 import '../provider/providers_manage_page.dart';
@@ -89,6 +90,16 @@ class WorkbenchPage extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          _EntryCard(
+            icon: Icons.bookmark_border,
+            title: '书签管理',
+            subtitle: '常用网址，点击在应用内打开',
+            color: cs.secondary,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const BookmarksPage(),
+            )),
           ),
           const SizedBox(height: 12),
           _EntryCard(

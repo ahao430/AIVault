@@ -51,10 +51,13 @@ class WidgetSyncService {
     return '—';
   }
 
-  /// 挑选展示顺序：置顶优先，其后按用户排序
+  /// 挑选展示顺序：置顶优先，其后按用户排序；
+  /// 关闭「组件显示」的供应商不参与
   static List<ProviderWithState> pick(
       List<ProviderWithState> states, int count) {
-    final sorted = [...states]..sort((a, b) {
+    final eligible =
+        states.where((s) => s.provider.showOnWidget).toList();
+    final sorted = [...eligible]..sort((a, b) {
         if (a.provider.pinned != b.provider.pinned) {
           return a.provider.pinned ? -1 : 1;
         }
@@ -72,7 +75,10 @@ class WidgetSyncService {
     try {
       final repo = ProviderRepository(db, FlutterSecureStore());
       final actions = ProviderActions(repo);
-      final states = await repo.loadHomeList();
+      // 只刷新参与小组件的供应商（后台链路只为组件供数）
+      final states = (await repo.loadHomeList())
+          .where((s) => s.provider.showOnWidget)
+          .toList();
       for (final s in states) {
         try {
           await actions.refresh(s);

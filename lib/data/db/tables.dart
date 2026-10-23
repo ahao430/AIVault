@@ -49,6 +49,9 @@ class Providers extends Table {
   BoolColumn get pinned => boolean().withDefault(const Constant(false))();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   BoolColumn get hidden => boolean().withDefault(const Constant(false))();
+
+  /// 是否参与桌面小组件轮播（与首页展示 hidden 相互独立）
+  BoolColumn get showOnWidget => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -302,6 +305,27 @@ class MonitorSites extends Table {
   TextColumn get lastError => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+}
+
+/// 通用键值设置（首页板块顺序等；值存 JSON 文本）
+class AppSettings extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
+/// 工作台书签：常用网址，点击在应用内 WebView 打开
+class Bookmarks extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get url => text()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 /// App 内通知（Plan #49）：只在真正需要用户行动时提醒。

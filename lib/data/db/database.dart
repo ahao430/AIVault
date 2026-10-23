@@ -20,6 +20,8 @@ part 'database.g.dart';
   SshHosts,
   Notifications,
   MonitorSites,
+  AppSettings,
+  Bookmarks,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -31,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -60,6 +62,11 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 9) {
             await m.createTable(monitorSites);
+          }
+          if (from < 10) {
+            await m.createTable(appSettings);
+            await m.createTable(bookmarks);
+            await m.addColumn(providers, providers.showOnWidget);
           }
         },
       );

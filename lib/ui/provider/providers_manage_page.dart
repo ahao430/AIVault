@@ -31,7 +31,6 @@ class ProvidersManagePage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('加载失败：$e')),
         data: (list) {
-          final hiddenCount = list.where((s) => s.provider.hidden).length;
           return ListView(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 88),
             children: [
@@ -40,7 +39,7 @@ class ProvidersManagePage extends ConsumerWidget {
                 child: Text(
                   list.isEmpty
                       ? '还没有供应商'
-                      : '共 ${list.length} 个供应商${hiddenCount > 0 ? '，$hiddenCount 个已从首页隐藏' : ''}。开关控制是否在首页展示，数据始终保留。',
+                      : '共 ${list.length} 个供应商。开关控制是否在首页 / 桌面小组件展示，数据始终保留。',
                   style: TextStyle(fontSize: 12, color: cs.outline),
                 ),
               ),
@@ -102,17 +101,49 @@ class _ProviderRow extends ConsumerWidget {
                   ],
                 ),
               ),
-              Text('首页显示',
-                  style: TextStyle(fontSize: 12, color: cs.outline)),
-              Switch(
+              _MiniSwitch(
+                label: '首页',
                 value: !p.hidden,
+                onChanged: (v) =>
+                    ref.read(repositoryProvider).setHidden(p.id, !v),
+              ),
+              _MiniSwitch(
+                label: '组件',
+                value: p.showOnWidget,
                 onChanged: (v) => ref
                     .read(repositoryProvider)
-                    .setHidden(p.id, !v),
+                    .setShowOnWidget(p.id, v),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 紧凑开关：竖排 label + Switch（订阅管理行内并排放两个）
+class _MiniSwitch extends StatelessWidget {
+  const _MiniSwitch({required this.label, required this.value, required this.onChanged});
+
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 58,
+      child: Column(
+        children: [
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          Text(label, style: TextStyle(fontSize: 11, color: cs.outline)),
+        ],
       ),
     );
   }

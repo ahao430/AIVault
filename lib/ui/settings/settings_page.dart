@@ -11,6 +11,7 @@ import 'dart:io' show Platform;
 
 import 'app_lock_settings_page.dart';
 import 'hidden_providers_page.dart';
+import 'home_sections_page.dart';
 import 'update_page.dart';
 import 'webdav_page.dart';
 
@@ -154,6 +155,14 @@ class SettingsPage extends ConsumerWidget {
             ),
           ]),
           _section(context, '订阅管理', [
+            _item(
+              icon: Icons.dashboard_customize_outlined,
+              title: '首页板块顺序',
+              subtitle: '远程主机 / 探针监控 / 订阅看板的排列',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const HomeSectionsPage(),
+              )),
+            ),
             _item(
               icon: Icons.visibility_off_outlined,
               title: '已隐藏供应商',

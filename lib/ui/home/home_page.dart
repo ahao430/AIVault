@@ -129,6 +129,24 @@ class _HomePageState extends ConsumerState<HomePage> {
           if (list.isEmpty && !hasSites && _noSshHosts(ref)) {
             return const _EmptyView();
           }
+          final sections =
+              ref.watch(homeSectionsProvider).value ?? kDefaultHomeSections;
+          final slivers = <Widget>[];
+          for (final section in sections) {
+            switch (section) {
+              case kRemoteSection:
+                slivers.add(const SliverToBoxAdapter(
+                  // 远程状态区（Plan #41）：只展示在线 SSH 主机
+                  child: _RemoteStatusCard(),
+                ));
+              case kProbesSection:
+                // 探针区：展示设置为首页可见的监控站点
+                slivers.add(const SliverToBoxAdapter(child: _ProbeSection()));
+              case kSubsSection:
+                slivers.add(_subscriptionsSliver(list));
+            }
+          }
+          slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 24)));
           return RefreshIndicator(
             onRefresh: () async {
               unawaited(ref
@@ -144,41 +162,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  // 远程状态区（Plan #41）：只展示在线 SSH 主机
-                  child: _RemoteStatusCard(),
-                ),
-                SliverReorderableList(
-                  itemCount: list.length,
-                  onReorder: (oldIndex, newIndex) {
-                    if (newIndex > oldIndex) newIndex -= 1;
-                    final ids = [
-                      for (final s in list) s.provider.id
-                    ];
-                    final item = ids.removeAt(oldIndex);
-                    ids.insert(newIndex, item);
-                    unawaited(ref
-                        .read(repositoryProvider)
-                        .reorder(ids));
-                  },
-                  itemBuilder: (_, i) => KeyedSubtree(
-                    key: ValueKey(list[i].provider.id),
-                    child: Padding(
-                      // 保留 ReorderableDragStartListener 的默认位置：
-                      // 卡片整体可长按拖动（Material3 卡片自带 handle）
-                      padding: EdgeInsets.zero,
-                      child: ReorderableDelayedDragStartListener(
-                        index: i,
-                        child: ProviderCard(state: list[i]),
-                      ),
-                    ),
-                  ),
-                ),
-                // 探针区：展示设置为首页可见的监控站点
-                const SliverToBoxAdapter(child: _ProbeSection()),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              ],
+              slivers: slivers,
             ),
           );
         },
@@ -187,8 +171,33 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  void _refreshAll(BuildContext context, WidgetRef ref) {
-    final list = ref.read(homeListProvider).value ?? const [];
+  /// 订阅看板板块：可长按拖拽排序的供应商卡片列表
+  Widget _subscriptionsSliver(List<ProviderWithState> list) {
+    return SliverReorderableList(
+      itemCount: list.length,
+      onReorder: (oldIndex, newIndex) {
+        if (newIndex > oldIndex) newIndex -= 1;
+        final ids = [for (final s in list) s.provider.id];
+        final item = ids.removeAt(oldIndex);
+        ids.insert(newIndex, item);
+        unawaited(ref.read(repositoryProvider).reorder(ids));
+      },
+      itemBuilder: (_, i) => KeyedSubtree(
+        key: ValueKey(list[i].provider.id),
+        child: Padding(
+          // 保留 ReorderableDragStartListener 的默认位置：
+          // 卡片整体可长按拖动（Material3 卡片自带 handle）
+          padding: EdgeInsets.zero,
+          child: ReorderableDelayedDragStartListener(
+            index: i,
+            child: ProviderCard(state: list[i]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _refreshAll(BuildContext context, WidgetRef ref) {    final list = ref.read(homeListProvider).value ?? const [];
     ref.read(taskCenterProvider.notifier).startRefreshAll(list);
     Toast.show(context, '已发起批量刷新，可在任务中心查看进度');
   }
