@@ -2,6 +2,8 @@
     <!-- 应用内更新：下载 APK 后交给系统安装器 -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 小组件开机补刷 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="aivault"
         android:name="${applicationName}"
@@ -68,6 +70,15 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/aivault_widget_info_hyperos" />
+        </receiver>
+
+        <!-- 开机后补刷小组件数据 + 确保周期任务在册 -->
+        <receiver
+            android:name=".WidgetBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
         </receiver>
     </application>
     <!-- Required to query activities that can process text, see:

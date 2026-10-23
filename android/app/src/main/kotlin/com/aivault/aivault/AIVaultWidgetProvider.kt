@@ -22,10 +22,11 @@ import io.flutter.FlutterInjector
  * 展示前 4 个供应商的额度/余额 + 重置倒计时。
  * 数据键与 lib/services/widget_sync.dart 对应：updated / t0..t3 / v0..v3。
  *
- * 纯手动刷新（用户要求，不做任何自动拉取）：
+ * 刷新链路（手动 + 自动，详见 WidgetAutoRefresh）：
  * - 刷新按钮（ACTION_REFRESH）→ 显示「刷新中…」→ 后台拉取 → 重绘
- * - 其余 APPWIDGET_UPDATE（系统/桌面发起）只重绘已存数据，不拉取：
- *   部分桌面（MIUI 等）会频繁发送更新广播，逐次拉取会让组件不停闪烁
+ * - 自动：30 分钟 WorkManager 周期任务 / 开机补刷 / onUpdate 节流静默拉取
+ * - 其余 APPWIDGET_UPDATE（系统/桌面发起）只重绘已存数据：
+ *   部分桌面（MIUI 等）会频繁发送更新广播，拉取由节流逻辑统一把关
  * - Dart 侧 sync 的 updateWidget 广播带 triggeredFromHomeWidget=true → 重绘
  */
 open class AIVaultWidgetProvider : AppWidgetProvider() {
@@ -53,6 +54,9 @@ open class AIVaultWidgetProvider : AppWidgetProvider() {
         appWidgetIds: IntArray
     ) {
         drawWidgets(context, appWidgetManager, appWidgetIds, updatedLabel = null)
+        // 系统 30 分钟周期（updatePeriodMillis）与部分桌面的重绘广播都会进这里：
+        // 节流 15 分钟静默拉取（不显示「刷新中…」，不闪烁），见 WidgetAutoRefresh
+        WidgetAutoRefresh.maybeFetchNow(context, "update")
     }
 
     /// 重绘本 Provider 的全部实例（用 javaClass，子类变体各自维护实例集）；

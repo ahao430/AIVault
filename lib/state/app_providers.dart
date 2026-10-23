@@ -31,6 +31,12 @@ final homeListProvider =
   return ref.watch(repositoryProvider).watchHomeList();
 });
 
+/// 订阅管理页：全量列表（含首页隐藏的）
+final homeListAllProvider =
+    StreamProvider<List<ProviderWithState>>((ref) {
+  return ref.watch(repositoryProvider).watchHomeList(includeHidden: true);
+});
+
 /// 供应商详情
 final providerDetailProvider =
     StreamProvider.autoDispose.family<ProviderWithState?, String>((ref, id) {

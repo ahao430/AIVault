@@ -7236,6 +7236,724 @@ class NotificationsCompanion extends UpdateCompanion<Notification> {
   }
 }
 
+class $MonitorSitesTable extends MonitorSites
+    with TableInfo<$MonitorSitesTable, MonitorSite> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MonitorSitesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _baseUrlMeta = const VerificationMeta(
+    'baseUrl',
+  );
+  @override
+  late final GeneratedColumn<String> baseUrl = GeneratedColumn<String>(
+    'base_url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('komari'),
+  );
+  static const VerificationMeta _apiTokenRefMeta = const VerificationMeta(
+    'apiTokenRef',
+  );
+  @override
+  late final GeneratedColumn<String> apiTokenRef = GeneratedColumn<String>(
+    'api_token_ref',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _showOnHomeMeta = const VerificationMeta(
+    'showOnHome',
+  );
+  @override
+  late final GeneratedColumn<bool> showOnHome = GeneratedColumn<bool>(
+    'show_on_home',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_on_home" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastDataMeta = const VerificationMeta(
+    'lastData',
+  );
+  @override
+  late final GeneratedColumn<String> lastData = GeneratedColumn<String>(
+    'last_data',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastFetchedAtMeta = const VerificationMeta(
+    'lastFetchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastFetchedAt =
+      GeneratedColumn<DateTime>(
+        'last_fetched_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    baseUrl,
+    kind,
+    apiTokenRef,
+    showOnHome,
+    sortOrder,
+    lastData,
+    lastFetchedAt,
+    lastError,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'monitor_sites';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MonitorSite> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('base_url')) {
+      context.handle(
+        _baseUrlMeta,
+        baseUrl.isAcceptableOrUnknown(data['base_url']!, _baseUrlMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_baseUrlMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('api_token_ref')) {
+      context.handle(
+        _apiTokenRefMeta,
+        apiTokenRef.isAcceptableOrUnknown(
+          data['api_token_ref']!,
+          _apiTokenRefMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_on_home')) {
+      context.handle(
+        _showOnHomeMeta,
+        showOnHome.isAcceptableOrUnknown(
+          data['show_on_home']!,
+          _showOnHomeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('last_data')) {
+      context.handle(
+        _lastDataMeta,
+        lastData.isAcceptableOrUnknown(data['last_data']!, _lastDataMeta),
+      );
+    }
+    if (data.containsKey('last_fetched_at')) {
+      context.handle(
+        _lastFetchedAtMeta,
+        lastFetchedAt.isAcceptableOrUnknown(
+          data['last_fetched_at']!,
+          _lastFetchedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MonitorSite map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MonitorSite(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      baseUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_url'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      apiTokenRef: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}api_token_ref'],
+      ),
+      showOnHome: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_on_home'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      lastData: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_data'],
+      ),
+      lastFetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_fetched_at'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $MonitorSitesTable createAlias(String alias) {
+    return $MonitorSitesTable(attachedDatabase, alias);
+  }
+}
+
+class MonitorSite extends DataClass implements Insertable<MonitorSite> {
+  final int id;
+  final String name;
+  final String baseUrl;
+
+  /// 面板类型：komari（预留扩展哪吒等其他面板）
+  final String kind;
+
+  /// 管理员 API Key 在 Secure Storage 中的引用 key
+  /// （公开站点无需令牌；私有站点或需要完整数据时填写）
+  final String? apiTokenRef;
+
+  /// 是否在首页探针区展示
+  final bool showOnHome;
+  final int sortOrder;
+
+  /// 最近一次抓取的节点数据 JSON（离线时展示缓存）
+  final String? lastData;
+  final DateTime? lastFetchedAt;
+  final String? lastError;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const MonitorSite({
+    required this.id,
+    required this.name,
+    required this.baseUrl,
+    required this.kind,
+    this.apiTokenRef,
+    required this.showOnHome,
+    required this.sortOrder,
+    this.lastData,
+    this.lastFetchedAt,
+    this.lastError,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['base_url'] = Variable<String>(baseUrl);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || apiTokenRef != null) {
+      map['api_token_ref'] = Variable<String>(apiTokenRef);
+    }
+    map['show_on_home'] = Variable<bool>(showOnHome);
+    map['sort_order'] = Variable<int>(sortOrder);
+    if (!nullToAbsent || lastData != null) {
+      map['last_data'] = Variable<String>(lastData);
+    }
+    if (!nullToAbsent || lastFetchedAt != null) {
+      map['last_fetched_at'] = Variable<DateTime>(lastFetchedAt);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  MonitorSitesCompanion toCompanion(bool nullToAbsent) {
+    return MonitorSitesCompanion(
+      id: Value(id),
+      name: Value(name),
+      baseUrl: Value(baseUrl),
+      kind: Value(kind),
+      apiTokenRef: apiTokenRef == null && nullToAbsent
+          ? const Value.absent()
+          : Value(apiTokenRef),
+      showOnHome: Value(showOnHome),
+      sortOrder: Value(sortOrder),
+      lastData: lastData == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastData),
+      lastFetchedAt: lastFetchedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastFetchedAt),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory MonitorSite.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MonitorSite(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      baseUrl: serializer.fromJson<String>(json['baseUrl']),
+      kind: serializer.fromJson<String>(json['kind']),
+      apiTokenRef: serializer.fromJson<String?>(json['apiTokenRef']),
+      showOnHome: serializer.fromJson<bool>(json['showOnHome']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      lastData: serializer.fromJson<String?>(json['lastData']),
+      lastFetchedAt: serializer.fromJson<DateTime?>(json['lastFetchedAt']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'baseUrl': serializer.toJson<String>(baseUrl),
+      'kind': serializer.toJson<String>(kind),
+      'apiTokenRef': serializer.toJson<String?>(apiTokenRef),
+      'showOnHome': serializer.toJson<bool>(showOnHome),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'lastData': serializer.toJson<String?>(lastData),
+      'lastFetchedAt': serializer.toJson<DateTime?>(lastFetchedAt),
+      'lastError': serializer.toJson<String?>(lastError),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  MonitorSite copyWith({
+    int? id,
+    String? name,
+    String? baseUrl,
+    String? kind,
+    Value<String?> apiTokenRef = const Value.absent(),
+    bool? showOnHome,
+    int? sortOrder,
+    Value<String?> lastData = const Value.absent(),
+    Value<DateTime?> lastFetchedAt = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => MonitorSite(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    baseUrl: baseUrl ?? this.baseUrl,
+    kind: kind ?? this.kind,
+    apiTokenRef: apiTokenRef.present ? apiTokenRef.value : this.apiTokenRef,
+    showOnHome: showOnHome ?? this.showOnHome,
+    sortOrder: sortOrder ?? this.sortOrder,
+    lastData: lastData.present ? lastData.value : this.lastData,
+    lastFetchedAt: lastFetchedAt.present
+        ? lastFetchedAt.value
+        : this.lastFetchedAt,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  MonitorSite copyWithCompanion(MonitorSitesCompanion data) {
+    return MonitorSite(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      baseUrl: data.baseUrl.present ? data.baseUrl.value : this.baseUrl,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      apiTokenRef: data.apiTokenRef.present
+          ? data.apiTokenRef.value
+          : this.apiTokenRef,
+      showOnHome: data.showOnHome.present
+          ? data.showOnHome.value
+          : this.showOnHome,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      lastData: data.lastData.present ? data.lastData.value : this.lastData,
+      lastFetchedAt: data.lastFetchedAt.present
+          ? data.lastFetchedAt.value
+          : this.lastFetchedAt,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MonitorSite(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('baseUrl: $baseUrl, ')
+          ..write('kind: $kind, ')
+          ..write('apiTokenRef: $apiTokenRef, ')
+          ..write('showOnHome: $showOnHome, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('lastData: $lastData, ')
+          ..write('lastFetchedAt: $lastFetchedAt, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    baseUrl,
+    kind,
+    apiTokenRef,
+    showOnHome,
+    sortOrder,
+    lastData,
+    lastFetchedAt,
+    lastError,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MonitorSite &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.baseUrl == this.baseUrl &&
+          other.kind == this.kind &&
+          other.apiTokenRef == this.apiTokenRef &&
+          other.showOnHome == this.showOnHome &&
+          other.sortOrder == this.sortOrder &&
+          other.lastData == this.lastData &&
+          other.lastFetchedAt == this.lastFetchedAt &&
+          other.lastError == this.lastError &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class MonitorSitesCompanion extends UpdateCompanion<MonitorSite> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> baseUrl;
+  final Value<String> kind;
+  final Value<String?> apiTokenRef;
+  final Value<bool> showOnHome;
+  final Value<int> sortOrder;
+  final Value<String?> lastData;
+  final Value<DateTime?> lastFetchedAt;
+  final Value<String?> lastError;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const MonitorSitesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.baseUrl = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.apiTokenRef = const Value.absent(),
+    this.showOnHome = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.lastData = const Value.absent(),
+    this.lastFetchedAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  MonitorSitesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required String baseUrl,
+    this.kind = const Value.absent(),
+    this.apiTokenRef = const Value.absent(),
+    this.showOnHome = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.lastData = const Value.absent(),
+    this.lastFetchedAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : name = Value(name),
+       baseUrl = Value(baseUrl),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<MonitorSite> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? baseUrl,
+    Expression<String>? kind,
+    Expression<String>? apiTokenRef,
+    Expression<bool>? showOnHome,
+    Expression<int>? sortOrder,
+    Expression<String>? lastData,
+    Expression<DateTime>? lastFetchedAt,
+    Expression<String>? lastError,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (baseUrl != null) 'base_url': baseUrl,
+      if (kind != null) 'kind': kind,
+      if (apiTokenRef != null) 'api_token_ref': apiTokenRef,
+      if (showOnHome != null) 'show_on_home': showOnHome,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (lastData != null) 'last_data': lastData,
+      if (lastFetchedAt != null) 'last_fetched_at': lastFetchedAt,
+      if (lastError != null) 'last_error': lastError,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  MonitorSitesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? baseUrl,
+    Value<String>? kind,
+    Value<String?>? apiTokenRef,
+    Value<bool>? showOnHome,
+    Value<int>? sortOrder,
+    Value<String?>? lastData,
+    Value<DateTime?>? lastFetchedAt,
+    Value<String?>? lastError,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return MonitorSitesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      baseUrl: baseUrl ?? this.baseUrl,
+      kind: kind ?? this.kind,
+      apiTokenRef: apiTokenRef ?? this.apiTokenRef,
+      showOnHome: showOnHome ?? this.showOnHome,
+      sortOrder: sortOrder ?? this.sortOrder,
+      lastData: lastData ?? this.lastData,
+      lastFetchedAt: lastFetchedAt ?? this.lastFetchedAt,
+      lastError: lastError ?? this.lastError,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (baseUrl.present) {
+      map['base_url'] = Variable<String>(baseUrl.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (apiTokenRef.present) {
+      map['api_token_ref'] = Variable<String>(apiTokenRef.value);
+    }
+    if (showOnHome.present) {
+      map['show_on_home'] = Variable<bool>(showOnHome.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (lastData.present) {
+      map['last_data'] = Variable<String>(lastData.value);
+    }
+    if (lastFetchedAt.present) {
+      map['last_fetched_at'] = Variable<DateTime>(lastFetchedAt.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MonitorSitesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('baseUrl: $baseUrl, ')
+          ..write('kind: $kind, ')
+          ..write('apiTokenRef: $apiTokenRef, ')
+          ..write('showOnHome: $showOnHome, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('lastData: $lastData, ')
+          ..write('lastFetchedAt: $lastFetchedAt, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7254,6 +7972,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ImageTasksTable imageTasks = $ImageTasksTable(this);
   late final $SshHostsTable sshHosts = $SshHostsTable(this);
   late final $NotificationsTable notifications = $NotificationsTable(this);
+  late final $MonitorSitesTable monitorSites = $MonitorSitesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7272,6 +7991,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     imageTasks,
     sshHosts,
     notifications,
+    monitorSites,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -13251,6 +13971,339 @@ typedef $$NotificationsTableProcessedTableManager =
       Notification,
       PrefetchHooks Function()
     >;
+typedef $$MonitorSitesTableCreateCompanionBuilder =
+    MonitorSitesCompanion Function({
+      Value<int> id,
+      required String name,
+      required String baseUrl,
+      Value<String> kind,
+      Value<String?> apiTokenRef,
+      Value<bool> showOnHome,
+      Value<int> sortOrder,
+      Value<String?> lastData,
+      Value<DateTime?> lastFetchedAt,
+      Value<String?> lastError,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+    });
+typedef $$MonitorSitesTableUpdateCompanionBuilder =
+    MonitorSitesCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> baseUrl,
+      Value<String> kind,
+      Value<String?> apiTokenRef,
+      Value<bool> showOnHome,
+      Value<int> sortOrder,
+      Value<String?> lastData,
+      Value<DateTime?> lastFetchedAt,
+      Value<String?> lastError,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+
+class $$MonitorSitesTableFilterComposer
+    extends Composer<_$AppDatabase, $MonitorSitesTable> {
+  $$MonitorSitesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get baseUrl => $composableBuilder(
+    column: $table.baseUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get apiTokenRef => $composableBuilder(
+    column: $table.apiTokenRef,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showOnHome => $composableBuilder(
+    column: $table.showOnHome,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastData => $composableBuilder(
+    column: $table.lastData,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastFetchedAt => $composableBuilder(
+    column: $table.lastFetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MonitorSitesTableOrderingComposer
+    extends Composer<_$AppDatabase, $MonitorSitesTable> {
+  $$MonitorSitesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get baseUrl => $composableBuilder(
+    column: $table.baseUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get apiTokenRef => $composableBuilder(
+    column: $table.apiTokenRef,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showOnHome => $composableBuilder(
+    column: $table.showOnHome,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastData => $composableBuilder(
+    column: $table.lastData,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastFetchedAt => $composableBuilder(
+    column: $table.lastFetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MonitorSitesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MonitorSitesTable> {
+  $$MonitorSitesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get baseUrl =>
+      $composableBuilder(column: $table.baseUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get apiTokenRef => $composableBuilder(
+    column: $table.apiTokenRef,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showOnHome => $composableBuilder(
+    column: $table.showOnHome,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<String> get lastData =>
+      $composableBuilder(column: $table.lastData, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastFetchedAt => $composableBuilder(
+    column: $table.lastFetchedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$MonitorSitesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MonitorSitesTable,
+          MonitorSite,
+          $$MonitorSitesTableFilterComposer,
+          $$MonitorSitesTableOrderingComposer,
+          $$MonitorSitesTableAnnotationComposer,
+          $$MonitorSitesTableCreateCompanionBuilder,
+          $$MonitorSitesTableUpdateCompanionBuilder,
+          (
+            MonitorSite,
+            BaseReferences<_$AppDatabase, $MonitorSitesTable, MonitorSite>,
+          ),
+          MonitorSite,
+          PrefetchHooks Function()
+        > {
+  $$MonitorSitesTableTableManager(_$AppDatabase db, $MonitorSitesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MonitorSitesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MonitorSitesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MonitorSitesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> baseUrl = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> apiTokenRef = const Value.absent(),
+                Value<bool> showOnHome = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<String?> lastData = const Value.absent(),
+                Value<DateTime?> lastFetchedAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => MonitorSitesCompanion(
+                id: id,
+                name: name,
+                baseUrl: baseUrl,
+                kind: kind,
+                apiTokenRef: apiTokenRef,
+                showOnHome: showOnHome,
+                sortOrder: sortOrder,
+                lastData: lastData,
+                lastFetchedAt: lastFetchedAt,
+                lastError: lastError,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required String baseUrl,
+                Value<String> kind = const Value.absent(),
+                Value<String?> apiTokenRef = const Value.absent(),
+                Value<bool> showOnHome = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<String?> lastData = const Value.absent(),
+                Value<DateTime?> lastFetchedAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+              }) => MonitorSitesCompanion.insert(
+                id: id,
+                name: name,
+                baseUrl: baseUrl,
+                kind: kind,
+                apiTokenRef: apiTokenRef,
+                showOnHome: showOnHome,
+                sortOrder: sortOrder,
+                lastData: lastData,
+                lastFetchedAt: lastFetchedAt,
+                lastError: lastError,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MonitorSitesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MonitorSitesTable,
+      MonitorSite,
+      $$MonitorSitesTableFilterComposer,
+      $$MonitorSitesTableOrderingComposer,
+      $$MonitorSitesTableAnnotationComposer,
+      $$MonitorSitesTableCreateCompanionBuilder,
+      $$MonitorSitesTableUpdateCompanionBuilder,
+      (
+        MonitorSite,
+        BaseReferences<_$AppDatabase, $MonitorSitesTable, MonitorSite>,
+      ),
+      MonitorSite,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -13281,4 +14334,6 @@ class $AppDatabaseManager {
       $$SshHostsTableTableManager(_db, _db.sshHosts);
   $$NotificationsTableTableManager get notifications =>
       $$NotificationsTableTableManager(_db, _db.notifications);
+  $$MonitorSitesTableTableManager get monitorSites =>
+      $$MonitorSitesTableTableManager(_db, _db.monitorSites);
 }

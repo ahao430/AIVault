@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../chat/conversations_page.dart';
 import '../image/image_studio_page.dart';
+import '../monitor/monitor_sites_page.dart';
+import '../provider/providers_manage_page.dart';
 import '../ssh/host_edit_page.dart';
 import '../ssh/hosts_page.dart';
 import '../ssh/remote_dev_page.dart';
@@ -55,6 +57,34 @@ class WorkbenchPage extends ConsumerWidget {
                   color: cs.tertiary,
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const ImageStudioPage(),
+                  )),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _EntryCard(
+                  icon: Icons.card_membership_outlined,
+                  title: '订阅管理',
+                  subtitle: '供应商列表与首页展示开关',
+                  color: cs.tertiary,
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const ProvidersManagePage(),
+                  )),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _EntryCard(
+                  icon: Icons.monitor_heart_outlined,
+                  title: '探针管理',
+                  subtitle: 'Komari 服务器监控看板',
+                  color: cs.primary,
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const MonitorSitesPage(),
                   )),
                 ),
               ),

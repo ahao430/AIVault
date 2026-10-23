@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AIVault — AI 订阅看板 · SSH 远程开发 · 随身 AI 工作台</title>
+<title>AIVault — AI 订阅看板 · 探针监控 · SSH 远程开发 · 随身 AI 工作台</title>
 <meta name="description" content="AIVault：本地优先的跨平台 App。管理所有 AI 订阅的额度、余额与重置时间，批量签到 / 预热；内置 AI 聊天与画图；SSH + tmux 在手机上接管电脑里的 Agent。">
-<meta property="og:title" content="AIVault — AI 订阅看板 · SSH 远程开发 · 随身 AI 工作台">
+<meta property="og:title" content="AIVault — AI 订阅看板 · 探针监控 · SSH 远程开发 · 随身 AI 工作台">
 <meta property="og:description" content="本地优先：额度看板 / 批量预热 / 桌面小组件 / AI 聊天画图 / SSH 终端 + 终端 AI 助手。数据全在本机，API Key 只进系统安全存储。">
 <meta property="og:image" content="images/s/home.png">
 <style>
@@ -166,8 +166,8 @@
   <div class="wrap">
     <img class="logo" src="images/app_icon.png" alt="AIVault 图标">
     <h1><span class="grad">AIVault</span></h1>
-    <p class="tagline">AI 订阅看板 · SSH 远程开发 · 随身 AI 工作台<br>
-      把散落的 AI 订阅、中转站与远程 Agent，收进一个本地优先的 App。</p>
+    <p class="tagline">AI 订阅看板 · 探针监控 · SSH 远程开发 · 随身 AI 工作台<br>
+      把散落的 AI 订阅、中转站、服务器探针与远程 Agent，收进一个本地优先的 App。</p>
     <div class="badges">
       <span class="badge">Flutter · Android</span>
       <span class="badge">本地优先 · 数据不出设备</span>
@@ -189,7 +189,9 @@
       <div class="card"><div class="ico">📊</div><h3>订阅额度看板</h3>
         <p>所有订阅与中转站一屏看清：<b>额度进度、重置倒计时、余额、本月已用</b>；Coding Plan 双窗口（5 小时 + 本周）与<b>套餐名、续费日期</b>直接上卡片。支持智谱 / Kimi / OpenCode / DeepSeek / Moonshot / NewAPI 等适配器，批量签到 / 预热。</p></div>
       <div class="card"><div class="ico">🧩</div><h3>桌面小组件</h3>
-        <p>Android 看板小组件：置顶订阅的额度与倒计时直达桌面，<b>手动刷新不打开 App</b>；另有 <b>HyperOS（小米澎湃 OS）专用变体</b>，适配系统圆角与排版密度。</p></div>
+        <p>Android 看板小组件：置顶订阅的额度与倒计时直达桌面。<b>自动刷新</b>：每 30 分钟后台拉取 + 开机补刷 + 系统周期触发（15 分钟节流），数据不过夜；另有 <b>HyperOS（小米澎湃 OS）专用变体</b>，适配系统圆角与排版密度。</p></div>
+      <div class="card"><div class="ico">📡</div><h3>探针管理（Komari）</h3>
+        <p>接入 <b>Komari</b> 监控面板：首页探针区一览<b>在线比、CPU / 内存 / 实时网速</b>，详情页含磁盘、流量限额、负载、运行时长与到期日期；每 15 秒自动刷新。公开站点填地址即用，私有站点配管理员 API Key（只存本机安全存储）。</p></div>
       <div class="card"><div class="ico">💬</div><h3>AI 聊天 &amp; 画图</h3>
         <p>用已配置的模型直接对话与生图：<b>流式输出、Markdown / 代码高亮、推理折叠</b>、会话管理、导出长图；画图支持参考图与历史网格。</p></div>
       <div class="card"><div class="ico">🖥️</div><h3>SSH 远程开发</h3>
@@ -209,7 +211,9 @@
   </div>
   <div class="wrap">
     <div class="shots">
-      <figure class="shot"><div class="phone"><img src="images/s/home.png" alt="首页订阅看板" loading="lazy"></div><figcaption>首页 · 订阅看板</figcaption></figure>
+      <figure class="shot"><div class="phone"><img src="images/s/home.png" alt="首页订阅看板" loading="lazy"></div><figcaption>首页 · 订阅 + 探针</figcaption></figure>
+      <figure class="shot"><div class="phone"><img src="images/s/probe.png" alt="探针详情" loading="lazy"></div><figcaption>探针详情 · Komari 节点</figcaption></figure>
+      <figure class="shot"><div class="phone"><img src="images/s/probe_manage.png" alt="探针管理" loading="lazy"></div><figcaption>探针管理 · 站点开关</figcaption></figure>
       <figure class="shot"><div class="phone"><img src="images/s/detail.png" alt="供应商详情" loading="lazy"></div><figcaption>供应商详情 · 额度走势</figcaption></figure>
       <figure class="shot"><div class="phone"><img src="images/s/workbench.png" alt="工作台" loading="lazy"></div><figcaption>工作台 · 功能入口</figcaption></figure>
       <figure class="shot"><div class="phone"><img src="images/s/sshhosts.png" alt="SSH 主机" loading="lazy"></div><figcaption>SSH 主机管理</figcaption></figure>

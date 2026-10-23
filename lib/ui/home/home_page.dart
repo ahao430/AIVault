@@ -6,11 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/formatters.dart';
 import '../../core/provider_icons.dart';
+import '../../data/repositories/monitor_repository.dart' show MonitorSiteView;
 import '../../data/repositories/provider_repository.dart';
 import '../../services/provider_actions.dart';
 import '../../services/task_center.dart';
 import '../../services/widget_sync.dart';
 import '../../state/app_providers.dart';
+import '../../state/monitor_providers.dart';
+import '../monitor/monitor_nodes.dart';
+import '../monitor/monitor_site_detail_page.dart';
 import '../provider/provider_detail_page.dart';
 import '../provider/provider_edit_page.dart';
 import '../notifications/notifications_page.dart';
@@ -37,6 +41,14 @@ class _HomePageState extends ConsumerState<HomePage> {
       ref.read(repositoryProvider),
       force: true,
     ));
+    // 探针：静默刷新首页展示的站点
+    Future.microtask(() async {
+      final sites = await ref.read(monitorRepoProvider).allSites();
+      final visible = sites.where((s) => s.showOnHome).toList();
+      if (visible.isNotEmpty) {
+        unawaited(ref.read(monitorRepoProvider).refreshAll(visible));
+      }
+    });
   }
 
   @override
@@ -110,12 +122,23 @@ class _HomePageState extends ConsumerState<HomePage> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('加载失败：$e')),
         data: (list) {
-          if (list.isEmpty && _noSshHosts(ref)) return const _EmptyView();
+          final hasSites = ref.watch(monitorSitesProvider).maybeWhen(
+                data: (sites) => sites.any((s) => s.showOnHome),
+                orElse: () => false,
+              );
+          if (list.isEmpty && !hasSites && _noSshHosts(ref)) {
+            return const _EmptyView();
+          }
           return RefreshIndicator(
             onRefresh: () async {
               unawaited(ref
                   .read(taskCenterProvider.notifier)
                   .startRefreshAll(list));
+              // 探针站点同步刷新
+              final sites = await ref.read(monitorRepoProvider).allSites();
+              unawaited(ref
+                  .read(monitorRepoProvider)
+                  .refreshAll(sites.where((s) => s.showOnHome)));
               // 让下拉动画停留片刻后收起，任务继续在后台执行
               await Future<void>.delayed(const Duration(milliseconds: 800));
             },
@@ -133,11 +156,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                     final ids = [
                       for (final s in list) s.provider.id
                     ];
-                      final item = ids.removeAt(oldIndex);
-                      ids.insert(newIndex, item);
-                      unawaited(ref
-                          .read(repositoryProvider)
-                          .reorder(ids));
+                    final item = ids.removeAt(oldIndex);
+                    ids.insert(newIndex, item);
+                    unawaited(ref
+                        .read(repositoryProvider)
+                        .reorder(ids));
                   },
                   itemBuilder: (_, i) => KeyedSubtree(
                     key: ValueKey(list[i].provider.id),
@@ -152,6 +175,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                 ),
+                // 探针区：展示设置为首页可见的监控站点
+                const SliverToBoxAdapter(child: _ProbeSection()),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),
           );
@@ -279,6 +305,120 @@ class _RemoteStatusCard extends ConsumerWidget {
         );
       },
       orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// 首页探针区：展示「首页显示」开启的监控站点（Komari），
+/// 每站点一张卡：在线比 + 最多 4 条节点行；点击进节点详情。
+class _ProbeSection extends ConsumerWidget {
+  const _ProbeSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sitesAsync = ref.watch(monitorSitesProvider);
+    return sitesAsync.maybeWhen(
+      data: (sites) {
+        final visible = sites.where((s) => s.showOnHome).toList();
+        if (visible.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final site in visible) _ProbeSiteCard(view: MonitorSiteView.of(site)),
+            ],
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _ProbeSiteCard extends StatelessWidget {
+  const _ProbeSiteCard({required this.view});
+
+  final MonitorSiteView view;
+
+  @override
+  Widget build(BuildContext context) {
+    final site = view.site;
+    final nodes = view.nodes;
+    final cs = Theme.of(context).colorScheme;
+    final show = nodes.take(4).toList();
+
+    return Card(
+      margin: const EdgeInsets.only(top: 10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => MonitorSiteDetailPage(siteId: site.id),
+        )),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.monitor_heart_outlined,
+                      size: 16, color: cs.primary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(site.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w600)),
+                  ),
+                  Text(
+                    nodes.isEmpty ? '暂无数据' : '${view.onlineCount}/${nodes.length} 在线',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: nodes.isNotEmpty && view.onlineCount == nodes.length
+                            ? Colors.green
+                            : cs.outline),
+                  ),
+                ],
+              ),
+              if ((site.lastError ?? '').isNotEmpty && nodes.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text('⚠ ${site.lastError}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11, color: cs.error)),
+                ),
+              for (final n in show) KomariNodeRow(node: n),
+              Padding(
+                padding: const EdgeInsets.only(top: 2, bottom: 4),
+                child: Row(
+                  children: [
+                    if (site.lastFetchedAt != null)
+                      Text(
+                          '更新于 ${formatRelative(site.lastFetchedAt!, DateTime.now())}',
+                          style:
+                              TextStyle(fontSize: 11, color: cs.outline)),
+                    const Spacer(),
+                    if (nodes.length > 4)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Text('共 ${nodes.length} 台',
+                            style: TextStyle(fontSize: 11, color: cs.outline)),
+                      ),
+                    Text('详情 →',
+                        style: TextStyle(
+                            fontSize: 11, color: cs.primary)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -553,22 +693,21 @@ class ProviderCard extends ConsumerWidget {
                   .textTheme
                   .bodySmall
                   ?.copyWith(color: cs.outline)),
-          const Spacer(),
           if (b != null)
-            Text(
-              b.success
-                  ? '更新于 ${formatRelative(b.timestamp, now)}'
-                  : ((b.message ?? '').isNotEmpty
-                      ? '查询失败：${b.message}'
-                      : '查询失败'),
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(
-                      color: b.success ? cs.outline : cs.error,
-                      fontSize: 11),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            Expanded(
+              child: Text(
+                b.success
+                    ? '更新于 ${formatRelative(b.timestamp, now)}'
+                    : ((b.message ?? '').isNotEmpty
+                        ? '查询失败：${b.message}'
+                        : '查询失败'),
+                textAlign: TextAlign.right,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: b.success ? cs.outline : cs.error,
+                    fontSize: 11),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
         ],
       ),

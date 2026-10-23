@@ -1,12 +1,12 @@
 # AIVault
 
-**AI 订阅看板 · SSH 远程开发 · 随身 AI 工作台** —— 一个本地优先的 Android App：管理所有 AI 订阅与中转站的额度、余额、重置时间，批量签到 / 预热；内置 AI 聊天与画图；通过 SSH + tmux 在手机上观战和接管电脑里的 Agent（Claude Code / Codex / OpenCode）。
+**AI 订阅看板 · 探针监控 · SSH 远程开发 · 随身 AI 工作台** —— 一个本地优先的 Android App：管理所有 AI 订阅与中转站的额度、余额、重置时间，批量签到 / 预热；接入 Komari 探针在手机上看服务器负载；内置 AI 聊天与画图；通过 SSH + tmux 观战和接管电脑里的 Agent（Claude Code / Codex / OpenCode）。
 
 [项目主页](https://ahao430.github.io/AIVault/) · [下载最新版](https://github.com/ahao430/AIVault/releases/latest) · [更新日志](./CHANGELOG.md) · [设计基线](./Plan.md)
 
-| 首页看板 | SSH 终端 | AI 聊天 |
+| 首页看板 | 探针详情 | SSH 终端 |
 | --- | --- | --- |
-| ![首页看板](docs/images/home.png) | ![SSH 终端](docs/images/terminal.png) | ![AI 聊天](docs/images/chat.png) |
+| ![首页看板](docs/images/home.png) | ![探针详情](docs/images/probe.png) | ![SSH 终端](docs/images/terminal.png) |
 
 技术方案：**Flutter + SQLite（drift）+ 本地优先 + WebDAV 可选同步**。
 目前只分发 Android 安装包；iOS / macOS / Windows 由 Flutter 支持，但**未经编译适配
@@ -19,18 +19,27 @@
 ### 订阅看板
 - 供应商 / Token / 模型三级数据模型（同一供应商的不同账户视为不同实例）
 - 首页卡片：额度进度 + 重置倒计时、余额、本月已用，官方供应商带品牌图标（Claude / OpenAI / 智谱 / DeepSeek / NewAPI 等），长按拖拽排序、置顶 / 隐藏
+- **工作台「订阅管理」**：全量供应商列表 + 单独控制「是否在首页展示」（数据保留，仅首页隐藏）
 - 适配器：NewAPI / Sub2API / 智谱 Coding Plan（双格式，**套餐名 + 续费日期 + 周/5h 双窗口**）/ Kimi Code（双窗口 + 档位）/ OpenCode Go（三窗口）/ DeepSeek（双格式）/ Moonshot 按量 / OpenAI 兼容 / Claude 官方订阅
 - 批量签到 / 批量预热；预热规则：**只有额度达到 100% 才执行**，状态未知一律跳过
 - 查询失败保留上一次成功快照，不显示为 0
 - 任务中心：批量操作后台执行，进度 / 取消 / 重试失败项 / 结果明细
 - 额度历史（sparkline 走势 + 明细）、模型测试历史（9 类失败原因分类）
-- **桌面小组件（Android）**：置顶前 4 个供应商的额度 / 余额 + 倒计时，手动刷新按钮（后台拉取不打开 App）；另有 **HyperOS（小米澎湃 OS）专用变体**——系统圆角裁切适配、加大字号
+- **桌面小组件（Android）**：置顶前 4 个供应商的额度 / 余额 + 倒计时；刷新按钮后台拉取不打开 App；**自动刷新**（30 分钟 WorkManager 周期任务 + 开机补刷 + 系统周期触发，15 分钟节流，任务跨重启持久）；另有 **HyperOS（小米澎湃 OS）专用变体**——系统圆角裁切适配、加大字号
+  > 说明：Android 8.0 起「每次解锁」「切到小组件所在桌面页」都没有公开 API（解锁广播被隐式广播限制拦下），自动刷新以上述三条链路兜底，数据至多落后约 30 分钟。
 - 通知中心：额度恢复可预热 / 今日可签到 / 数据过期三类事件 + 系统本地通知转发
 - App 锁：PIN + 生物识别（Touch ID / Face ID / 指纹）
 
 ### AI 工作台
 - AI 聊天：会话管理、OpenAI 兼容流式输出、Markdown / 代码高亮、推理模型 reasoning 折叠、重新生成、导出长图
 - AI 画图：单次生成、参考图（edits multipart）、历史网格、图片详情
+
+### 探针监控（Komari）
+- 工作台「探针管理」添加 Komari 面板：公开站点填地址即用，私有站点配管理员 API Key（Bearer，只存本机安全存储）
+- 首页探针区：每个站点一张卡，**在线比 + 节点行（区域旗标 / CPU / 内存 / 实时网速）**；每个站点可单独开关「首页显示」
+- 节点详情页：CPU / 内存 / 磁盘 / 流量限额进度条（超 75% 变橙、90% 变红）、实时网速、负载、进程与连接数、运行时长、系统 / 内核 / 虚拟化、套餐到期与计费周期；页面停留期间每 15 秒自动刷新
+- 数据源：`GET /api/nodes` + `GET /api/recent/{uuid}`（实测 komari-monitor/komari），节点数据本地缓存，离线也能看上一次状态
+- 面板类型字段已预留（`kind`），后续可按同一套抽象接入哪吒等其他面板
 
 ### SSH 远程开发
 - SSH 主机管理（dartssh2，Key / 密码认证，凭证只存安全存储），首次连接 host key TOFU 校验（指纹变化拒绝连接），Tailscale 标记提示
@@ -55,16 +64,17 @@ lib/
 │   ├── db/                       # drift 表定义 + 数据库（SQLite）
 │   └── repositories/             # 仓库层（聚合视图模型）
 ├── services/                     # 刷新 / 签到 / 预热 / 任务中心 / WebDAV /
-│                                 #   小组件同步 / 更新检查 / SSH / tmux
+│                                 #   小组件同步 / Komari 客户端 / 更新检查 / SSH / tmux
 ├── state/                        # Riverpod providers
 └── ui/
-    ├── home/                     # 订阅看板（卡片 + 拖拽 + 远程状态区）
-    ├── provider/                 # 供应商详情 / 编辑 / 额度历史
+    ├── home/                     # 订阅看板（卡片 + 拖拽 + 远程状态区 + 探针区）
+    ├── provider/                 # 供应商详情 / 编辑 / 订阅管理 / 额度历史
+    ├── monitor/                  # 探针管理（站点列表 / 编辑 / 节点详情）
     ├── chat/  image/             # AI 聊天 / AI 画图
     ├── ssh/                      # 主机管理 / 终端 / tmux / 终端 AI 助手
     ├── workbench/  tasks/        # 工作台入口 / 任务中心
     └── settings/  lock/  ...     # 设置 / WebDAV / App 锁 / 通知
-android/…/AIVaultWidgetProvider.kt  # 桌面小组件（含 HyperOS 变体）
+android/…/AIVaultWidgetProvider.kt  # 桌面小组件（含 HyperOS 变体）+ 自动刷新调度
 ```
 
 ## 开发
@@ -102,5 +112,5 @@ git tag v0.4.18+19 && git push origin v0.4.18+19   # 触发发版流水线
 
 ## 迭代路线
 
-- ✅ **P0-P3 已完成**：订阅看板全量、任务中心、通知、WebDAV、桌面小组件（含 HyperOS）、App 锁、AI 聊天 / 画图、SSH 远程开发 + 终端 AI 助手
-- **P4 规划**：SFTP 文件管理、端口转发、更多官方适配器（MiniMax 等）、iOS 小组件（WidgetKit）
+- ✅ **P0-P3 已完成**：订阅看板全量、任务中心、通知、WebDAV、桌面小组件（含 HyperOS + 自动刷新）、App 锁、AI 聊天 / 画图、SSH 远程开发 + 终端 AI 助手、Komari 探针监控
+- **P4 规划**：SFTP 文件管理、端口转发、更多官方适配器（MiniMax 等）、更多探针面板（哪吒等，`kind` 字段已预留）、iOS 小组件（WidgetKit）

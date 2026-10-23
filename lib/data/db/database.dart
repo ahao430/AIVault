@@ -19,6 +19,7 @@ part 'database.g.dart';
   ImageTasks,
   SshHosts,
   Notifications,
+  MonitorSites,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -30,7 +31,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -56,6 +57,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 8) {
             await m.addColumn(sshHosts, sshHosts.isTailscale);
+          }
+          if (from < 9) {
+            await m.createTable(monitorSites);
           }
         },
       );

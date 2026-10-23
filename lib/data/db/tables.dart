@@ -279,6 +279,31 @@ class SshHosts extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// 监控探针站点（Komari 等面板）。API Token 存安全存储，数据库只存引用。
+class MonitorSites extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get baseUrl => text()();
+
+  /// 面板类型：komari（预留扩展哪吒等其他面板）
+  TextColumn get kind => text().withDefault(const Constant('komari'))();
+
+  /// 管理员 API Key 在 Secure Storage 中的引用 key
+  /// （公开站点无需令牌；私有站点或需要完整数据时填写）
+  TextColumn get apiTokenRef => text().nullable()();
+
+  /// 是否在首页探针区展示
+  BoolColumn get showOnHome => boolean().withDefault(const Constant(true))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  /// 最近一次抓取的节点数据 JSON（离线时展示缓存）
+  TextColumn get lastData => text().nullable()();
+  DateTimeColumn get lastFetchedAt => dateTime().nullable()();
+  TextColumn get lastError => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+}
+
 /// App 内通知（Plan #49）：只在真正需要用户行动时提醒。
 class Notifications extends Table {
   IntColumn get id => integer().autoIncrement()();
