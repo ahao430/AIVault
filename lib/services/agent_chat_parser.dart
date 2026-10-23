@@ -102,6 +102,9 @@ String tidyAgentOutput(String raw) {
 /// 用户输入行标记（只认行首，避免误伤回复里缩进的 `>` 引用 / diff）
 final _tuiUserMarkerRe = RegExp(r'^(?:❯|›|>) ?(.*)$');
 
+/// 输入回显的弱化前缀 artifact（Claude Code 部分版本：`❯ ·hi`）
+final _tuiEchoDotRe = RegExp(r'^·\s?');
+
 /// Agent 侧标记：Claude Code 回复 `⏺` 与工具结果 `⎿`
 final _tuiAgentMarkerRe = RegExp(r'^\s{0,3}(?:⏺|⎿) ?(.*)$');
 
@@ -139,7 +142,8 @@ List<AgentChatBlock>? splitAgentTuiChat(String paneText) {
 
     final user = _tuiUserMarkerRe.firstMatch(line);
     if (user != null) {
-      final rest = user.group(1)!.trim();
+      var rest = user.group(1)!.trim();
+      rest = rest.replaceFirst(_tuiEchoDotRe, '').trim();
       // 空输入框（当前无草稿）：不切换状态，后续行仍归上一个块
       if (rest.isEmpty) continue;
       flush();
@@ -187,4 +191,149 @@ List<String> _dedent(List<String> lines) {
   }
   if (min <= 0 || min == 1 << 30) return lines;
   return [for (final l in lines) l.length < min ? l : l.substring(min)];
+}
+
+/// ─── 编号选项（触屏直选）───────────────────────────────────────────────────
+
+class AgentOption {
+  const AgentOption({required this.number, required this.label});
+
+  final int number;
+  final String label;
+}
+
+/// 单行内的编号项：`1. Yes`（inline 多项以 ≥2 空格分隔；编号 1-3 位，
+/// Claude Code 的模型选择器分页后从任意编号开始，如 `36.`）
+final _numberedItemRe =
+    RegExp(r'([0-9]{1,3})\.\s+(\S.*?)\s*(?=\s{2,}[0-9]{1,3}\.|\s*$)');
+
+/// 选项对话框的语境标记（二选一即认定）：
+/// 1. 选中光标直接前缀编号项：`❯ 1. Yes` / `↑ 36.`（inline / 计划确认 /
+///    分页列表样式）
+/// 2. 上方 ≤3 行是权限 / 确认类标题（Claude is asking for permission、
+///    Claude wants to use …、Select model 等）。
+/// 用于排除「Agent 回复里的编号步骤列表」「欢迎页使用技巧」这两种
+/// 长得像选项的普通编号列表。
+final _optionCursorRe = RegExp(r'^\s*[❯›↑]\s*[0-9]{1,3}\.');
+final _optionHeaderRe = RegExp(
+    r'asking for permission|wants to|permission to|approve|select (?:an option|model)|确认|选择',
+    caseSensitive: false);
+
+/// 从 pane 尾部提取最近一组编号选项（Claude Code 的权限 / 计划确认
+/// 对话框：`❯ 1. Yes`、`│ 1. Yes │`、单行 `1. Yes  2. No` 及其换行
+/// 续排）。要求 ≥2 项、以 1 开头、邻近 3 行内有对话框语境标记
+/// （❯ / asking for permission 等，用于排除欢迎页的编号技巧列表）。
+List<AgentOption> extractNumberedOptions(String paneText,
+    {int tailLines = 30}) {
+  final lines = paneText.split('\n');
+  final tail =
+      lines.length <= tailLines ? lines : lines.sublist(lines.length - tailLines);
+  final stripped = [for (final l in tail) _stripBoxEdge(l.trimRight())];
+
+  // 第一段：收集连续编号行组成的选项组（start, end, items）
+  final runs = <(int, int, List<AgentOption>)>[];
+  var start = -1;
+  var end = -1;
+  var items = <AgentOption>[];
+  for (var i = 0; i < stripped.length; i++) {
+    final lineItems = <AgentOption>[
+      for (final m in _numberedItemRe.allMatches(stripped[i]))
+        if (m.group(2)!.trim().isNotEmpty)
+          AgentOption(
+              number: int.parse(m.group(1)!),
+              // 压缩模型选择器等多列布局留下的长空白
+              label: m
+                  .group(2)!
+                  .trim()
+                  .replaceAll(RegExp(r'\s{2,}'), ' ')),
+    ];
+    if (lineItems.isEmpty) {
+      if (items.isNotEmpty) {
+        runs.add((start, end, items));
+        items = <AgentOption>[];
+      }
+      continue;
+    }
+    if (items.isEmpty) start = i;
+    items = [...items, ...lineItems];
+    end = i;
+  }
+  if (items.isNotEmpty) runs.add((start, end, items));
+
+  // 第二段：从后往前找合法组，并校验语境（光标前缀或权限标题）。
+  // 编号须严格递增且 ≥2 项（允许分页列表从任意编号开始，如 36/37/38）。
+  for (final (s, e, runItems) in runs.reversed) {
+    if (runItems.length < 2) continue;
+    var ascending = true;
+    for (var i = 1; i < runItems.length; i++) {
+      if (runItems[i].number <= runItems[i - 1].number) ascending = false;
+    }
+    if (!ascending) continue;
+    final hasCursor = stripped
+        .sublist(s, e + 1)
+        .any((l) => _optionCursorRe.hasMatch(l));
+    if (hasCursor) return runItems;
+    final from = (s - 3).clamp(0, stripped.length);
+    final header = stripped.sublist(from, s).join('\n');
+    if (_optionHeaderRe.hasMatch(header)) return runItems;
+  }
+  return const [];
+}
+
+/// ─── Agent 状态（模型 / 上下文 / 缓存）─────────────────────────────────────
+
+class AgentStatusInfo {
+  const AgentStatusInfo({this.model, this.contextLeftPct, this.cacheHitPct});
+
+  final String? model;
+
+  /// 剩余上下文百分比（0-100），TUI 未展示时为 null
+  final double? contextLeftPct;
+
+  /// 缓存命中率百分比（0-100），TUI 未展示时为 null
+  final double? cacheHitPct;
+
+  bool get isEmpty =>
+      model == null && contextLeftPct == null && cacheHitPct == null;
+}
+
+/// 尽力从 pane 快照提取 Agent 状态：Claude Code 横幅的 `Using <model> ·`、
+/// `Context left until auto-compact: N%`、`N% of prompt tokens ... cache`。
+/// 这些展示随版本 / 状态时有时无，取最后一次出现的值。
+AgentStatusInfo parseAgentStatusInfo(String paneText) {
+  String? model;
+  final usingMatches =
+      RegExp(r'Using\s+(.+?)\s*·').allMatches(paneText).toList();
+  if (usingMatches.isNotEmpty) {
+    model = usingMatches.last.group(1)!.trim();
+  } else {
+    final m = RegExp(
+            r'\bmodel[:\s]+([A-Za-z0-9][\w.+\-/ ]{1,32}?)\s*(?:·|\||\n|$)',
+            caseSensitive: false)
+        .allMatches(paneText)
+        .toList();
+    if (m.isNotEmpty) model = m.last.group(1)!.trim();
+  }
+
+  double? ctx;
+  for (final re in [
+    RegExp(r'context (?:left|remaining)[^0-9\n]{0,40}?([\d.]+)\s*%',
+        caseSensitive: false),
+    RegExp(r'([\d.]+)\s*%\s*context left', caseSensitive: false),
+  ]) {
+    final ms = re.allMatches(paneText).toList();
+    if (ms.isNotEmpty) {
+      ctx = double.tryParse(ms.last.group(1)!);
+      if (ctx != null) break;
+    }
+  }
+
+  double? cache;
+  final cacheMs = RegExp(r'([\d.]+)\s*%[^%\n]{0,60}?cache', caseSensitive: false)
+      .allMatches(paneText)
+      .toList();
+  if (cacheMs.isNotEmpty) cache = double.tryParse(cacheMs.last.group(1)!);
+
+  return AgentStatusInfo(
+      model: model, contextLeftPct: ctx, cacheHitPct: cache);
 }

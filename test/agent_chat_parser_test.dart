@@ -166,4 +166,150 @@ func quickSort(arr []int) {
       expect(splitAgentTuiChat('───\n❯\n───'), isNull);
     });
   });
+
+  group('编号选项提取（extractNumberedOptions）', () {
+    test('Claude 权限对话框（盒子样式，光标 ❯ 在选项上）', () {
+      const pane = '''
+
+╭─❯ Claude is asking for permission ────────────────╮
+│ ❯ 1. Yes                                          │
+│   2. Yes, and don't ask again this session        │
+│   3. No, and tell Claude what to do differently   │
+╰───────────────────────────────────────────────────╯
+  ? for shortcuts
+''';
+      final options = extractNumberedOptions(pane);
+      expect(options, hasLength(3));
+      expect(options[0].number, 1);
+      expect(options[0].label, contains('Yes'));
+      expect(options[1].number, 2);
+      expect(options[2].label, contains('differently'));
+    });
+
+    test('计划确认（inline 光标前缀 + 换行续排）', () {
+      const pane = '''
+❯ 1. Yes, and auto-accept edits
+  2. Yes, and manually approve edits
+  3. No, keep planning
+
+──────────────────────────────────────
+❯ 
+──────────────────────────────────────''';
+      final options = extractNumberedOptions(pane);
+      expect(options, hasLength(3));
+      expect(options[2].label, 'No, keep planning');
+    });
+
+    test('盒子样式（无光标，靠标题语境）', () {
+      const pane = '''
+│ Claude wants to use Bash          │
+│ 1. Allow once                     │
+│ 2. Allow always for this session  │
+╰───────────────────────────────────╯''';
+      final options = extractNumberedOptions(pane);
+      expect(options, hasLength(2));
+      expect(options[1].label, contains('always'));
+    });
+
+    test('欢迎页使用技巧（编号列表但非对话框）不误报', () {
+      const pane = '''
+✳ Welcome to Claude Code!
+
+  Tips for getting started:
+
+  1. Ask questions, edit files, or run commands
+  2. Plan tasks, and keep Claude on track
+  3. Review Claude's changes
+
+
+
+
+──────────────────────────────
+❯ 
+──────────────────────────────''';
+      expect(extractNumberedOptions(pane), isEmpty);
+    });
+
+    test('Agent 回复里的编号步骤列表不误报', () {
+      const pane = '''
+❯ how to install docker?
+
+⏺ Steps:
+
+  1. Install dependencies
+  2. Run the installer
+  3. Verify the installation
+''';
+      expect(extractNumberedOptions(pane), isEmpty);
+    });
+
+    test('模型选择器（分页两位数编号 + ❯/↑ 光标，实测 v2.1.304）', () {
+      const pane = '''
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+   Select model
+   Switch between Claude models.
+
+   ↑ 36.  GPT-5.5 · 易准大模型                    via magpie
+     37.  GPT-5.6 Sol · 易准大模型                via magpie
+   ❯ 38.  DeepSeek V4.1 Flash · 易准大模型 ✔      via magpie
+      … +144 models
+
+   ● High effort (default) ←/→ to adjust
+
+   Enter to set as default · s to use this session only · Esc to cancel
+''';
+      final options = extractNumberedOptions(pane);
+      expect(options, hasLength(3));
+      expect(options[0].number, 36, reason: '两位编号不能错位成 6');
+      expect(options[0].label, startsWith('GPT-5.5'));
+      expect(options[2].number, 38);
+      expect(options[2].label, contains('DeepSeek'));
+    });
+
+    test('用户消息本身是编号文本（❯ ·1. xxx）不误报', () {
+      const pane = '''
+❯ ·1. first choice
+  2. second choice
+''';
+      expect(extractNumberedOptions(pane), isEmpty);
+    });
+  });
+
+  group('Agent 状态解析（parseAgentStatusInfo）', () {
+    test('Claude Code 横幅：模型名', () {
+      const pane = '''
+ ▐▛███▛█   Claude Code v2.1.304
+▝▜██████▀  DeepSeek V4.1 Flash · 易准大模型 · API Usage Billing
+
+▎ Using DeepSeek V4.1 Flash · 易准大模型 (from .claude/settings.json) · /model
+''';
+      final info = parseAgentStatusInfo(pane);
+      expect(info.model, 'DeepSeek V4.1 Flash');
+      expect(info.contextLeftPct, isNull);
+      expect(info.cacheHitPct, isNull);
+    });
+
+    test('上下文剩余 + 缓存命中', () {
+      const pane = '''
+Context left until auto-compact: 61.2% (36.7k tokens)
+
+94% of prompt tokens were read from cache
+''';
+      final info = parseAgentStatusInfo(pane);
+      expect(info.contextLeftPct, 61.2);
+      expect(info.cacheHitPct, 94);
+    });
+
+    test('Percent context left 句式 + 无字段时全 null', () {
+      final info = parseAgentStatusInfo('⚡ 42% context left');
+      expect(info.contextLeftPct, 42);
+      final empty = parseAgentStatusInfo('plain pane\nno status here');
+      expect(empty.isEmpty, isTrue);
+    });
+
+    test('Codex 风格 model: 前缀', () {
+      final info = parseAgentStatusInfo('OpenAI Codex\nmodel: gpt-5-codex\n');
+      expect(info.model, 'gpt-5-codex');
+    });
+  });
 }
