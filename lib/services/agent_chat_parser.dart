@@ -337,3 +337,110 @@ AgentStatusInfo parseAgentStatusInfo(String paneText) {
   return AgentStatusInfo(
       model: model, contextLeftPct: ctx, cacheHitPct: cache);
 }
+
+/// ─── Agent 消息内容分段（编程视图）─────────────────────────────────────────
+
+enum AgentSegmentKind { text, code, tool }
+
+/// Agent 气泡内的一段内容：普通文本 / 代码块 / 工具调用卡。
+class AgentSegment {
+  const AgentSegment.text(String this.text)
+      : kind = AgentSegmentKind.text,
+        lang = null,
+        title = null,
+        body = null;
+
+  const AgentSegment.code(String this.text, {this.lang})
+      : kind = AgentSegmentKind.code,
+        title = null,
+        body = null;
+
+  const AgentSegment.tool(String this.title, String this.body)
+      : kind = AgentSegmentKind.tool,
+        text = null,
+        lang = null;
+
+  final AgentSegmentKind kind;
+
+  /// text / code 段内容
+  final String? text;
+
+  /// code 段语言（``` 围栏标注）
+  final String? lang;
+
+  /// tool 段标题（如 `Bash(npm test)`）与正文（含 ⎿ 结果行）
+  final String? title;
+  final String? body;
+}
+
+/// 工具调用行：`⏺ Bash(npm test)`、`⏺ Read(/path/file.dart)` 等。
+/// 普通回复也以 ⏺ 开头，但后面是自然语言而非 `Identifier(...)`，
+/// 用「标识符 + 同行括号」区分。
+final _toolCallRe = RegExp(r'^\s*⏺\s*([A-Za-z_][A-Za-z0-9_]*)\(.*\)\s*$');
+
+/// ``` 围栏（可带语言标注）
+final _fenceRe = RegExp(r'^\s*```\w*\s*$');
+
+/// 把 Agent 气泡的文本切成段：``` 围栏代码块、工具调用卡
+/// （⏺ Xxx(...) + 后续输出 + ⎿ 结果）、其余为普通文本。
+/// 编程会话里工具输出与代码占大头，分段后可折叠 / 横向滚动 / 复制。
+List<AgentSegment> parseAgentSegments(String blockText) {
+  final segments = <AgentSegment>[];
+  final textBuf = <String>[];
+
+  void flushText() {
+    if (textBuf.isEmpty) return;
+    final t = tidyAgentOutput(textBuf.join('\n'));
+    textBuf.clear();
+    if (t.isNotEmpty) segments.add(AgentSegment.text(t));
+  }
+
+  final lines = blockText.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+
+    // ``` 围栏代码块
+    if (_fenceRe.hasMatch(line)) {
+      flushText();
+      final lang =
+          RegExp(r'```(\w+)').firstMatch(line)?.group(1);
+      final code = <String>[];
+      i++;
+      while (i < lines.length && !_fenceRe.hasMatch(lines[i])) {
+        code.add(lines[i]);
+        i++;
+      }
+      segments.add(AgentSegment.code(code.join('\n'), lang: lang));
+      continue;
+    }
+
+    // 工具调用卡：⏺ Xxx(...) 开头，收集缩进的输出行；Claude 的工具
+    // 输出（含 ⎿ 结果）都带缩进，遇到顶格的非空行（下一段回复）即截止
+    final tool = _toolCallRe.firstMatch(line);
+    if (tool != null) {
+      flushText();
+      final title = line.trim();
+      final body = <String>[];
+      i++;
+      while (i < lines.length) {
+        final l = lines[i];
+        if (_toolCallRe.hasMatch(l) ||
+            _tuiUserMarkerRe.hasMatch(l) ||
+            _fenceRe.hasMatch(l) ||
+            (l.trim().isNotEmpty && l.trimLeft() == l)) {
+          i--; // 归还当前行
+          break;
+        }
+        body.add(l);
+        i++;
+      }
+      final bodyText = tidyAgentOutput(body.join('\n'));
+      segments.add(AgentSegment.tool(title, bodyText));
+      continue;
+    }
+
+    textBuf.add(line);
+  }
+  flushText();
+  return segments;
+}

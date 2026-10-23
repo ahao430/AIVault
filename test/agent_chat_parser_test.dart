@@ -312,4 +312,71 @@ Context left until auto-compact: 61.2% (36.7k tokens)
       expect(info.model, 'gpt-5-codex');
     });
   });
+
+  group('Agent 内容分段（parseAgentSegments）', () {
+    test('工具调用卡：⏺ Xxx(...) + ⎿ 结果收集为 tool 段', () {
+      const text = '''
+开始分析项目结构。
+
+⏺ Read(/src/main.dart)
+  ⎿ Read 45 lines
+
+⏺ Bash(npm test)
+  ⎿ 8 passed
+
+修复完成。''';
+      final segs = parseAgentSegments(text);
+      expect(
+          segs.where((s) => s.kind == AgentSegmentKind.tool), hasLength(2));
+      final bash = segs.firstWhere(
+          (s) => s.kind == AgentSegmentKind.tool && s.title!.contains('Bash'));
+      expect(bash.title, '⏺ Bash(npm test)');
+      expect(bash.body, contains('8 passed'));
+      // 工具卡前后的自然语言保留为 text 段
+      expect(segs.first.kind, AgentSegmentKind.text);
+      expect(segs.first.text, contains('分析项目结构'));
+      expect(segs.last.kind, AgentSegmentKind.text);
+      expect(segs.last.text, contains('修复完成'));
+    });
+
+    test('``` 围栏代码块提取（含语言标注）', () {
+      const text = '''
+修改如下：
+
+```dart
+void main() {
+  print('hello');
+}
+```
+
+完成。''';
+      final segs = parseAgentSegments(text);
+      final code =
+          segs.where((s) => s.kind == AgentSegmentKind.code).single;
+      expect(code.lang, 'dart');
+      expect(code.text, contains("print('hello');"));
+      expect(code.text, isNot(contains('```')));
+      expect(segs.first.kind, AgentSegmentKind.text);
+    });
+
+    test('普通回复文本（⏺ 开头但非 Identifier(...)）不误判为工具', () {
+      const text = '⏺ 好的，我已经完成修改。\n\n  详细说明在这里';
+      final segs = parseAgentSegments(text);
+      expect(segs, hasLength(1));
+      expect(segs.single.kind, AgentSegmentKind.text);
+    });
+
+    test('工具卡正文在下一个 ⏺ 前截止（不吞后续回复）', () {
+      const text = '''
+⏺ Edit(/lib/a.dart)
+  ⎿ Updated 2 lines
+
+⏺ 已应用全部修改，测试通过。''';
+      final segs = parseAgentSegments(text);
+      expect(segs, hasLength(2));
+      final last = segs.last;
+      expect(last.kind, AgentSegmentKind.text);
+      expect(last.text, contains('测试通过'));
+    });
+  });
 }

@@ -132,17 +132,43 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
                         height: 1.4,
                         color: cs.onPrimary,
                         fontWeight: FontWeight.w500))
-                : SelectableText(
-                    b.text,
-                    style: TextStyle(
-                        fontSize: 12,
-                        height: 1.45,
-                        fontFamily: 'monospace',
-                        color: cs.onSurface),
-                  ),
+                : _buildAgentContent(cs, b.text),
           ),
         );
       },
+    );
+  }
+
+  /// Agent 气泡内容分段渲染：普通文本 / 代码块（横向滚动 + 复制）/
+  /// 工具调用卡（折叠）。纯文本时保持整块可选。
+  Widget _buildAgentContent(ColorScheme cs, String text) {
+    final segments = parseAgentSegments(text);
+    if (segments.length == 1 &&
+        segments.first.kind == AgentSegmentKind.text) {
+      return SelectableText(
+        segments.first.text!,
+        style: TextStyle(fontSize: 12.5, height: 1.5, color: cs.onSurface),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final s in segments)
+          switch (s.kind) {
+            AgentSegmentKind.text => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: SelectableText(
+                  s.text!,
+                  style: TextStyle(
+                      fontSize: 12.5, height: 1.5, color: cs.onSurface),
+                ),
+              ),
+            AgentSegmentKind.code => _CodeBlock(
+                cs: cs, code: s.text ?? '', lang: s.lang),
+            AgentSegmentKind.tool => _ToolCard(
+                cs: cs, title: s.title ?? '', body: s.body ?? ''),
+          },
+      ],
     );
   }
 
@@ -284,6 +310,7 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
     ('→', '右移（长按连续）', 'Right', true),
     ('␣', '空格（勾选 / 多选）', "-l ' '", false),
     ('Tab', 'Tab（补全 / 切换）', 'Tab', false),
+    ('⇧Tab', 'Shift+Tab（切换权限模式）', 'Btab', false),
     ('⏎', '回车（确认）', 'Enter', false),
     ('Esc', 'Esc（取消 / 退出）', 'Escape', false),
     ('^C', 'Ctrl+C 中断', 'C-c', false),
@@ -612,6 +639,24 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 10),
+                        suffixIcon: IconButton(
+                          tooltip: '粘贴到输入框（报错 / 代码快速发送）',
+                          icon: Icon(Icons.content_paste,
+                              size: 18, color: cs.outline),
+                          onPressed: () async {
+                            final data =
+                                await Clipboard.getData(Clipboard.kTextPlain);
+                            final t = data?.text?.trim() ?? '';
+                            if (!context.mounted) return;
+                            if (t.isEmpty) {
+                              Toast.show(context, '剪贴板为空');
+                              return;
+                            }
+                            _inputCtrl.text = t;
+                            if (!context.mounted) return;
+                            Toast.show(context, '已粘贴 ${t.length} 字符');
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -628,5 +673,207 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
         ],
       ),
     );
+  }
+}
+
+/// 代码块：深色底 + 横向滚动（不折行）+ 一键复制 + diff 行着色。
+class _CodeBlock extends StatelessWidget {
+  const _CodeBlock({required this.cs, required this.code, this.lang});
+
+  final ColorScheme cs;
+  final String code;
+  final String? lang;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          children: [
+            Container(
+              width: double.infinity,
+              color: cs.surfaceContainerHighest,
+              padding: const EdgeInsets.fromLTRB(10, 8, 44, 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: _DiffColoredText(
+                  text: code,
+                  base: TextStyle(
+                    fontSize: 11.5,
+                    height: 1.45,
+                    fontFamily: 'monospace',
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (lang != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(lang!,
+                          style: TextStyle(
+                              fontSize: 9, color: cs.outline)),
+                    ),
+                  IconButton(
+                    tooltip: '复制代码',
+                    visualDensity: VisualDensity.compact,
+                    iconSize: 14,
+                    onPressed: () async {
+                      await Clipboard.setData(ClipboardData(text: code));
+                      if (context.mounted) {
+                        Toast.show(context, '代码已复制');
+                      }
+                    },
+                    icon: Icon(Icons.copy, size: 13, color: cs.outline),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 工具调用卡：`⏺ Bash(npm test)` 标题行 + 输出正文（默认折叠，
+/// 点标题展开；正文横向滚动 + 上下限滚动 + diff 着色）。
+class _ToolCard extends StatefulWidget {
+  const _ToolCard(
+      {required this.cs, required this.title, required this.body});
+
+  final ColorScheme cs;
+  final String title;
+  final String body;
+
+  @override
+  State<_ToolCard> createState() => _ToolCardState();
+}
+
+class _ToolCardState extends State<_ToolCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = widget.cs;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.6)),
+          color: cs.surfaceContainer,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Row(
+                  children: [
+                    Icon(Icons.build_circle_outlined,
+                        size: 14, color: cs.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        widget.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: 11.5,
+                            fontFamily: 'monospace',
+                            color: cs.onSurface),
+                      ),
+                    ),
+                    Icon(
+                      _expanded
+                          ? Icons.expand_less
+                          : Icons.expand_more,
+                      size: 16,
+                      color: cs.outline,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_expanded && widget.body.trim().isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border(
+                      top: BorderSide(
+                          color:
+                              cs.outlineVariant.withValues(alpha: 0.4))),
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 300),
+                  child: SingleChildScrollView(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: _DiffColoredText(
+                        text: widget.body,
+                        base: TextStyle(
+                          fontSize: 11,
+                          height: 1.45,
+                          fontFamily: 'monospace',
+                          color: cs.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// diff 行着色：行首 `+` 绿（新增）、`-` 红（删除），其余原色。
+class _DiffColoredText extends StatelessWidget {
+  const _DiffColoredText({required this.text, required this.base});
+
+  final String text;
+  final TextStyle base;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    final addColor =
+        isDark ? const Color(0xFF7FD894) : const Color(0xFF1B7F3B);
+    final delColor =
+        isDark ? const Color(0xFFE57373) : const Color(0xFFB71C1C);
+
+    final lines = text.split('\n');
+    final spans = <TextSpan>[];
+    for (var i = 0; i < lines.length; i++) {
+      final t = lines[i].trimLeft();
+      Color? c;
+      if (t.startsWith('+') && !t.startsWith('+++')) {
+        c = addColor;
+      } else if (t.startsWith('-') && !t.startsWith('---')) {
+        c = delColor;
+      }
+      spans.add(TextSpan(
+        text: '${lines[i]}${i < lines.length - 1 ? '\n' : ''}',
+        style: c == null ? null : TextStyle(color: c),
+      ));
+    }
+    return Text.rich(TextSpan(style: base, children: spans));
   }
 }
