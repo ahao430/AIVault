@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:drift/drift.dart' hide Column;
@@ -146,8 +147,17 @@ class SshService {
     final session = await client.execute(command);
     final stdout = StringBuffer();
     final stderr = StringBuffer();
-    final sub = session.stdout.listen(stdout.write);
-    final sub2 = session.stderr.listen(stderr.write);
+    // stdout/stderr 是 Uint8List 字节流，必须先 utf8 解码再拼接：
+    // 直接 listen 进 StringBuffer 会把字节列表 toString 成
+    // "[104, 101, …]" 数字数组（终端页走的是自己的解码链路，没踩到）。
+    final sub = session.stdout
+        .cast<List<int>>()
+        .transform(const Utf8Decoder(allowMalformed: true))
+        .listen(stdout.write);
+    final sub2 = session.stderr
+        .cast<List<int>>()
+        .transform(const Utf8Decoder(allowMalformed: true))
+        .listen(stderr.write);
     try {
       await session.done.timeout(timeout, onTimeout: () => session.close());
     } finally {

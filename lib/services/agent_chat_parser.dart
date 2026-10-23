@@ -90,3 +90,101 @@ String tidyAgentOutput(String raw) {
   }
   return out.join('\n');
 }
+
+/// ─── Agent TUI 聊天解析（Claude Code / Codex / Pi）───────────────────────
+///
+/// 这些 Agent 的 TUI 在 pane 快照里有稳定的行首标记（实测 Claude Code
+/// v2.1.304）：用户输入 `❯ `（旧版 `> `、Codex `› `、Pi/通用 `> `），
+/// 回复与工具结果 `⏺ ` / `⎿ `。按标记把 pane 切成「用户 ↔ Agent」
+/// 对话块；识别不到任何用户输入标记时返回 null，调用方退回
+/// [splitPaneIntoChat] 的输入历史分割逻辑。
+
+/// 用户输入行标记（只认行首，避免误伤回复里缩进的 `>` 引用 / diff）
+final _tuiUserMarkerRe = RegExp(r'^(?:❯|›|>) ?(.*)$');
+
+/// Agent 侧标记：Claude Code 回复 `⏺` 与工具结果 `⎿`
+final _tuiAgentMarkerRe = RegExp(r'^\s{0,3}(?:⏺|⎿) ?(.*)$');
+
+/// 纯边框/分隔线行（输入框上下沿的横线、盒子边框等）
+final _tuiBorderOnlyRe = RegExp(
+    r'^[\s╭╮╰╯┌┐└┘├┤┬┴┼─━═│┃╌╍╎╏┄┅┆┇┈┉┊┋]+$');
+
+/// 底部输入区的提示噪音（auto mode / 快捷键提示）
+final _tuiNoiseRe = RegExp(r'⏵⏵|shift\+tab|^\s*\? for shortcuts');
+
+List<AgentChatBlock>? splitAgentTuiChat(String paneText) {
+  final blocks = <AgentChatBlock>[];
+  final buf = <String>[];
+  var isUser = false;
+  var foundUser = false;
+
+  void flush() {
+    if (buf.isEmpty) return;
+    final text = tidyAgentOutput(_dedent(buf).join('\n'));
+    buf.clear();
+    if (text.isEmpty) return;
+    // 相邻同侧块合并，避免一段回复的多个 ⏺/⎿ 段碎成一串气泡
+    if (blocks.isNotEmpty && blocks.last.isUser == isUser) {
+      blocks[blocks.length - 1] =
+          AgentChatBlock(isUser: isUser, text: '${blocks.last.text}\n\n$text');
+    } else {
+      blocks.add(AgentChatBlock(isUser: isUser, text: text));
+    }
+  }
+
+  for (final raw in paneText.split('\n')) {
+    final line = _stripBoxEdge(raw.trimRight());
+    if (_tuiBorderOnlyRe.hasMatch(line)) continue;
+    if (_tuiNoiseRe.hasMatch(line)) continue;
+
+    final user = _tuiUserMarkerRe.firstMatch(line);
+    if (user != null) {
+      final rest = user.group(1)!.trim();
+      // 空输入框（当前无草稿）：不切换状态，后续行仍归上一个块
+      if (rest.isEmpty) continue;
+      flush();
+      isUser = true;
+      foundUser = true;
+      buf.add(rest);
+      continue;
+    }
+    final agent = _tuiAgentMarkerRe.firstMatch(line);
+    if (agent != null) {
+      if (isUser) flush();
+      isUser = false;
+      final rest = agent.group(1)!.trim();
+      if (rest.isNotEmpty) buf.add(rest);
+      continue;
+    }
+    // Codex / Pi 的回复没有专用标记：用户消息通常单行 + 空行结束，
+    // 空行之后的内容归 Agent 侧。
+    if (isUser && line.trim().isEmpty) {
+      flush();
+      isUser = false;
+      continue;
+    }
+    buf.add(line);
+  }
+  flush();
+
+  if (!foundUser) return null;
+  return blocks;
+}
+
+/// 去掉行首尾的盒子竖边（`│ text │` → `text`），其余空白不动。
+String _stripBoxEdge(String line) {
+  var s = line.replaceFirst(RegExp(r'^\s*│\s?'), '');
+  return s.replaceFirst(RegExp(r'\s?│\s*$'), '');
+}
+
+/// 去掉块内非空行的公共缩进（Claude Code 回复续行缩进 2 格）。
+List<String> _dedent(List<String> lines) {
+  var min = 1 << 30;
+  for (final l in lines) {
+    if (l.trim().isEmpty) continue;
+    final indent = l.length - l.trimLeft().length;
+    if (indent < min) min = indent;
+  }
+  if (min <= 0 || min == 1 << 30) return lines;
+  return [for (final l in lines) l.length < min ? l : l.substring(min)];
+}

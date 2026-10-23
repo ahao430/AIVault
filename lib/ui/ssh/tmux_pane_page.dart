@@ -75,11 +75,15 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
     });
   }
 
-  /// 聊天视图（Plan #34）：输入历史分割对话块；遇到解析不了的
-  /// 复杂 TUI 内容，用户可切 [终端] 视图兜底（Plan #35）。
+  /// 聊天视图：识别到 Agent（Claude Code / Codex / Pi 等）时优先按
+  /// TUI 行首标记（❯ / ⏺ / ⎿ …）切块成对话流；解析不出标记再退回
+  /// 本 App 输入历史分割。仍不理想可切 [终端] 视图兜底（Plan #35）。
   Widget _buildChatView() {
     final cs = Theme.of(context).colorScheme;
-    final blocks = splitPaneIntoChat(_output, _sentInputs);
+    final blocks = _agent == AgentKind.unknown
+        ? splitPaneIntoChat(_output, _sentInputs)
+        : (splitAgentTuiChat(_output) ??
+            splitPaneIntoChat(_output, _sentInputs));
     if (blocks.isEmpty) {
       return Center(
         child: Text('暂无输出，发送消息开始',

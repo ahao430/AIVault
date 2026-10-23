@@ -51,6 +51,7 @@
 - SSH 主机管理（dartssh2，Key / 密码认证，凭证只存安全存储），首次连接 host key TOFU 校验（指纹变化拒绝连接），Tailscale 标记提示
 - 完整 xterm 终端（pty + xterm-256color，ANSI / 全屏 TUI / tmux attach，桌面端快捷键 / 右键复制粘贴）+ 移动端快捷键条
 - tmux 会话列表（窗口数 / attached / Agent 识别：Claude Code / Codex / OpenCode / Pi），App 内新建 / 恢复会话
+- **Agent 会话聊天视图**：按 TUI 行首标记（`❯` / `⏺` / `⎿` 等）把 Claude Code / Codex / Pi 的 pane 快照解析成「用户 ↔ Agent」对话气泡，输入框边框与提示噪音自动过滤；解析不了的内容可一键切完整终端兜底
 - **终端 AI 助手**：当前屏幕作上下文提问；命令一键「执行」后自动读回终端新增输出继续分析；**自动续跑**模式会把「执行 → 读结果 → 分析 → 下一步」循环跑到任务完成（上限 8 轮，随时可停；破坏性命令拒执行）
 - 首页远程状态区（在线主机 + 最近连接）、首次使用引导
 
