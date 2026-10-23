@@ -40,6 +40,7 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
   bool _chatView = true; // Plan #34：聊天式为上层，终端为兜底
   final List<String> _sentInputs = [];
   Timer? _timer;
+  Timer? _repeatTimer;
 
   /// shell 转义：单引号包裹，内部单引号转义
   String _sh(String s) => "'${s.replaceAll("'", "'\\''")}'";
@@ -51,12 +52,14 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
       final service = ref.read(sshServiceProvider);
       final output = await service.execute(
         widget.hostId,
-        'tmux capture-pane -t ${_sh(widget.session)} -p -S -400 2>&1',
+        'tmux capture-pane -t ${_sh(widget.session)} -p -S -1000 2>&1',
       );
       if (!mounted) return;
+      final detected = detectAgent(widget.session, output);
       setState(() {
         _output = output.trimRight();
-        _agent = detectAgent(widget.session, output);
+        // 粘性识别：长会话尾部不含 Agent 关键词时保留上次的识别结果
+        if (detected != AgentKind.unknown) _agent = detected;
         _error = null;
       });
       _scrollToBottom();
@@ -143,14 +146,17 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
     );
   }
 
-  /// Agent 状态栏：尽力从 pane 解析当前模型 / 剩余上下文 / 缓存命中
-  /// （TUI 未展示的字段自动隐藏），Claude Code / Codex 附「切换模型」。
+  /// Agent 状态栏：常显 Agent 名；模型 / 剩余上下文 / 缓存命中尽力从
+  /// pane 解析（TUI 未展示的字段自动隐藏），Claude Code / Codex 附
+  /// 「切换模型」。
   Widget _buildStatusBar(ColorScheme cs) {
     final info = parseAgentStatusInfo(_output);
+    final known = _agent != AgentKind.unknown;
+    if (info.isEmpty && !known) return const SizedBox.shrink();
     final canSwitch =
         _agent == AgentKind.claudeCode || _agent == AgentKind.codex;
-    if (info.isEmpty && !canSwitch) return const SizedBox.shrink();
     final children = <Widget>[
+      _statusChip(cs, Icons.smart_toy_outlined, _agent.label),
       if (info.model != null)
         _statusChip(cs, Icons.memory_outlined, info.model!),
       if (info.contextLeftPct != null)
@@ -215,42 +221,52 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
     );
   }
 
-  /// 检测到 Agent 的编号选项（权限 / 计划确认对话框）时展示，
-  /// 点按 = 发送数字 + 回车直选。
-  Widget _buildOptionsRow(ColorScheme cs) {
+  /// 检测到 Agent 的编号选项（权限 / 计划确认 / 模型选择器）时展示，
+  /// 竖排固定高度滚动（选项标签完整显示不省略），点按 = 数字 + 回车。
+  Widget _buildOptionsPanel(ColorScheme cs) {
     final options = extractNumberedOptions(_output);
     if (options.isEmpty) return const SizedBox.shrink();
     return Container(
       width: double.infinity,
+      constraints: const BoxConstraints(maxHeight: 228),
       color: cs.secondaryContainer.withValues(alpha: 0.3),
-      padding: const EdgeInsets.fromLTRB(8, 5, 8, 5),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Agent 在等待选择 · 点按直选',
-              style: TextStyle(fontSize: 10, color: cs.outline)),
-          const SizedBox(height: 4),
-          SizedBox(
-            height: 34,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                for (final o in options)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+            child: Text('Agent 在等待选择 · 点按直选',
+                style: TextStyle(fontSize: 10, color: cs.outline)),
+          ),
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+              itemCount: options.length,
+              itemBuilder: (_, i) {
+                final o = options[i];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: SizedBox(
+                    width: double.infinity,
                     child: FilledButton.tonal(
                       style: FilledButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 12),
-                        textStyle: const TextStyle(fontSize: 12),
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
                       ),
                       onPressed: () => _chooseOption(o),
-                      child: Text('${o.number}. ${_ellipsize(o.label, 20)}'),
+                      child: Text(
+                        '${o.number}. ${o.label}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13),
+                      ),
                     ),
                   ),
-              ],
+                );
+              },
             ),
           ),
         ],
@@ -258,20 +274,20 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
     );
   }
 
-  String _ellipsize(String s, int max) =>
-      s.length <= max ? s : '${s.substring(0, max)}…';
-
-  /// 输入框上方的快捷键条：Agent TUI 没有光标键，方向 / Tab / Esc /
-  /// Ctrl+C / 斜杠命令在手机上没法按，这里一键发送到会话。
-  static const _quickKeys = <(String, String, String)>[
-    ('↑', '上移（选项 / 历史）', 'Up'),
-    ('↓', '下移（选项 / 历史）', 'Down'),
-    ('←', '左移', 'Left'),
-    ('→', '右移', 'Right'),
-    ('Tab', 'Tab（补全 / 切换）', 'Tab'),
-    ('Esc', 'Esc（取消 / 退出）', 'Escape'),
-    ('^C', 'Ctrl+C 中断', 'C-c'),
-    ('/', '斜杠命令', "-l '/'"),
+  /// 输入框上方的快捷键条：Agent TUI 没有光标键，方向 / 空格 / Tab /
+  /// 回车 / Esc / Ctrl+C / 斜杠在手机上没法按，这里一键发送到会话。
+  /// 方向键支持长按连续移动（浏览长选项列表）。
+  static const _quickKeys = <(String, String, String, bool)>[
+    ('↑', '上移（长按连续）', 'Up', true),
+    ('↓', '下移（长按连续）', 'Down', true),
+    ('←', '左移（长按连续）', 'Left', true),
+    ('→', '右移（长按连续）', 'Right', true),
+    ('␣', '空格（勾选 / 多选）', "-l ' '", false),
+    ('Tab', 'Tab（补全 / 切换）', 'Tab', false),
+    ('⏎', '回车（确认）', 'Enter', false),
+    ('Esc', 'Esc（取消 / 退出）', 'Escape', false),
+    ('^C', 'Ctrl+C 中断', 'C-c', false),
+    ('/', '斜杠命令', "-l '/'", false),
   ];
 
   Widget _buildQuickKeys(ColorScheme cs) {
@@ -281,25 +297,123 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         children: [
-          for (final (label, tip, arg) in _quickKeys)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Tooltip(
-                message: tip,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(40, 32),
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    visualDensity: VisualDensity.compact,
-                    textStyle: const TextStyle(
-                        fontSize: 12.5, fontWeight: FontWeight.w600),
-                  ),
-                  onPressed: () => _sendKeysArg(arg),
-                  child: Text(label),
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: Tooltip(
+              message: '常用命令（/compact、/model…）',
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(40, 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  visualDensity: VisualDensity.compact,
+                  textStyle: const TextStyle(
+                      fontSize: 12.5, fontWeight: FontWeight.w600),
                 ),
+                onPressed: _showCommandSheet,
+                icon: const Icon(Icons.terminal, size: 14),
+                label: const Text('命令'),
               ),
             ),
+          ),
+          for (final (label, tip, arg, repeatable) in _quickKeys)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: _quickKeyButton(cs, label, tip, arg, repeatable),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _quickKeyButton(
+      ColorScheme cs, String label, String tip, String arg, bool repeatable) {
+    final button = OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(40, 32),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        visualDensity: VisualDensity.compact,
+        textStyle:
+            const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+      ),
+      onPressed: () => _sendKeysArg(arg),
+      child: Text(label),
+    );
+    if (!repeatable) return Tooltip(message: tip, child: button);
+    // 长按连续发送（不逐次抓屏，松手后统一抓一次）
+    return Tooltip(
+      message: tip,
+      child: GestureDetector(
+        onLongPressStart: (_) {
+          _repeatTimer?.cancel();
+          _repeatTimer = Timer.periodic(
+              const Duration(milliseconds: 130), (_) => _sendKeysRaw(arg));
+        },
+        onLongPressEnd: (_) {
+          _repeatTimer?.cancel();
+          _repeatTimer = null;
+          _capture();
+        },
+        child: button,
+      ),
+    );
+  }
+
+  /// 常用斜杠命令面板：手机上敲斜杠菜单太费劲，按 Agent 给常用命令
+  /// 一键发送（发送 = 命令 + 回车）。
+  Future<void> _showCommandSheet() async {
+    final cs = Theme.of(context).colorScheme;
+    const claudeCmds = [
+      ('/compact', '压缩上下文，释放剩余额度'),
+      ('/clear', '清空当前对话'),
+      ('/model', '切换模型'),
+      ('/status', '会话状态与账号信息'),
+      ('/cost', 'Token 用量统计'),
+      ('/review', '审查代码变更'),
+      ('/init', '初始化项目 CLAUDE.md'),
+      ('/help', '帮助与快捷键'),
+    ];
+    const codexCmds = [
+      ('/model', '切换模型'),
+      ('/status', '会话状态'),
+      ('/approvals', '审批方式设置'),
+      ('/help', '帮助'),
+    ];
+    const genericCmds = [('/help', '帮助')];
+    final cmds = switch (_agent) {
+      AgentKind.claudeCode => claudeCmds,
+      AgentKind.codex => codexCmds,
+      _ => genericCmds,
+    };
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Text('常用命令 · 发送到 ${widget.session}',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: cs.outline,
+                      fontWeight: FontWeight.w600)),
+            ),
+            for (final (cmd, desc) in cmds)
+              ListTile(
+                dense: true,
+                title: Text(cmd,
+                    style: const TextStyle(
+                        fontSize: 14, fontFamily: 'monospace'),
+                    ),
+                subtitle: Text(desc, style: const TextStyle(fontSize: 12)),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _sendText(cmd);
+                },
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -329,13 +443,18 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
   /// 发送特殊键 / 字面量参数（如 `Up`、`C-c`、`-l '/'`）。
   Future<void> _sendKeysArg(String arg,
       {Duration delay = const Duration(milliseconds: 350)}) async {
+    await _sendKeysRaw(arg);
+    await Future<void>.delayed(delay);
+    await _capture();
+  }
+
+  /// 只发送不抓屏（长按连发用，避免抓屏风暴）。
+  Future<void> _sendKeysRaw(String arg) async {
     final service = ref.read(sshServiceProvider);
     await service.execute(
       widget.hostId,
       'tmux send-keys -t ${_sh(widget.session)} $arg',
     );
-    await Future<void>.delayed(delay);
-    await _capture();
   }
 
   /// 直选编号选项：数字 + 回车。
@@ -373,6 +492,7 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
   @override
   void dispose() {
     _timer?.cancel();
+    _repeatTimer?.cancel();
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -469,7 +589,7 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
                     ),
                   ),
           ),
-          _buildOptionsRow(cs),
+          _buildOptionsPanel(cs),
           _buildQuickKeys(cs),
           SafeArea(
             child: Padding(
