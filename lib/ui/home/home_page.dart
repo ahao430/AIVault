@@ -171,28 +171,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  /// 订阅看板板块：可长按拖拽排序的供应商卡片列表
+  /// 订阅看板板块：供应商卡片列表（排序在「订阅管理」页用箭头调整，
+  /// 首页不做拖拽——与滚动手势冲突，体验差）
   Widget _subscriptionsSliver(List<ProviderWithState> list) {
-    return SliverReorderableList(
-      itemCount: list.length,
-      onReorder: (oldIndex, newIndex) {
-        if (newIndex > oldIndex) newIndex -= 1;
-        final ids = [for (final s in list) s.provider.id];
-        final item = ids.removeAt(oldIndex);
-        ids.insert(newIndex, item);
-        unawaited(ref.read(repositoryProvider).reorder(ids));
-      },
-      itemBuilder: (_, i) => KeyedSubtree(
-        key: ValueKey(list[i].provider.id),
-        child: Padding(
-          // 保留 ReorderableDragStartListener 的默认位置：
-          // 卡片整体可长按拖动（Material3 卡片自带 handle）
-          padding: EdgeInsets.zero,
-          child: ReorderableDelayedDragStartListener(
-            index: i,
-            child: ProviderCard(state: list[i]),
-          ),
-        ),
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (_, i) => ProviderCard(state: list[i]),
+        childCount: list.length,
       ),
     );
   }
@@ -358,7 +343,8 @@ class _ProbeSiteCard extends StatelessWidget {
     final show = nodes.take(4).toList();
 
     return Card(
-      margin: const EdgeInsets.only(top: 10),
+      // 水平 margin 与订阅卡片（Card 默认 all(4)）对齐，宽度一致
+      margin: const EdgeInsets.fromLTRB(4, 10, 4, 4),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () => Navigator.of(context).push(MaterialPageRoute(

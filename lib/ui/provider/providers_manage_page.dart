@@ -43,7 +43,9 @@ class ProvidersManagePage extends ConsumerWidget {
                   style: TextStyle(fontSize: 12, color: cs.outline),
                 ),
               ),
-              for (final s in list) _ProviderRow(state: s),
+              for (var i = 0; i < list.length; i++)
+                _ProviderRow(
+                    state: list[i], index: i, list: list),
             ],
           );
         },
@@ -53,9 +55,15 @@ class ProvidersManagePage extends ConsumerWidget {
 }
 
 class _ProviderRow extends ConsumerWidget {
-  const _ProviderRow({required this.state});
+  const _ProviderRow({
+    required this.state,
+    required this.index,
+    required this.list,
+  });
 
   final ProviderWithState state;
+  final int index;
+  final List<ProviderWithState> list;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -101,7 +109,8 @@ class _ProviderRow extends ConsumerWidget {
                   ],
                 ),
               ),
-              _MiniSwitch(
+              // 排序：首页不做拖拽，这里用上下箭头调整（写 sortOrder）
+              _SortArrows(index: index, list: list),              _MiniSwitch(
                 label: '首页',
                 value: !p.hidden,
                 onChanged: (v) =>
@@ -119,6 +128,63 @@ class _ProviderRow extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// 行内上下箭头：与相邻的**同分组**行交换位置
+/// （列表按 置顶 → 类型 → sortOrder 排列，跨分组交换无视觉效果）。
+/// 置顶在列表里是独立分组，上/下边界处对应按钮禁用。
+class _SortArrows extends ConsumerWidget {
+  const _SortArrows({required this.index, required this.list});
+
+  final int index;
+  final List<ProviderWithState> list;
+
+  String _group(ProviderWithState s) =>
+      '${s.provider.pinned}|${s.provider.type}';
+
+  int? _neighbor(int step) {
+    final group = _group(list[index]);
+    var i = index + step;
+    while (i >= 0 && i < list.length) {
+      if (_group(list[i]) == group) return i;
+      i += step;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cs = Theme.of(context).colorScheme;
+    final prev = _neighbor(-1);
+    final next = _neighbor(1);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          tooltip: prev == null ? '上移（已到分组顶部）' : '上移',
+          icon: Icon(Icons.keyboard_arrow_up,
+              size: 22, color: prev == null ? cs.outline : cs.onSurface),
+          onPressed: prev == null ? null : () => _swap(ref, prev),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          tooltip: next == null ? '下移（已到分组底部）' : '下移',
+          icon: Icon(Icons.keyboard_arrow_down,
+              size: 22, color: next == null ? cs.outline : cs.onSurface),
+          onPressed: next == null ? null : () => _swap(ref, next),
+        ),
+      ],
+    );
+  }
+
+  void _swap(WidgetRef ref, int other) {
+    final ids = [for (final s in list) s.provider.id];
+    final tmp = ids[index];
+    ids[index] = ids[other];
+    ids[other] = tmp;
+    ref.read(repositoryProvider).reorder(ids);
   }
 }
 
