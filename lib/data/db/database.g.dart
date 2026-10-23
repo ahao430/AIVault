@@ -91,6 +91,18 @@ class $ProvidersTable extends Providers
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _balanceCurrencyMeta = const VerificationMeta(
+    'balanceCurrency',
+  );
+  @override
+  late final GeneratedColumn<String> balanceCurrency = GeneratedColumn<String>(
+    'balance_currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _checkinDisabledMeta = const VerificationMeta(
     'checkinDisabled',
   );
@@ -191,6 +203,7 @@ class $ProvidersTable extends Providers
     accountLabel,
     systemTokenRef,
     systemUserId,
+    balanceCurrency,
     checkinDisabled,
     pinned,
     sortOrder,
@@ -254,6 +267,15 @@ class $ProvidersTable extends Providers
         systemUserId.isAcceptableOrUnknown(
           data['system_user_id']!,
           _systemUserIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('balance_currency')) {
+      context.handle(
+        _balanceCurrencyMeta,
+        balanceCurrency.isAcceptableOrUnknown(
+          data['balance_currency']!,
+          _balanceCurrencyMeta,
         ),
       );
     }
@@ -354,6 +376,10 @@ class $ProvidersTable extends Providers
         DriftSqlType.string,
         data['${effectivePrefix}system_user_id'],
       ),
+      balanceCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}balance_currency'],
+      )!,
       checkinDisabled: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}checkin_disabled'],
@@ -412,6 +438,10 @@ class Provider extends DataClass implements Insertable<Provider> {
   /// NewAPI 系的部分版本接口要求 New-Api-User 头（用户 ID），明文非敏感
   final String? systemUserId;
 
+  /// 余额展示币种覆盖：'' = 跟随适配器默认（NewAPI 系为 $）；
+  /// 站点按人民币计价（quota 兑换的是 ¥）时设为 'CNY'
+  final String balanceCurrency;
+
   /// 站点未开启签到功能时置 true：隐藏签到入口并跳过批量签到
   final bool checkinDisabled;
   final bool pinned;
@@ -431,6 +461,7 @@ class Provider extends DataClass implements Insertable<Provider> {
     required this.accountLabel,
     this.systemTokenRef,
     this.systemUserId,
+    required this.balanceCurrency,
     required this.checkinDisabled,
     required this.pinned,
     required this.sortOrder,
@@ -460,6 +491,7 @@ class Provider extends DataClass implements Insertable<Provider> {
     if (!nullToAbsent || systemUserId != null) {
       map['system_user_id'] = Variable<String>(systemUserId);
     }
+    map['balance_currency'] = Variable<String>(balanceCurrency);
     map['checkin_disabled'] = Variable<bool>(checkinDisabled);
     map['pinned'] = Variable<bool>(pinned);
     map['sort_order'] = Variable<int>(sortOrder);
@@ -484,6 +516,7 @@ class Provider extends DataClass implements Insertable<Provider> {
       systemUserId: systemUserId == null && nullToAbsent
           ? const Value.absent()
           : Value(systemUserId),
+      balanceCurrency: Value(balanceCurrency),
       checkinDisabled: Value(checkinDisabled),
       pinned: Value(pinned),
       sortOrder: Value(sortOrder),
@@ -512,6 +545,7 @@ class Provider extends DataClass implements Insertable<Provider> {
       accountLabel: serializer.fromJson<String>(json['accountLabel']),
       systemTokenRef: serializer.fromJson<String?>(json['systemTokenRef']),
       systemUserId: serializer.fromJson<String?>(json['systemUserId']),
+      balanceCurrency: serializer.fromJson<String>(json['balanceCurrency']),
       checkinDisabled: serializer.fromJson<bool>(json['checkinDisabled']),
       pinned: serializer.fromJson<bool>(json['pinned']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
@@ -537,6 +571,7 @@ class Provider extends DataClass implements Insertable<Provider> {
       'accountLabel': serializer.toJson<String>(accountLabel),
       'systemTokenRef': serializer.toJson<String?>(systemTokenRef),
       'systemUserId': serializer.toJson<String?>(systemUserId),
+      'balanceCurrency': serializer.toJson<String>(balanceCurrency),
       'checkinDisabled': serializer.toJson<bool>(checkinDisabled),
       'pinned': serializer.toJson<bool>(pinned),
       'sortOrder': serializer.toJson<int>(sortOrder),
@@ -556,6 +591,7 @@ class Provider extends DataClass implements Insertable<Provider> {
     String? accountLabel,
     Value<String?> systemTokenRef = const Value.absent(),
     Value<String?> systemUserId = const Value.absent(),
+    String? balanceCurrency,
     bool? checkinDisabled,
     bool? pinned,
     int? sortOrder,
@@ -574,6 +610,7 @@ class Provider extends DataClass implements Insertable<Provider> {
         ? systemTokenRef.value
         : this.systemTokenRef,
     systemUserId: systemUserId.present ? systemUserId.value : this.systemUserId,
+    balanceCurrency: balanceCurrency ?? this.balanceCurrency,
     checkinDisabled: checkinDisabled ?? this.checkinDisabled,
     pinned: pinned ?? this.pinned,
     sortOrder: sortOrder ?? this.sortOrder,
@@ -600,6 +637,9 @@ class Provider extends DataClass implements Insertable<Provider> {
       systemUserId: data.systemUserId.present
           ? data.systemUserId.value
           : this.systemUserId,
+      balanceCurrency: data.balanceCurrency.present
+          ? data.balanceCurrency.value
+          : this.balanceCurrency,
       checkinDisabled: data.checkinDisabled.present
           ? data.checkinDisabled.value
           : this.checkinDisabled,
@@ -625,6 +665,7 @@ class Provider extends DataClass implements Insertable<Provider> {
           ..write('accountLabel: $accountLabel, ')
           ..write('systemTokenRef: $systemTokenRef, ')
           ..write('systemUserId: $systemUserId, ')
+          ..write('balanceCurrency: $balanceCurrency, ')
           ..write('checkinDisabled: $checkinDisabled, ')
           ..write('pinned: $pinned, ')
           ..write('sortOrder: $sortOrder, ')
@@ -646,6 +687,7 @@ class Provider extends DataClass implements Insertable<Provider> {
     accountLabel,
     systemTokenRef,
     systemUserId,
+    balanceCurrency,
     checkinDisabled,
     pinned,
     sortOrder,
@@ -666,6 +708,7 @@ class Provider extends DataClass implements Insertable<Provider> {
           other.accountLabel == this.accountLabel &&
           other.systemTokenRef == this.systemTokenRef &&
           other.systemUserId == this.systemUserId &&
+          other.balanceCurrency == this.balanceCurrency &&
           other.checkinDisabled == this.checkinDisabled &&
           other.pinned == this.pinned &&
           other.sortOrder == this.sortOrder &&
@@ -684,6 +727,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
   final Value<String> accountLabel;
   final Value<String?> systemTokenRef;
   final Value<String?> systemUserId;
+  final Value<String> balanceCurrency;
   final Value<bool> checkinDisabled;
   final Value<bool> pinned;
   final Value<int> sortOrder;
@@ -701,6 +745,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     this.accountLabel = const Value.absent(),
     this.systemTokenRef = const Value.absent(),
     this.systemUserId = const Value.absent(),
+    this.balanceCurrency = const Value.absent(),
     this.checkinDisabled = const Value.absent(),
     this.pinned = const Value.absent(),
     this.sortOrder = const Value.absent(),
@@ -719,6 +764,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     this.accountLabel = const Value.absent(),
     this.systemTokenRef = const Value.absent(),
     this.systemUserId = const Value.absent(),
+    this.balanceCurrency = const Value.absent(),
     this.checkinDisabled = const Value.absent(),
     this.pinned = const Value.absent(),
     this.sortOrder = const Value.absent(),
@@ -742,6 +788,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     Expression<String>? accountLabel,
     Expression<String>? systemTokenRef,
     Expression<String>? systemUserId,
+    Expression<String>? balanceCurrency,
     Expression<bool>? checkinDisabled,
     Expression<bool>? pinned,
     Expression<int>? sortOrder,
@@ -760,6 +807,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
       if (accountLabel != null) 'account_label': accountLabel,
       if (systemTokenRef != null) 'system_token_ref': systemTokenRef,
       if (systemUserId != null) 'system_user_id': systemUserId,
+      if (balanceCurrency != null) 'balance_currency': balanceCurrency,
       if (checkinDisabled != null) 'checkin_disabled': checkinDisabled,
       if (pinned != null) 'pinned': pinned,
       if (sortOrder != null) 'sort_order': sortOrder,
@@ -780,6 +828,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     Value<String>? accountLabel,
     Value<String?>? systemTokenRef,
     Value<String?>? systemUserId,
+    Value<String>? balanceCurrency,
     Value<bool>? checkinDisabled,
     Value<bool>? pinned,
     Value<int>? sortOrder,
@@ -798,6 +847,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
       accountLabel: accountLabel ?? this.accountLabel,
       systemTokenRef: systemTokenRef ?? this.systemTokenRef,
       systemUserId: systemUserId ?? this.systemUserId,
+      balanceCurrency: balanceCurrency ?? this.balanceCurrency,
       checkinDisabled: checkinDisabled ?? this.checkinDisabled,
       pinned: pinned ?? this.pinned,
       sortOrder: sortOrder ?? this.sortOrder,
@@ -840,6 +890,9 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     if (systemUserId.present) {
       map['system_user_id'] = Variable<String>(systemUserId.value);
     }
+    if (balanceCurrency.present) {
+      map['balance_currency'] = Variable<String>(balanceCurrency.value);
+    }
     if (checkinDisabled.present) {
       map['checkin_disabled'] = Variable<bool>(checkinDisabled.value);
     }
@@ -878,6 +931,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
           ..write('accountLabel: $accountLabel, ')
           ..write('systemTokenRef: $systemTokenRef, ')
           ..write('systemUserId: $systemUserId, ')
+          ..write('balanceCurrency: $balanceCurrency, ')
           ..write('checkinDisabled: $checkinDisabled, ')
           ..write('pinned: $pinned, ')
           ..write('sortOrder: $sortOrder, ')
@@ -8706,6 +8760,7 @@ typedef $$ProvidersTableCreateCompanionBuilder =
       Value<String> accountLabel,
       Value<String?> systemTokenRef,
       Value<String?> systemUserId,
+      Value<String> balanceCurrency,
       Value<bool> checkinDisabled,
       Value<bool> pinned,
       Value<int> sortOrder,
@@ -8725,6 +8780,7 @@ typedef $$ProvidersTableUpdateCompanionBuilder =
       Value<String> accountLabel,
       Value<String?> systemTokenRef,
       Value<String?> systemUserId,
+      Value<String> balanceCurrency,
       Value<bool> checkinDisabled,
       Value<bool> pinned,
       Value<int> sortOrder,
@@ -8909,6 +8965,11 @@ class $$ProvidersTableFilterComposer
 
   ColumnFilters<String> get systemUserId => $composableBuilder(
     column: $table.systemUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get balanceCurrency => $composableBuilder(
+    column: $table.balanceCurrency,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9147,6 +9208,11 @@ class $$ProvidersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get balanceCurrency => $composableBuilder(
+    column: $table.balanceCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get checkinDisabled => $composableBuilder(
     column: $table.checkinDisabled,
     builder: (column) => ColumnOrderings(column),
@@ -9222,6 +9288,11 @@ class $$ProvidersTableAnnotationComposer
 
   GeneratedColumn<String> get systemUserId => $composableBuilder(
     column: $table.systemUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get balanceCurrency => $composableBuilder(
+    column: $table.balanceCurrency,
     builder: (column) => column,
   );
 
@@ -9444,6 +9515,7 @@ class $$ProvidersTableTableManager
                 Value<String> accountLabel = const Value.absent(),
                 Value<String?> systemTokenRef = const Value.absent(),
                 Value<String?> systemUserId = const Value.absent(),
+                Value<String> balanceCurrency = const Value.absent(),
                 Value<bool> checkinDisabled = const Value.absent(),
                 Value<bool> pinned = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
@@ -9461,6 +9533,7 @@ class $$ProvidersTableTableManager
                 accountLabel: accountLabel,
                 systemTokenRef: systemTokenRef,
                 systemUserId: systemUserId,
+                balanceCurrency: balanceCurrency,
                 checkinDisabled: checkinDisabled,
                 pinned: pinned,
                 sortOrder: sortOrder,
@@ -9480,6 +9553,7 @@ class $$ProvidersTableTableManager
                 Value<String> accountLabel = const Value.absent(),
                 Value<String?> systemTokenRef = const Value.absent(),
                 Value<String?> systemUserId = const Value.absent(),
+                Value<String> balanceCurrency = const Value.absent(),
                 Value<bool> checkinDisabled = const Value.absent(),
                 Value<bool> pinned = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
@@ -9497,6 +9571,7 @@ class $$ProvidersTableTableManager
                 accountLabel: accountLabel,
                 systemTokenRef: systemTokenRef,
                 systemUserId: systemUserId,
+                balanceCurrency: balanceCurrency,
                 checkinDisabled: checkinDisabled,
                 pinned: pinned,
                 sortOrder: sortOrder,

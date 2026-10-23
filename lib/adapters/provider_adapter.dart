@@ -90,6 +90,15 @@ class BalanceResult {
   final String currency;
   final bool success;
   final String? message;
+
+  /// 币种覆盖（供应商设置）：NewAPI 系 quota 本身不带币种，
+  /// 站点按人民币计价时由用户在编辑页指定 ¥
+  BalanceResult withCurrency(String currency) => BalanceResult(
+        amount: amount,
+        currency: currency,
+        success: success,
+        message: message,
+      );
 }
 
 /// 订阅信息查询结果（智谱 / Kimi 等 Coding Plan 提供商）。

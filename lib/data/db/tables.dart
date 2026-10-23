@@ -43,6 +43,10 @@ class Providers extends Table {
   /// NewAPI 系的部分版本接口要求 New-Api-User 头（用户 ID），明文非敏感
   TextColumn get systemUserId => text().nullable()();
 
+  /// 余额展示币种覆盖：'' = 跟随适配器默认（NewAPI 系为 $）；
+  /// 站点按人民币计价（quota 兑换的是 ¥）时设为 'CNY'
+  TextColumn get balanceCurrency => text().withDefault(const Constant(''))();
+
   /// 站点未开启签到功能时置 true：隐藏签到入口并跳过批量签到
   BoolColumn get checkinDisabled => boolean().withDefault(const Constant(false))();
 

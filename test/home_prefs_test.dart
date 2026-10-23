@@ -88,6 +88,7 @@ ProviderWithState _fakeState(String id, {required bool showOnWidget}) {
       sortOrder: 0,
       hidden: false,
       showOnWidget: showOnWidget,
+      balanceCurrency: '',
       createdAt: DateTime(2026),
       updatedAt: DateTime(2026),
     ),

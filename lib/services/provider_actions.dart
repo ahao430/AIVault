@@ -102,7 +102,12 @@ class ProviderActions {
       // NewAPI 系忽略 apiKey（用系统令牌），传了也无害。
       final ctx = await _repo.buildContext(provider,
           apiKey: await _firstApiKey(provider.id));
-      final result = await adapter.getBalance(ctx);
+      var result = await adapter.getBalance(ctx);
+      // 币种覆盖：NewAPI 系 quota 本身不带币种，站点按人民币计价时
+      // 由用户在编辑页指定 ¥。记录时就覆盖，卡片 / 小组件 / 历史一致。
+      if (result != null && provider.balanceCurrency.isNotEmpty) {
+        result = result.withCurrency(provider.balanceCurrency);
+      }
       if (result != null) {
         await _repo.recordBalance(provider.id, result);
       }

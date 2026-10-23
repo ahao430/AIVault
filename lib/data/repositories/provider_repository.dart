@@ -282,6 +282,7 @@ class ProviderRepository {
     required String accountLabel,
     String? systemToken,
     String? systemUserId,
+    String balanceCurrency = '',
     bool pinned = false,
     bool hidden = false,
     bool checkinDisabled = false,
@@ -299,6 +300,7 @@ class ProviderRepository {
         systemTokenRef: Value(
             systemToken != null && systemToken.isNotEmpty ? SecureStore.systemTokenRef(newId) : null),
         systemUserId: Value(systemUserId),
+        balanceCurrency: Value(balanceCurrency),
         pinned: Value(pinned),
         hidden: Value(hidden),
         checkinDisabled: Value(checkinDisabled),
@@ -320,6 +322,7 @@ class ProviderRepository {
         baseUrl: Value(baseUrl),
         accountLabel: Value(accountLabel),
         systemUserId: Value(systemUserId),
+        balanceCurrency: Value(balanceCurrency),
         pinned: Value(pinned),
         hidden: Value(hidden),
         checkinDisabled: Value(checkinDisabled),
@@ -614,6 +617,7 @@ class ProviderRepository {
         'baseUrl': p.baseUrl,
         'accountLabel': p.accountLabel,
         'systemUserId': p.systemUserId,
+        'balanceCurrency': p.balanceCurrency,
         'checkinDisabled': p.checkinDisabled,
         'pinned': p.pinned,
         'hidden': p.hidden,
@@ -679,6 +683,7 @@ class ProviderRepository {
           baseUrl: Value(entry['baseUrl']?.toString() ?? ''),
           accountLabel: Value(entry['accountLabel']?.toString() ?? ''),
           systemUserId: Value(entry['systemUserId']?.toString()),
+          balanceCurrency: Value(entry['balanceCurrency']?.toString() ?? ''),
           pinned: Value(entry['pinned'] == true),
           hidden: Value(entry['hidden'] == true),
           checkinDisabled: Value(entry['checkinDisabled'] == true),
@@ -705,6 +710,8 @@ class ProviderRepository {
           accountLabel:
               Value(entry['accountLabel']?.toString() ?? existing.accountLabel),
           systemUserId: Value(entry['systemUserId']?.toString()),
+          balanceCurrency: Value(entry['balanceCurrency']?.toString() ??
+              existing.balanceCurrency),
           pinned: Value(entry['pinned'] == true),
           hidden: Value(entry['hidden'] == true),
           checkinDisabled: Value(entry['checkinDisabled'] == true),

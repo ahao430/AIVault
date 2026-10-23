@@ -30,6 +30,12 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
   ProviderType _type = ProviderType.relay;
   AdapterKind _adapter = AdapterKind.newapi;
   bool _checkinDisabled = false;
+
+  /// 余额币种覆盖（NewAPI 系）：'' = 适配器默认（$）
+  String _balanceCurrency = '';
+
+  /// 编辑已隐藏的供应商时保存不得重置 hidden（upsertProvider 会写该列）
+  bool _hiddenOriginal = false;
   bool _initialized = false;
   bool _saving = false;
 
@@ -63,6 +69,8 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
       _type = p.type;
       _adapter = p.adapterKind;
       _checkinDisabled = p.checkinDisabled;
+      _balanceCurrency = p.balanceCurrency;
+      _hiddenOriginal = p.hidden;
     });
   }
 
@@ -129,6 +137,8 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
             systemUserId: _sysUserCtrl.text.trim().isEmpty
                 ? null
                 : _sysUserCtrl.text.trim(),
+            balanceCurrency: _balanceCurrency,
+            hidden: _hiddenOriginal,
             checkinDisabled: _checkinDisabled,
           );
       if (mounted) Navigator.of(context).pop();
@@ -254,6 +264,23 @@ class _ProviderEditPageState extends ConsumerState<ProviderEditPage> {
                   labelText: 'New-Api-User ID（可选）',
                   helperText: '部分 NewAPI 版本接口要求携带用户 ID',
                 ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue:
+                    _balanceCurrency.isEmpty ? '' : _balanceCurrency,
+                decoration: const InputDecoration(
+                  labelText: '余额币种',
+                  helperText: '站点按人民币计价（quota 兑换的是 ¥）时选人民币，'
+                      r'默认跟随适配器（$）',
+                ),
+                items: const [
+                  DropdownMenuItem(value: '', child: Text(r'默认（$ 美元）')),
+                  DropdownMenuItem(value: 'CNY', child: Text('¥ 人民币')),
+                  DropdownMenuItem(value: 'USD', child: Text(r'$ 美元')),
+                ],
+                onChanged: (v) =>
+                    setState(() => _balanceCurrency = v ?? ''),
               ),
             ],
             if (AdapterRegistry.of(_adapter).capabilities.checkIn) ...[
