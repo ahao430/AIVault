@@ -133,6 +133,7 @@ open class AIVaultWidgetProvider : AppWidgetProvider() {
     private fun triggerBackgroundFetch(context: Context, data: Uri?) {
         Log.d(TAG, "triggerBackgroundFetch")
         try {
+            WidgetAutoRefresh.markFetched(context)
             val loader = FlutterInjector.instance().flutterLoader()
             loader.startInitialization(context)
             loader.ensureInitializationComplete(context, null)

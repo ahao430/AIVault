@@ -41,6 +41,13 @@ object WidgetAutoRefresh {
     /// 两次自动拉取的最小间隔（毫秒）：各触发源合并去抖
     private const val THROTTLE_MS = 15 * 60_000L
 
+    /// 记录一次拉取时间（自动与手动共用，避免手动刷新刚结束
+    /// 又被 onUpdate 的静默拉取立即重复触发一次）
+    fun markFetched(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putLong(KEY_LAST_FETCH, System.currentTimeMillis()).apply()
+    }
+
     fun ensurePeriodic(context: Context) {
         try {
             val request = PeriodicWorkRequestBuilder<HomeWidgetBackgroundWorker>(

@@ -30,11 +30,11 @@ class _MonitorSiteEditPageState extends ConsumerState<MonitorSiteEditPage> {
   void initState() {
     super.initState();
     if (widget.siteId != null) {
-      final site =
-          ref.read(monitorSitesProvider).value?.firstWhere(
-                (s) => s.id == widget.siteId,
-                orElse: () => throw StateError('站点不存在'),
-              );
+      final site = ref
+          .read(monitorSitesProvider)
+          .value
+          ?.where((s) => s.id == widget.siteId)
+          .firstOrNull;
       if (site != null) {
         _name.text = site.name;
         _url.text = site.baseUrl;
