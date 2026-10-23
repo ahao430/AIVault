@@ -31,7 +31,8 @@ class TmuxPanePage extends ConsumerStatefulWidget {
 
 class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
   final _inputCtrl = TextEditingController();
-  final _scrollCtrl = ScrollController();
+  final _scrollCtrl = ScrollController(); // 聊天视图
+  final _termScrollCtrl = ScrollController(); // 终端视图（独立，互不干扰）
   String _output = '';
   AgentKind _agent = AgentKind.unknown;
   String? _error;
@@ -42,8 +43,24 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
   Timer? _timer;
   Timer? _repeatTimer;
 
+  /// 贴底跟随：在底部时抓屏自动滚底；用户上翻即停（回到底部恢复）。
+  /// 进入会话 / 切换视图 / 发送消息时强制滚底并恢复跟随。
+  bool _stickBottom = true;
+  bool _firstCapture = true;
+
   /// shell 转义：单引号包裹，内部单引号转义
   String _sh(String s) => "'${s.replaceAll("'", "'\\''")}'";
+
+  ScrollController get _activeScrollCtrl =>
+      _chatView ? _scrollCtrl : _termScrollCtrl;
+
+  void _attachStickListener(ScrollController c) {
+    c.addListener(() {
+      if (!c.hasClients) return;
+      final pos = c.position;
+      _stickBottom = pos.maxScrollExtent - pos.pixels <= 64;
+    });
+  }
 
   Future<void> _capture() async {
     if (_loading) return;
@@ -62,7 +79,8 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
         if (detected != AgentKind.unknown) _agent = detected;
         _error = null;
       });
-      _scrollToBottom();
+      _scrollToBottom(force: _firstCapture);
+      _firstCapture = false;
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString());
@@ -71,10 +89,12 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
     }
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool force = false}) {
+    if (!force && !_stickBottom) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollCtrl.hasClients) {
-        _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
+      final c = _activeScrollCtrl;
+      if (c.hasClients) {
+        c.jumpTo(c.position.maxScrollExtent);
       }
     });
   }
@@ -448,10 +468,12 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
   Future<void> _send() => _sendText(_inputCtrl.text, fromInput: true);
 
   /// 发送文本到会话（-l 字面量 + 回车），等待远端执行后抓取一次。
+  /// 发送后恢复贴底跟随，回复流式进来时自动滚到底。
   Future<void> _sendText(String text, {bool fromInput = false}) async {
     if (text.isEmpty) return;
     if (fromInput) _inputCtrl.clear();
     _sentInputs.add(text);
+    _stickBottom = true;
     setState(() => _chatView = true);
     final service = ref.read(sshServiceProvider);
     // -l 字面量输入：内容中的特殊字符不会被当作键名解释
@@ -510,6 +532,8 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
   @override
   void initState() {
     super.initState();
+    _attachStickListener(_scrollCtrl);
+    _attachStickListener(_termScrollCtrl);
     _capture();
     _timer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (_autoRefresh && mounted) _capture();
@@ -522,6 +546,7 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
     _repeatTimer?.cancel();
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
+    _termScrollCtrl.dispose();
     super.dispose();
   }
 
@@ -551,8 +576,12 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
             ],
             selected: {_chatView},
             showSelectedIcon: false,
-            onSelectionChanged: (v) =>
-                setState(() => _chatView = v.first),
+            onSelectionChanged: (v) {
+              setState(() => _chatView = v.first);
+              // 切换视图后回到该视图底部并恢复跟随
+              _stickBottom = true;
+              _scrollToBottom(force: true);
+            },
           ),
           const SizedBox(width: 4),
           IconButton(
@@ -602,7 +631,7 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
                 : Container(
                     color: const Color(0xFF1E1E1E),
                     child: SingleChildScrollView(
-                      controller: _scrollCtrl,
+                      controller: _termScrollCtrl,
                       padding: const EdgeInsets.all(10),
                       child: SelectableText(
                         _output.isEmpty ? '（暂无输出）' : _output,
