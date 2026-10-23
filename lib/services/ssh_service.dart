@@ -122,6 +122,14 @@ class SshService {
     return client;
   }
 
+  /// SSH 非交互执行走 `登录 shell -c`：zsh 这种场景只读 .zshenv，
+  /// 不加载 .zprofile/.zshrc，Homebrew（/opt/homebrew/bin、
+  /// /usr/local/bin）/ MacPorts（/opt/local/bin）装的 tmux 等工具
+  /// 不在 PATH 里（报 `zsh: command not found: tmux`，交互终端里
+  /// 却正常）。所有远端命令统一前置常见安装路径。
+  static const String pathSetup =
+      r'export PATH="/opt/homebrew/bin:/usr/local/bin:/opt/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"; ';
+
   /// 打开交互式 pty 会话（Plan #40：真正的 Terminal Emulator 所需的底层）。
   /// [command] 为空时启动登录 shell；否则执行该命令
   /// （如 `tmux new -A -s name` = 存在则附加、不存在则创建）。
@@ -136,7 +144,7 @@ class SshService {
     if (command == null) {
       return client.shell(pty: pty);
     }
-    return client.execute(command, pty: pty);
+    return client.execute('$pathSetup$command', pty: pty);
   }
 
   /// 执行单条命令并收集全部 stdout（stderr 拼在后面）。
@@ -144,7 +152,7 @@ class SshService {
       {Duration timeout = const Duration(seconds: 20)}) async {
     final host = await _hostById(hostId);
     final client = await connect(host);
-    final session = await client.execute(command);
+    final session = await client.execute('$pathSetup$command');
     final stdout = StringBuffer();
     final stderr = StringBuffer();
     // stdout/stderr 是 Uint8List 字节流，必须先 utf8 解码再拼接：

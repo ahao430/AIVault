@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.25（2026-10-23）
+
+- **修复 SSH 报 `zsh: command not found: tmux`**：SSH 非交互执行走
+  「登录 shell -c」，zsh 该场景只读 .zshenv、不加载
+  .zprofile/.zshrc，Homebrew（/opt/homebrew/bin、/usr/local/bin）/
+  MacPorts（/opt/local/bin）安装的 tmux 不在 PATH——交互终端里正常、
+  App 远程执行却找不到。现在所有远端命令（execute 与 tmux attach
+  的 pty 会话）统一前置这些常见安装路径
+- tmux 会话列表：远端确实未安装 tmux 时给出安装指引
+  （brew install tmux / apt install tmux）
+
 ## 0.4.24（2026-10-23）
 
 - **修复 tmux 会话页显示「数字数组」且卡死**：SSH 单条命令的输出是

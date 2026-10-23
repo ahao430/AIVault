@@ -43,6 +43,12 @@ class _TmuxSessionsPageState extends ConsumerState<TmuxSessionsPage> {
       final output = await service
           .execute(widget.hostId, 'tmux list-sessions 2>&1 || true');
       if (!mounted) return;
+      // 远端确实没装 tmux 时（PATH 已由 SshService 兜底），给出安装指引
+      if (output.contains('command not found')) {
+        setState(() => _error = '远端未安装 tmux\nmacOS：brew install tmux\n'
+            'Debian/Ubuntu：sudo apt install tmux');
+        return;
+      }
       setState(() => _sessions = parseTmuxSessions(output));
     } catch (e) {
       if (!mounted) return;
