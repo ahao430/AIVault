@@ -10,5 +10,6 @@
     android:widgetCategory="home_screen"
     android:updatePeriodMillis="1800000"
     android:description="@string/widget_desc"
+    android:previewImage="@mipmap/widget_preview"
     android:previewLayout="@layout/aivault_widget"
     android:initialLayout="@layout/aivault_widget" />

@@ -469,12 +469,12 @@ class _TmuxPanePageState extends ConsumerState<TmuxPanePage> {
 
   /// 发送文本到会话（-l 字面量 + 回车），等待远端执行后抓取一次。
   /// 发送后恢复贴底跟随，回复流式进来时自动滚到底。
+  /// 不强制切换视图：终端视图下发送就留在终端。
   Future<void> _sendText(String text, {bool fromInput = false}) async {
     if (text.isEmpty) return;
     if (fromInput) _inputCtrl.clear();
     _sentInputs.add(text);
     _stickBottom = true;
-    setState(() => _chatView = true);
     final service = ref.read(sshServiceProvider);
     // -l 字面量输入：内容中的特殊字符不会被当作键名解释
     await service.execute(

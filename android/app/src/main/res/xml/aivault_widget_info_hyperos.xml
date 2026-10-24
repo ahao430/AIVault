@@ -10,5 +10,6 @@
     android:widgetCategory="home_screen"
     android:updatePeriodMillis="1800000"
     android:description="@string/widget_desc_hyperos"
+    android:previewImage="@mipmap/widget_preview_hyperos"
     android:previewLayout="@layout/aivault_widget_hyperos"
     android:initialLayout="@layout/aivault_widget_hyperos" />

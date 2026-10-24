@@ -10,6 +10,7 @@ import '../ssh/host_edit_page.dart';
 import '../ssh/hosts_page.dart';
 import '../ssh/remote_dev_page.dart';
 import '../ssh/tmux_sessions_page.dart';
+import '../../services/tailscale.dart';
 import '../../state/ssh_providers.dart';
 
 /// 工作台：功能入口卡片。
@@ -129,9 +130,50 @@ class WorkbenchPage extends ConsumerWidget {
 
 /// 远程开发入口：弹层直接选择 SSH 主机 → 该主机的 tmux 会话。
 /// 没有主机时引导添加；「管理全部」进完整列表页。
+/// 有 Tailscale 标记的主机时先探测手机侧 Tailscale 是否在线，
+/// 未开启则提示（可一键拉起 Tailscale App）。
 Future<void> _pickRemoteHost(BuildContext context, WidgetRef ref) async {
   final hosts = await ref.read(sshHostRepoProvider).allHosts();
   final service = ref.read(sshServiceProvider);
+  if (!context.mounted) return;
+  if (hosts.any((h) => h.isTailscale) && !await Tailscale.isUp()) {
+    if (!context.mounted) return;
+    final open = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Tailscale 未开启'),
+        content: const Text(
+            '手机当前不在 Tailscale 网络中，无法访问标记为 Tailscale 的'
+            '主机（如 MacBook）。先去打开 Tailscale，连上后再回来。'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, 'cancel'),
+              child: const Text('取消')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, 'continue'),
+              child: const Text('仍要进入')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, 'open'),
+              child: const Text('打开 Tailscale')),
+        ],
+      ),
+    );
+    if (!context.mounted) return;
+    if (open == 'open') {
+      final ok = await Tailscale.openApp();
+      if (!context.mounted) return;
+      // 未安装时提示安装；已打开则等用户开完 VPN 自己回来
+      if (!ok) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('未检测到 Tailscale App，请先安装并登录')));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('已打开 Tailscale，开启 VPN 后回到这里重试')));
+      }
+      return;
+    }
+    if (open != 'continue') return;
+  }
   if (!context.mounted) return;
   final picked = await showModalBottomSheet<String>(
     context: context,
