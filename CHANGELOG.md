@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.0（2026-10-24）
+
+- **新增 Webhook / API 调试**（工作台入口）：
+  - 请求模板：GET / POST / PUT / DELETE / PATCH / OPTIONS / HEAD，
+    自定义 URL，**路径变量 `{key}`**（替换 URL 与 body）、Query、
+    Headers（内置 Content-Type / Authorization 等常用预设，值一律
+    字符串）、Body（无 / JSON / 表单 / 文本，表单字段支持
+    文本 / 数字 / 布尔类型，数字布尔不带引号）
+  - 列表点按 = 用保存的参数直接执行；可进详情改变量后发送、
+    编辑、删除
+  - 响应面板：**HTTP 状态徽章**（2xx 绿 / 4xx 橙 / 5xx 红）、
+    **业务 code**（响应 JSON 含 code 字段时展示，0/200 判定成功）、
+    耗时、业务 message；**预览（JSON 缩进）/ Raw 双面板** + 一键复制
+  - **请求历史**：默认保留 50 条（可设 10 / 20 / 50 / 100 / 200，
+    超限自动裁剪，响应预览超 8KB 截断存储），可清空；历史详情含
+    请求 body 与响应（schema v12：webhook_requests / webhook_history）
+
+# Changelog
+
 ## 0.4.30（2026-10-24）
 
 - 终端视图发送消息后**保持在终端视图**（不再自动切回聊天）

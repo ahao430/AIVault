@@ -22,6 +22,8 @@ part 'database.g.dart';
   MonitorSites,
   AppSettings,
   Bookmarks,
+  WebhookRequests,
+  WebhookHistory,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -33,7 +35,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -70,6 +72,10 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 11) {
             await m.addColumn(providers, providers.balanceCurrency);
+          }
+          if (from < 12) {
+            await m.createTable(webhookRequests);
+            await m.createTable(webhookHistory);
           }
         },
       );

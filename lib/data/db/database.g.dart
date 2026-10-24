@@ -8622,6 +8622,1270 @@ class BookmarksCompanion extends UpdateCompanion<Bookmark> {
   }
 }
 
+class $WebhookRequestsTable extends WebhookRequests
+    with TableInfo<$WebhookRequestsTable, WebhookRequest> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WebhookRequestsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _methodMeta = const VerificationMeta('method');
+  @override
+  late final GeneratedColumn<String> method = GeneratedColumn<String>(
+    'method',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _variablesMeta = const VerificationMeta(
+    'variables',
+  );
+  @override
+  late final GeneratedColumn<String> variables = GeneratedColumn<String>(
+    'variables',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _queryMeta = const VerificationMeta('query');
+  @override
+  late final GeneratedColumn<String> query = GeneratedColumn<String>(
+    'query',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _headersMeta = const VerificationMeta(
+    'headers',
+  );
+  @override
+  late final GeneratedColumn<String> headers = GeneratedColumn<String>(
+    'headers',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{"type":"none"}'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    method,
+    url,
+    variables,
+    query,
+    headers,
+    body,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'webhook_requests';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WebhookRequest> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('method')) {
+      context.handle(
+        _methodMeta,
+        method.isAcceptableOrUnknown(data['method']!, _methodMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_methodMeta);
+    }
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_urlMeta);
+    }
+    if (data.containsKey('variables')) {
+      context.handle(
+        _variablesMeta,
+        variables.isAcceptableOrUnknown(data['variables']!, _variablesMeta),
+      );
+    }
+    if (data.containsKey('query')) {
+      context.handle(
+        _queryMeta,
+        query.isAcceptableOrUnknown(data['query']!, _queryMeta),
+      );
+    }
+    if (data.containsKey('headers')) {
+      context.handle(
+        _headersMeta,
+        headers.isAcceptableOrUnknown(data['headers']!, _headersMeta),
+      );
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+        _bodyMeta,
+        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WebhookRequest map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WebhookRequest(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      method: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}method'],
+      )!,
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      )!,
+      variables: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}variables'],
+      )!,
+      query: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}query'],
+      )!,
+      headers: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}headers'],
+      )!,
+      body: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WebhookRequestsTable createAlias(String alias) {
+    return $WebhookRequestsTable(attachedDatabase, alias);
+  }
+}
+
+class WebhookRequest extends DataClass implements Insertable<WebhookRequest> {
+  final String id;
+
+  /// 显示名
+  final String name;
+  final String method;
+  final String url;
+
+  /// 路径参数 / 变量（JSON：[{"key":"id","value":"123"}]，替换 URL
+  /// 与 body 中的 {key} 占位符）
+  final String variables;
+
+  /// Query 参数（JSON：[{"key":"k","value":"v"}]，值一律字符串）
+  final String query;
+
+  /// Headers（JSON：[{"key":"Content-Type","value":"application/json"}]）
+  final String headers;
+
+  /// Body（JSON：{"type":"none|json|form|text","raw":"...","fields":[{"key":"a","value":"1","fieldType":"string"}]}）
+  final String body;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const WebhookRequest({
+    required this.id,
+    required this.name,
+    required this.method,
+    required this.url,
+    required this.variables,
+    required this.query,
+    required this.headers,
+    required this.body,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['method'] = Variable<String>(method);
+    map['url'] = Variable<String>(url);
+    map['variables'] = Variable<String>(variables);
+    map['query'] = Variable<String>(query);
+    map['headers'] = Variable<String>(headers);
+    map['body'] = Variable<String>(body);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  WebhookRequestsCompanion toCompanion(bool nullToAbsent) {
+    return WebhookRequestsCompanion(
+      id: Value(id),
+      name: Value(name),
+      method: Value(method),
+      url: Value(url),
+      variables: Value(variables),
+      query: Value(query),
+      headers: Value(headers),
+      body: Value(body),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory WebhookRequest.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WebhookRequest(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      method: serializer.fromJson<String>(json['method']),
+      url: serializer.fromJson<String>(json['url']),
+      variables: serializer.fromJson<String>(json['variables']),
+      query: serializer.fromJson<String>(json['query']),
+      headers: serializer.fromJson<String>(json['headers']),
+      body: serializer.fromJson<String>(json['body']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'method': serializer.toJson<String>(method),
+      'url': serializer.toJson<String>(url),
+      'variables': serializer.toJson<String>(variables),
+      'query': serializer.toJson<String>(query),
+      'headers': serializer.toJson<String>(headers),
+      'body': serializer.toJson<String>(body),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  WebhookRequest copyWith({
+    String? id,
+    String? name,
+    String? method,
+    String? url,
+    String? variables,
+    String? query,
+    String? headers,
+    String? body,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => WebhookRequest(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    method: method ?? this.method,
+    url: url ?? this.url,
+    variables: variables ?? this.variables,
+    query: query ?? this.query,
+    headers: headers ?? this.headers,
+    body: body ?? this.body,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  WebhookRequest copyWithCompanion(WebhookRequestsCompanion data) {
+    return WebhookRequest(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      method: data.method.present ? data.method.value : this.method,
+      url: data.url.present ? data.url.value : this.url,
+      variables: data.variables.present ? data.variables.value : this.variables,
+      query: data.query.present ? data.query.value : this.query,
+      headers: data.headers.present ? data.headers.value : this.headers,
+      body: data.body.present ? data.body.value : this.body,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebhookRequest(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('method: $method, ')
+          ..write('url: $url, ')
+          ..write('variables: $variables, ')
+          ..write('query: $query, ')
+          ..write('headers: $headers, ')
+          ..write('body: $body, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    method,
+    url,
+    variables,
+    query,
+    headers,
+    body,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WebhookRequest &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.method == this.method &&
+          other.url == this.url &&
+          other.variables == this.variables &&
+          other.query == this.query &&
+          other.headers == this.headers &&
+          other.body == this.body &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class WebhookRequestsCompanion extends UpdateCompanion<WebhookRequest> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> method;
+  final Value<String> url;
+  final Value<String> variables;
+  final Value<String> query;
+  final Value<String> headers;
+  final Value<String> body;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const WebhookRequestsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.method = const Value.absent(),
+    this.url = const Value.absent(),
+    this.variables = const Value.absent(),
+    this.query = const Value.absent(),
+    this.headers = const Value.absent(),
+    this.body = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WebhookRequestsCompanion.insert({
+    required String id,
+    required String name,
+    required String method,
+    required String url,
+    this.variables = const Value.absent(),
+    this.query = const Value.absent(),
+    this.headers = const Value.absent(),
+    this.body = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       method = Value(method),
+       url = Value(url),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<WebhookRequest> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? method,
+    Expression<String>? url,
+    Expression<String>? variables,
+    Expression<String>? query,
+    Expression<String>? headers,
+    Expression<String>? body,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (method != null) 'method': method,
+      if (url != null) 'url': url,
+      if (variables != null) 'variables': variables,
+      if (query != null) 'query': query,
+      if (headers != null) 'headers': headers,
+      if (body != null) 'body': body,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WebhookRequestsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? method,
+    Value<String>? url,
+    Value<String>? variables,
+    Value<String>? query,
+    Value<String>? headers,
+    Value<String>? body,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return WebhookRequestsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      method: method ?? this.method,
+      url: url ?? this.url,
+      variables: variables ?? this.variables,
+      query: query ?? this.query,
+      headers: headers ?? this.headers,
+      body: body ?? this.body,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (method.present) {
+      map['method'] = Variable<String>(method.value);
+    }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (variables.present) {
+      map['variables'] = Variable<String>(variables.value);
+    }
+    if (query.present) {
+      map['query'] = Variable<String>(query.value);
+    }
+    if (headers.present) {
+      map['headers'] = Variable<String>(headers.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebhookRequestsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('method: $method, ')
+          ..write('url: $url, ')
+          ..write('variables: $variables, ')
+          ..write('query: $query, ')
+          ..write('headers: $headers, ')
+          ..write('body: $body, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WebhookHistoryTable extends WebhookHistory
+    with TableInfo<$WebhookHistoryTable, WebhookHistoryData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WebhookHistoryTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _requestIdMeta = const VerificationMeta(
+    'requestId',
+  );
+  @override
+  late final GeneratedColumn<String> requestId = GeneratedColumn<String>(
+    'request_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _methodMeta = const VerificationMeta('method');
+  @override
+  late final GeneratedColumn<String> method = GeneratedColumn<String>(
+    'method',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _requestBodyMeta = const VerificationMeta(
+    'requestBody',
+  );
+  @override
+  late final GeneratedColumn<String> requestBody = GeneratedColumn<String>(
+    'request_body',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusCodeMeta = const VerificationMeta(
+    'statusCode',
+  );
+  @override
+  late final GeneratedColumn<int> statusCode = GeneratedColumn<int>(
+    'status_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _okMeta = const VerificationMeta('ok');
+  @override
+  late final GeneratedColumn<bool> ok = GeneratedColumn<bool>(
+    'ok',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("ok" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _responsePreviewMeta = const VerificationMeta(
+    'responsePreview',
+  );
+  @override
+  late final GeneratedColumn<String> responsePreview = GeneratedColumn<String>(
+    'response_preview',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMsMeta = const VerificationMeta(
+    'durationMs',
+  );
+  @override
+  late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
+    'duration_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    requestId,
+    name,
+    method,
+    url,
+    requestBody,
+    statusCode,
+    ok,
+    responsePreview,
+    durationMs,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'webhook_history';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WebhookHistoryData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('request_id')) {
+      context.handle(
+        _requestIdMeta,
+        requestId.isAcceptableOrUnknown(data['request_id']!, _requestIdMeta),
+      );
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('method')) {
+      context.handle(
+        _methodMeta,
+        method.isAcceptableOrUnknown(data['method']!, _methodMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_methodMeta);
+    }
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_urlMeta);
+    }
+    if (data.containsKey('request_body')) {
+      context.handle(
+        _requestBodyMeta,
+        requestBody.isAcceptableOrUnknown(
+          data['request_body']!,
+          _requestBodyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status_code')) {
+      context.handle(
+        _statusCodeMeta,
+        statusCode.isAcceptableOrUnknown(data['status_code']!, _statusCodeMeta),
+      );
+    }
+    if (data.containsKey('ok')) {
+      context.handle(_okMeta, ok.isAcceptableOrUnknown(data['ok']!, _okMeta));
+    }
+    if (data.containsKey('response_preview')) {
+      context.handle(
+        _responsePreviewMeta,
+        responsePreview.isAcceptableOrUnknown(
+          data['response_preview']!,
+          _responsePreviewMeta,
+        ),
+      );
+    }
+    if (data.containsKey('duration_ms')) {
+      context.handle(
+        _durationMsMeta,
+        durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WebhookHistoryData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WebhookHistoryData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      requestId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}request_id'],
+      ),
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      method: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}method'],
+      )!,
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      )!,
+      requestBody: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}request_body'],
+      ),
+      statusCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}status_code'],
+      ),
+      ok: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ok'],
+      )!,
+      responsePreview: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}response_preview'],
+      ),
+      durationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_ms'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WebhookHistoryTable createAlias(String alias) {
+    return $WebhookHistoryTable(attachedDatabase, alias);
+  }
+}
+
+class WebhookHistoryData extends DataClass
+    implements Insertable<WebhookHistoryData> {
+  final int id;
+
+  /// 来源的保存请求 id（临时执行时为空）
+  final String? requestId;
+  final String name;
+  final String method;
+
+  /// 实际发出的完整 URL（变量已替换、query 已拼接）
+  final String url;
+  final String? requestBody;
+
+  /// HTTP 状态码；网络失败 / 超时为空
+  final int? statusCode;
+  final bool ok;
+
+  /// 响应正文预览（截断存储，上限 8KB）
+  final String? responsePreview;
+  final int durationMs;
+  final DateTime createdAt;
+  const WebhookHistoryData({
+    required this.id,
+    this.requestId,
+    required this.name,
+    required this.method,
+    required this.url,
+    this.requestBody,
+    this.statusCode,
+    required this.ok,
+    this.responsePreview,
+    required this.durationMs,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || requestId != null) {
+      map['request_id'] = Variable<String>(requestId);
+    }
+    map['name'] = Variable<String>(name);
+    map['method'] = Variable<String>(method);
+    map['url'] = Variable<String>(url);
+    if (!nullToAbsent || requestBody != null) {
+      map['request_body'] = Variable<String>(requestBody);
+    }
+    if (!nullToAbsent || statusCode != null) {
+      map['status_code'] = Variable<int>(statusCode);
+    }
+    map['ok'] = Variable<bool>(ok);
+    if (!nullToAbsent || responsePreview != null) {
+      map['response_preview'] = Variable<String>(responsePreview);
+    }
+    map['duration_ms'] = Variable<int>(durationMs);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  WebhookHistoryCompanion toCompanion(bool nullToAbsent) {
+    return WebhookHistoryCompanion(
+      id: Value(id),
+      requestId: requestId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(requestId),
+      name: Value(name),
+      method: Value(method),
+      url: Value(url),
+      requestBody: requestBody == null && nullToAbsent
+          ? const Value.absent()
+          : Value(requestBody),
+      statusCode: statusCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(statusCode),
+      ok: Value(ok),
+      responsePreview: responsePreview == null && nullToAbsent
+          ? const Value.absent()
+          : Value(responsePreview),
+      durationMs: Value(durationMs),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory WebhookHistoryData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WebhookHistoryData(
+      id: serializer.fromJson<int>(json['id']),
+      requestId: serializer.fromJson<String?>(json['requestId']),
+      name: serializer.fromJson<String>(json['name']),
+      method: serializer.fromJson<String>(json['method']),
+      url: serializer.fromJson<String>(json['url']),
+      requestBody: serializer.fromJson<String?>(json['requestBody']),
+      statusCode: serializer.fromJson<int?>(json['statusCode']),
+      ok: serializer.fromJson<bool>(json['ok']),
+      responsePreview: serializer.fromJson<String?>(json['responsePreview']),
+      durationMs: serializer.fromJson<int>(json['durationMs']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'requestId': serializer.toJson<String?>(requestId),
+      'name': serializer.toJson<String>(name),
+      'method': serializer.toJson<String>(method),
+      'url': serializer.toJson<String>(url),
+      'requestBody': serializer.toJson<String?>(requestBody),
+      'statusCode': serializer.toJson<int?>(statusCode),
+      'ok': serializer.toJson<bool>(ok),
+      'responsePreview': serializer.toJson<String?>(responsePreview),
+      'durationMs': serializer.toJson<int>(durationMs),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  WebhookHistoryData copyWith({
+    int? id,
+    Value<String?> requestId = const Value.absent(),
+    String? name,
+    String? method,
+    String? url,
+    Value<String?> requestBody = const Value.absent(),
+    Value<int?> statusCode = const Value.absent(),
+    bool? ok,
+    Value<String?> responsePreview = const Value.absent(),
+    int? durationMs,
+    DateTime? createdAt,
+  }) => WebhookHistoryData(
+    id: id ?? this.id,
+    requestId: requestId.present ? requestId.value : this.requestId,
+    name: name ?? this.name,
+    method: method ?? this.method,
+    url: url ?? this.url,
+    requestBody: requestBody.present ? requestBody.value : this.requestBody,
+    statusCode: statusCode.present ? statusCode.value : this.statusCode,
+    ok: ok ?? this.ok,
+    responsePreview: responsePreview.present
+        ? responsePreview.value
+        : this.responsePreview,
+    durationMs: durationMs ?? this.durationMs,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  WebhookHistoryData copyWithCompanion(WebhookHistoryCompanion data) {
+    return WebhookHistoryData(
+      id: data.id.present ? data.id.value : this.id,
+      requestId: data.requestId.present ? data.requestId.value : this.requestId,
+      name: data.name.present ? data.name.value : this.name,
+      method: data.method.present ? data.method.value : this.method,
+      url: data.url.present ? data.url.value : this.url,
+      requestBody: data.requestBody.present
+          ? data.requestBody.value
+          : this.requestBody,
+      statusCode: data.statusCode.present
+          ? data.statusCode.value
+          : this.statusCode,
+      ok: data.ok.present ? data.ok.value : this.ok,
+      responsePreview: data.responsePreview.present
+          ? data.responsePreview.value
+          : this.responsePreview,
+      durationMs: data.durationMs.present
+          ? data.durationMs.value
+          : this.durationMs,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebhookHistoryData(')
+          ..write('id: $id, ')
+          ..write('requestId: $requestId, ')
+          ..write('name: $name, ')
+          ..write('method: $method, ')
+          ..write('url: $url, ')
+          ..write('requestBody: $requestBody, ')
+          ..write('statusCode: $statusCode, ')
+          ..write('ok: $ok, ')
+          ..write('responsePreview: $responsePreview, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    requestId,
+    name,
+    method,
+    url,
+    requestBody,
+    statusCode,
+    ok,
+    responsePreview,
+    durationMs,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WebhookHistoryData &&
+          other.id == this.id &&
+          other.requestId == this.requestId &&
+          other.name == this.name &&
+          other.method == this.method &&
+          other.url == this.url &&
+          other.requestBody == this.requestBody &&
+          other.statusCode == this.statusCode &&
+          other.ok == this.ok &&
+          other.responsePreview == this.responsePreview &&
+          other.durationMs == this.durationMs &&
+          other.createdAt == this.createdAt);
+}
+
+class WebhookHistoryCompanion extends UpdateCompanion<WebhookHistoryData> {
+  final Value<int> id;
+  final Value<String?> requestId;
+  final Value<String> name;
+  final Value<String> method;
+  final Value<String> url;
+  final Value<String?> requestBody;
+  final Value<int?> statusCode;
+  final Value<bool> ok;
+  final Value<String?> responsePreview;
+  final Value<int> durationMs;
+  final Value<DateTime> createdAt;
+  const WebhookHistoryCompanion({
+    this.id = const Value.absent(),
+    this.requestId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.method = const Value.absent(),
+    this.url = const Value.absent(),
+    this.requestBody = const Value.absent(),
+    this.statusCode = const Value.absent(),
+    this.ok = const Value.absent(),
+    this.responsePreview = const Value.absent(),
+    this.durationMs = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  WebhookHistoryCompanion.insert({
+    this.id = const Value.absent(),
+    this.requestId = const Value.absent(),
+    required String name,
+    required String method,
+    required String url,
+    this.requestBody = const Value.absent(),
+    this.statusCode = const Value.absent(),
+    this.ok = const Value.absent(),
+    this.responsePreview = const Value.absent(),
+    this.durationMs = const Value.absent(),
+    required DateTime createdAt,
+  }) : name = Value(name),
+       method = Value(method),
+       url = Value(url),
+       createdAt = Value(createdAt);
+  static Insertable<WebhookHistoryData> custom({
+    Expression<int>? id,
+    Expression<String>? requestId,
+    Expression<String>? name,
+    Expression<String>? method,
+    Expression<String>? url,
+    Expression<String>? requestBody,
+    Expression<int>? statusCode,
+    Expression<bool>? ok,
+    Expression<String>? responsePreview,
+    Expression<int>? durationMs,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (requestId != null) 'request_id': requestId,
+      if (name != null) 'name': name,
+      if (method != null) 'method': method,
+      if (url != null) 'url': url,
+      if (requestBody != null) 'request_body': requestBody,
+      if (statusCode != null) 'status_code': statusCode,
+      if (ok != null) 'ok': ok,
+      if (responsePreview != null) 'response_preview': responsePreview,
+      if (durationMs != null) 'duration_ms': durationMs,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  WebhookHistoryCompanion copyWith({
+    Value<int>? id,
+    Value<String?>? requestId,
+    Value<String>? name,
+    Value<String>? method,
+    Value<String>? url,
+    Value<String?>? requestBody,
+    Value<int?>? statusCode,
+    Value<bool>? ok,
+    Value<String?>? responsePreview,
+    Value<int>? durationMs,
+    Value<DateTime>? createdAt,
+  }) {
+    return WebhookHistoryCompanion(
+      id: id ?? this.id,
+      requestId: requestId ?? this.requestId,
+      name: name ?? this.name,
+      method: method ?? this.method,
+      url: url ?? this.url,
+      requestBody: requestBody ?? this.requestBody,
+      statusCode: statusCode ?? this.statusCode,
+      ok: ok ?? this.ok,
+      responsePreview: responsePreview ?? this.responsePreview,
+      durationMs: durationMs ?? this.durationMs,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (requestId.present) {
+      map['request_id'] = Variable<String>(requestId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (method.present) {
+      map['method'] = Variable<String>(method.value);
+    }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (requestBody.present) {
+      map['request_body'] = Variable<String>(requestBody.value);
+    }
+    if (statusCode.present) {
+      map['status_code'] = Variable<int>(statusCode.value);
+    }
+    if (ok.present) {
+      map['ok'] = Variable<bool>(ok.value);
+    }
+    if (responsePreview.present) {
+      map['response_preview'] = Variable<String>(responsePreview.value);
+    }
+    if (durationMs.present) {
+      map['duration_ms'] = Variable<int>(durationMs.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebhookHistoryCompanion(')
+          ..write('id: $id, ')
+          ..write('requestId: $requestId, ')
+          ..write('name: $name, ')
+          ..write('method: $method, ')
+          ..write('url: $url, ')
+          ..write('requestBody: $requestBody, ')
+          ..write('statusCode: $statusCode, ')
+          ..write('ok: $ok, ')
+          ..write('responsePreview: $responsePreview, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8643,6 +9907,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MonitorSitesTable monitorSites = $MonitorSitesTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final $BookmarksTable bookmarks = $BookmarksTable(this);
+  late final $WebhookRequestsTable webhookRequests = $WebhookRequestsTable(
+    this,
+  );
+  late final $WebhookHistoryTable webhookHistory = $WebhookHistoryTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8664,6 +9932,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     monitorSites,
     appSettings,
     bookmarks,
+    webhookRequests,
+    webhookHistory,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -15351,6 +16621,629 @@ typedef $$BookmarksTableProcessedTableManager =
       Bookmark,
       PrefetchHooks Function()
     >;
+typedef $$WebhookRequestsTableCreateCompanionBuilder =
+    WebhookRequestsCompanion Function({
+      required String id,
+      required String name,
+      required String method,
+      required String url,
+      Value<String> variables,
+      Value<String> query,
+      Value<String> headers,
+      Value<String> body,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$WebhookRequestsTableUpdateCompanionBuilder =
+    WebhookRequestsCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> method,
+      Value<String> url,
+      Value<String> variables,
+      Value<String> query,
+      Value<String> headers,
+      Value<String> body,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$WebhookRequestsTableFilterComposer
+    extends Composer<_$AppDatabase, $WebhookRequestsTable> {
+  $$WebhookRequestsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get method => $composableBuilder(
+    column: $table.method,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get variables => $composableBuilder(
+    column: $table.variables,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get query => $composableBuilder(
+    column: $table.query,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get headers => $composableBuilder(
+    column: $table.headers,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WebhookRequestsTableOrderingComposer
+    extends Composer<_$AppDatabase, $WebhookRequestsTable> {
+  $$WebhookRequestsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get method => $composableBuilder(
+    column: $table.method,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get variables => $composableBuilder(
+    column: $table.variables,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get query => $composableBuilder(
+    column: $table.query,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get headers => $composableBuilder(
+    column: $table.headers,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WebhookRequestsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WebhookRequestsTable> {
+  $$WebhookRequestsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get method =>
+      $composableBuilder(column: $table.method, builder: (column) => column);
+
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<String> get variables =>
+      $composableBuilder(column: $table.variables, builder: (column) => column);
+
+  GeneratedColumn<String> get query =>
+      $composableBuilder(column: $table.query, builder: (column) => column);
+
+  GeneratedColumn<String> get headers =>
+      $composableBuilder(column: $table.headers, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$WebhookRequestsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WebhookRequestsTable,
+          WebhookRequest,
+          $$WebhookRequestsTableFilterComposer,
+          $$WebhookRequestsTableOrderingComposer,
+          $$WebhookRequestsTableAnnotationComposer,
+          $$WebhookRequestsTableCreateCompanionBuilder,
+          $$WebhookRequestsTableUpdateCompanionBuilder,
+          (
+            WebhookRequest,
+            BaseReferences<
+              _$AppDatabase,
+              $WebhookRequestsTable,
+              WebhookRequest
+            >,
+          ),
+          WebhookRequest,
+          PrefetchHooks Function()
+        > {
+  $$WebhookRequestsTableTableManager(
+    _$AppDatabase db,
+    $WebhookRequestsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WebhookRequestsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WebhookRequestsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WebhookRequestsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> method = const Value.absent(),
+                Value<String> url = const Value.absent(),
+                Value<String> variables = const Value.absent(),
+                Value<String> query = const Value.absent(),
+                Value<String> headers = const Value.absent(),
+                Value<String> body = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WebhookRequestsCompanion(
+                id: id,
+                name: name,
+                method: method,
+                url: url,
+                variables: variables,
+                query: query,
+                headers: headers,
+                body: body,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required String method,
+                required String url,
+                Value<String> variables = const Value.absent(),
+                Value<String> query = const Value.absent(),
+                Value<String> headers = const Value.absent(),
+                Value<String> body = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => WebhookRequestsCompanion.insert(
+                id: id,
+                name: name,
+                method: method,
+                url: url,
+                variables: variables,
+                query: query,
+                headers: headers,
+                body: body,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WebhookRequestsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WebhookRequestsTable,
+      WebhookRequest,
+      $$WebhookRequestsTableFilterComposer,
+      $$WebhookRequestsTableOrderingComposer,
+      $$WebhookRequestsTableAnnotationComposer,
+      $$WebhookRequestsTableCreateCompanionBuilder,
+      $$WebhookRequestsTableUpdateCompanionBuilder,
+      (
+        WebhookRequest,
+        BaseReferences<_$AppDatabase, $WebhookRequestsTable, WebhookRequest>,
+      ),
+      WebhookRequest,
+      PrefetchHooks Function()
+    >;
+typedef $$WebhookHistoryTableCreateCompanionBuilder =
+    WebhookHistoryCompanion Function({
+      Value<int> id,
+      Value<String?> requestId,
+      required String name,
+      required String method,
+      required String url,
+      Value<String?> requestBody,
+      Value<int?> statusCode,
+      Value<bool> ok,
+      Value<String?> responsePreview,
+      Value<int> durationMs,
+      required DateTime createdAt,
+    });
+typedef $$WebhookHistoryTableUpdateCompanionBuilder =
+    WebhookHistoryCompanion Function({
+      Value<int> id,
+      Value<String?> requestId,
+      Value<String> name,
+      Value<String> method,
+      Value<String> url,
+      Value<String?> requestBody,
+      Value<int?> statusCode,
+      Value<bool> ok,
+      Value<String?> responsePreview,
+      Value<int> durationMs,
+      Value<DateTime> createdAt,
+    });
+
+class $$WebhookHistoryTableFilterComposer
+    extends Composer<_$AppDatabase, $WebhookHistoryTable> {
+  $$WebhookHistoryTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get requestId => $composableBuilder(
+    column: $table.requestId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get method => $composableBuilder(
+    column: $table.method,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get requestBody => $composableBuilder(
+    column: $table.requestBody,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get statusCode => $composableBuilder(
+    column: $table.statusCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get ok => $composableBuilder(
+    column: $table.ok,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get responsePreview => $composableBuilder(
+    column: $table.responsePreview,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WebhookHistoryTableOrderingComposer
+    extends Composer<_$AppDatabase, $WebhookHistoryTable> {
+  $$WebhookHistoryTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get requestId => $composableBuilder(
+    column: $table.requestId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get method => $composableBuilder(
+    column: $table.method,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get requestBody => $composableBuilder(
+    column: $table.requestBody,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get statusCode => $composableBuilder(
+    column: $table.statusCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get ok => $composableBuilder(
+    column: $table.ok,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get responsePreview => $composableBuilder(
+    column: $table.responsePreview,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WebhookHistoryTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WebhookHistoryTable> {
+  $$WebhookHistoryTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get requestId =>
+      $composableBuilder(column: $table.requestId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get method =>
+      $composableBuilder(column: $table.method, builder: (column) => column);
+
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<String> get requestBody => $composableBuilder(
+    column: $table.requestBody,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get statusCode => $composableBuilder(
+    column: $table.statusCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get ok =>
+      $composableBuilder(column: $table.ok, builder: (column) => column);
+
+  GeneratedColumn<String> get responsePreview => $composableBuilder(
+    column: $table.responsePreview,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$WebhookHistoryTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WebhookHistoryTable,
+          WebhookHistoryData,
+          $$WebhookHistoryTableFilterComposer,
+          $$WebhookHistoryTableOrderingComposer,
+          $$WebhookHistoryTableAnnotationComposer,
+          $$WebhookHistoryTableCreateCompanionBuilder,
+          $$WebhookHistoryTableUpdateCompanionBuilder,
+          (
+            WebhookHistoryData,
+            BaseReferences<
+              _$AppDatabase,
+              $WebhookHistoryTable,
+              WebhookHistoryData
+            >,
+          ),
+          WebhookHistoryData,
+          PrefetchHooks Function()
+        > {
+  $$WebhookHistoryTableTableManager(
+    _$AppDatabase db,
+    $WebhookHistoryTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WebhookHistoryTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WebhookHistoryTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WebhookHistoryTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> requestId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> method = const Value.absent(),
+                Value<String> url = const Value.absent(),
+                Value<String?> requestBody = const Value.absent(),
+                Value<int?> statusCode = const Value.absent(),
+                Value<bool> ok = const Value.absent(),
+                Value<String?> responsePreview = const Value.absent(),
+                Value<int> durationMs = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => WebhookHistoryCompanion(
+                id: id,
+                requestId: requestId,
+                name: name,
+                method: method,
+                url: url,
+                requestBody: requestBody,
+                statusCode: statusCode,
+                ok: ok,
+                responsePreview: responsePreview,
+                durationMs: durationMs,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> requestId = const Value.absent(),
+                required String name,
+                required String method,
+                required String url,
+                Value<String?> requestBody = const Value.absent(),
+                Value<int?> statusCode = const Value.absent(),
+                Value<bool> ok = const Value.absent(),
+                Value<String?> responsePreview = const Value.absent(),
+                Value<int> durationMs = const Value.absent(),
+                required DateTime createdAt,
+              }) => WebhookHistoryCompanion.insert(
+                id: id,
+                requestId: requestId,
+                name: name,
+                method: method,
+                url: url,
+                requestBody: requestBody,
+                statusCode: statusCode,
+                ok: ok,
+                responsePreview: responsePreview,
+                durationMs: durationMs,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WebhookHistoryTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WebhookHistoryTable,
+      WebhookHistoryData,
+      $$WebhookHistoryTableFilterComposer,
+      $$WebhookHistoryTableOrderingComposer,
+      $$WebhookHistoryTableAnnotationComposer,
+      $$WebhookHistoryTableCreateCompanionBuilder,
+      $$WebhookHistoryTableUpdateCompanionBuilder,
+      (
+        WebhookHistoryData,
+        BaseReferences<_$AppDatabase, $WebhookHistoryTable, WebhookHistoryData>,
+      ),
+      WebhookHistoryData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -15387,4 +17280,8 @@ class $AppDatabaseManager {
       $$AppSettingsTableTableManager(_db, _db.appSettings);
   $$BookmarksTableTableManager get bookmarks =>
       $$BookmarksTableTableManager(_db, _db.bookmarks);
+  $$WebhookRequestsTableTableManager get webhookRequests =>
+      $$WebhookRequestsTableTableManager(_db, _db.webhookRequests);
+  $$WebhookHistoryTableTableManager get webhookHistory =>
+      $$WebhookHistoryTableTableManager(_db, _db.webhookHistory);
 }

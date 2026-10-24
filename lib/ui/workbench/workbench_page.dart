@@ -5,6 +5,7 @@ import '../chat/conversations_page.dart';
 import '../bookmarks/bookmarks_page.dart';
 import '../image/image_studio_page.dart';
 import '../monitor/monitor_sites_page.dart';
+import '../webhook/webhooks_page.dart';
 import '../provider/providers_manage_page.dart';
 import '../ssh/host_edit_page.dart';
 import '../ssh/hosts_page.dart';
@@ -100,6 +101,16 @@ class WorkbenchPage extends ConsumerWidget {
             color: cs.secondary,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => const BookmarksPage(),
+            )),
+          ),
+          const SizedBox(height: 12),
+          _EntryCard(
+            icon: Icons.api_outlined,
+            title: 'Webhook',
+            subtitle: 'API 请求调试：变量 / Headers / Body 与历史',
+            color: cs.tertiary,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const WebhooksPage(),
             )),
           ),
           const SizedBox(height: 12),

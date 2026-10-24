@@ -344,3 +344,55 @@ class Notifications extends Table {
   BoolColumn get read => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
 }
+
+/// 工作台 Webhook / API 调试：保存的请求模板
+class WebhookRequests extends Table {
+  TextColumn get id => text()();
+
+  /// 显示名
+  TextColumn get name => text()();
+  TextColumn get method => text()(); // GET/POST/PUT/DELETE/OPTIONS/PATCH/HEAD
+  TextColumn get url => text()();
+
+  /// 路径参数 / 变量（JSON：[{"key":"id","value":"123"}]，替换 URL
+  /// 与 body 中的 {key} 占位符）
+  TextColumn get variables => text().withDefault(const Constant('[]'))();
+
+  /// Query 参数（JSON：[{"key":"k","value":"v"}]，值一律字符串）
+  TextColumn get query => text().withDefault(const Constant('[]'))();
+
+  /// Headers（JSON：[{"key":"Content-Type","value":"application/json"}]）
+  TextColumn get headers => text().withDefault(const Constant('[]'))();
+
+  /// Body（JSON：{"type":"none|json|form|text","raw":"...","fields":[{"key":"a","value":"1","fieldType":"string"}]}）
+  TextColumn get body => text().withDefault(const Constant('{"type":"none"}'))();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Webhook 请求历史（含请求快照与响应摘要，上限可配置）
+class WebhookHistory extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  /// 来源的保存请求 id（临时执行时为空）
+  TextColumn get requestId => text().nullable()();
+  TextColumn get name => text()();
+  TextColumn get method => text()();
+
+  /// 实际发出的完整 URL（变量已替换、query 已拼接）
+  TextColumn get url => text()();
+  TextColumn get requestBody => text().nullable()();
+
+  /// HTTP 状态码；网络失败 / 超时为空
+  IntColumn get statusCode => integer().nullable()();
+  BoolColumn get ok => boolean().withDefault(const Constant(false))();
+
+  /// 响应正文预览（截断存储，上限 8KB）
+  TextColumn get responsePreview => text().nullable()();
+  IntColumn get durationMs => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+}

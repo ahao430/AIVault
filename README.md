@@ -47,6 +47,11 @@
 - 点击在**应用内 WebView** 打开：网页内后退（系统返回键优先退网页历史）、刷新、复制当前网址，标题自动跟随页面
 - 网址自动补全 `https://`；新增 / 编辑为轻量弹窗表单
 
+### Webhook / API 调试
+- 请求模板管理：GET / POST / PUT / DELETE / PATCH / OPTIONS / HEAD，路径变量 `{key}`、Query、Headers（常用预设）、Body（JSON / 表单 / 文本，字段支持文本 / 数字 / 布尔类型）
+- 列表点按直接执行，或进详情改变量后发送；响应 **HTTP 状态徽章 + 业务 code + 耗时**，**预览（JSON 缩进）/ Raw** 双面板，一键复制
+- 请求历史默认保留 50 条（可配 10–200，自动裁剪），支持清空与详情回看
+
 ### SSH 远程开发
 - SSH 主机管理（dartssh2，Key / 密码认证，凭证只存安全存储），首次连接 host key TOFU 校验（指纹变化拒绝连接），Tailscale 标记提示；远程开发入口**Tailscale 预检**——未开启时提示并可一键拉起 Tailscale App
 - 完整 xterm 终端（pty + xterm-256color，ANSI / 全屏 TUI / tmux attach，桌面端快捷键 / 右键复制粘贴）+ 移动端快捷键条
