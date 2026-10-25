@@ -127,3 +127,9 @@ git tag v0.4.18+19 && git push origin v0.4.18+19   # 触发发版流水线
 
 - ✅ **P0-P3 已完成**：订阅看板全量、任务中心、通知、WebDAV、桌面小组件（含 HyperOS + 自动刷新 + 组件展示开关）、App 锁、AI 聊天 / 画图、SSH 远程开发 + 终端 AI 助手、Komari 探针监控、首页板块顺序、书签管理
 - **P4 规划**：SFTP 文件管理、端口转发、更多官方适配器（MiniMax 等）、更多探针面板（哪吒等，`kind` 字段已预留）、iOS 小组件（WidgetKit）
+
+## 🙏 致谢
+
+感谢真诚、友善、团结、专业的 [LinuxDo](https://linux.do/) 社区，让我学到那么多有关 AI 相关知识。
+
+**LinuxDo — 学 AI, 上 L 站!**
